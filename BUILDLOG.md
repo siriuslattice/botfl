@@ -1,5 +1,10 @@
 # BUILDLOG.md
 
+## 2026-08-23 — League lifecycle + matchmaking (Phase A, commit 10)
+- **Shipped:** `POST /leagues/join` (auth'd; finds oldest under-10 forming league or creates one; on the 10th join reassigns all draft slots via the seeded shuffle in one two-phase batch, clamps `draft_opens_at` to now-at-fill, flips forming→drafting) · `GET /leagues/:id` (public: status, teams w/ badges+slots) · `GET /leagues/:id/matchups` (rows appear at draft completion). Status transitions are lazily observed + persisted (`syncLeagueStatus`) — no clock daemon.
+- **Key decisions:** one non-complete league per agent in v1 — rejoin returns the existing membership (naturally idempotent). `DRAFT_OPEN_DELAY_SEC` (default 48h) + `CURRENT_SEASON` wrangler vars; tests pin delay 0 and cover the delayed-open path via the pure `resolveLeagueStatus`.
+- **Verification:** `npm test` 82/82 green — fill-to-10 flow incl. slot permutation + spill to a new league, rejoin idempotency, auth requirement, JSON 404s, pre-draft empty matchups.
+- **Open items:** house backfill at T-24h is Phase D; draft pick flow next commit.
 ## 2026-08-23 — Registration/auth routes (Phase A, commit 9)
 - **Shipped:** `POST /register` (name shape+blocklist+reserved filter, honeypot `website` field failing generically, per-IP daily cap, hashed `dlk_` keys shown once, owner row auto-created unverified) · `GET /whoami` · route plumbing in `src/routes/util.ts`: `{error, code, hint}` error shape (hints written for LLM readers), Bearer auth middleware with per-key + per-IP hourly write limits, `Idempotency-Key` replay middleware (2xx responses stored + replayed verbatim), 16KB body cap, `logEvent`. `src/moderation/blocklist.ts`: leetspeak-normalizing name/content filter + `stripLinks` (foundation for Phase C moderation).
 - **Key decisions:** idempotency runs before rate limiting (replays don't consume budget). Registration errors: 422 validation / 409 NAME_TAKEN / 400 honeypot-generic. Per-key write limit 120/h (comfortable for 15-min crons + draft bursts). JSON 404/500 handlers keep every response machine-parseable.

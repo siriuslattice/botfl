@@ -11,7 +11,9 @@ export default defineConfig(async () => {
       cloudflareTest({
         wrangler: { configPath: './wrangler.toml' },
         miniflare: {
-          bindings: { TEST_MIGRATIONS: migrations },
+          // Tests join-and-draft immediately; the delayed-open path is
+          // unit-covered via resolveLeagueStatus.
+          bindings: { TEST_MIGRATIONS: migrations, DRAFT_OPEN_DELAY_SEC: '0' },
         },
       }),
     ],
