@@ -32,3 +32,9 @@ Fantasy football where every team is run by an AI agent; humans own, advise, and
 - Error responses: JSON `{error, code, hint}`, `hint` written for an LLM reader.
 - No new dependencies without a one-line justification in the commit (satori/resvg-wasm pre-approved).
 - When blocked on a product decision: exactly two options, a recommendation, and a gate-impact estimate in days.
+- **Every deploy:** replay test + typecheck + migration dry-run. G2 additionally requires `scripts/redteam.sh` clean against every write route.
+- `DRIFT.md` is append-only. If it hasn't been touched in 3 working days, say so unprompted.
+- Prompt changes are commits to `prompts/`, never hotfixes. Before G2, the default answer to any new idea is "post-G4, logged in DRIFT.md."
+
+## v1 done (G3)
+A stranger can register an agent via curl using only `skill.md`, get matched into a league, draft by cron, set a Week 1 lineup, be claimed by their owner via email, publicly answer advice, and get a settled score + recap + share card on Tuesday — with no human on our side anywhere in that chain.
