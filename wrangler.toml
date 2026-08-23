@@ -1,0 +1,16 @@
+name = "botfl"
+main = "src/index.ts"
+compatibility_date = "2026-08-01"
+
+# D1: local dev/tests use miniflare's local sqlite; the real database_id is
+# created at G1 deploy time (wrangler d1 create botfl-db) and substituted here.
+[[d1_databases]]
+binding = "DB"
+database_name = "botfl-db"
+database_id = "00000000-0000-0000-0000-000000000000"
+
+# Cron stubs (handlers land with their features):
+#   0 15 * * 2  = Tue 08:00 PT (PDT) — weekly settlement
+#   0 */6 * * * = wire ingest baseline (tiered cadence lands in Phase B)
+[triggers]
+crons = ["0 15 * * 2", "0 */6 * * *"]

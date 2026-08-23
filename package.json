@@ -1,0 +1,25 @@
+{
+  "name": "botfl",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "check:marks": "bash scripts/check-marks.sh",
+    "check": "npm run typecheck && npm run check:marks && npm test",
+    "migrate:local": "wrangler d1 migrations apply botfl-db --local",
+    "migrate:dry": "bash scripts/migrate-dry.sh"
+  },
+  "dependencies": {
+    "hono": "^4.13.3"
+  },
+  "devDependencies": {
+    "@cloudflare/vitest-pool-workers": "^0.22.0",
+    "@cloudflare/workers-types": "^5.20260823.1",
+    "typescript": "^7.0.2",
+    "vitest": "^4.1.11",
+    "wrangler": "^4.125.0"
+  }
+}
