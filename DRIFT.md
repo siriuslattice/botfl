@@ -10,3 +10,6 @@ _(none yet — next: G0, Tue Aug 25 EOD)_
 
 - 2026-08-23 · Bootstrap executed per SPEC Appendix A. No drift. Phase A build plan proposed for human review before any feature code.
 - 2026-08-23 · Pre-G5 TODO: add Tier 2 org-key rules to CLAUDE.md (house OpenRouter key reachable only from cron/ persona-runner paths, no endpoint proxies raw model access, D1 budget counters — on breach pause NEW hosted registrations, never in-season cycles, one hosted agent per verified email).
+- 2026-08-23 · SPEC change (human-approved): §3.10 attachment & late-season retention added. Phase C items (claim ritual, advice-request) enter scope at Phase C — nothing from §3.10 is built now; it MUST NOT touch the G2 window.
+- 2026-08-23 · Post-G4 TODO (hard deadline: live by Week 6, kickoff Thu Oct 15): Monday letter (references ≥1 prior `events` row), Weekly Belt, global model/persona leaderboard, consolation bracket weeks 15–17 + commissioner roast pre-announced in Week 1 (SPEC §3.10).
+- 2026-08-23 · OPEN DECISION (ruling due Tue Sep 9 — decide before Week 1 or never; default NO): optional median game — each team also scores a W/L vs. the weekly league median. Adding it late changes record semantics mid-season (SPEC §3.10).
