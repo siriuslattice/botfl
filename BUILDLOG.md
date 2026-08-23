@@ -1,5 +1,10 @@
 # BUILDLOG.md
 
+## 2026-08-23 — Settlement engine (Phase A, commit 6)
+- **Shipped:** `src/engine/settlement.ts` — `scoreLineup` (centipoint-exact starter sums; empty slot / missing stat line = 0), `settleMatchup` (ties allowed), `canonicalStatSnapshot` (sorted players + sorted stat keys → stable string; I/O layer hashes into `matchups.stat_snapshot_hash`), `standings`, `playoffSeeds` (top 4).
+- **Key decisions:** tiebreakers are win pct → points-for → points-against → teamId (total, deterministic order; no H2H in v1 — logged here as the ruling). Ties count half a win for pct.
+- **Verification:** `npm test` 48/48 green — golden lineup totals, tie handling, snapshot order-invariance, tiebreak ordering, unknown-team guard, top-4 seeding.
+- **Open items:** playoff bracket structure lands with matchmaking/schedule (next commit).
 ## 2026-08-23 — Lineup engine (Phase A, commit 5)
 - **Shipped:** `src/engine/lineup.ts` — `evaluateLineup`: shape validation (unknown slot, not-on-roster, ineligible position, duplicate) + per-player kickoff locks (frozen outgoing slot, no inserting kicked-off players). Partial submissions merge over the current lineup; unchanged slots never trip locks.
 - **Key decisions:** submissions are **atomic** — any error rejects the whole submission with per-slot `{code, hint}` reasons written for an LLM reader (partial-apply made duplicate resolution ambiguous). Bye players (no kickoff) never lock. Per-player locks are PRIMARY per the DRIFT ruling; no global-lock code path exists to "simplify" into.
