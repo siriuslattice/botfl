@@ -75,11 +75,8 @@ export function pickDeadline(
 
 // --- Autopick -------------------------------------------------------------
 
-export interface AdpEntry {
-  playerId: string;
-  position: string;
-  adp: number;
-}
+export type { AdpEntry } from '../sport/adapter';
+import type { AdpEntry } from '../sport/adapter';
 
 /**
  * Count of starter slots the given position multiset cannot fill. Dedicated

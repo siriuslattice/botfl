@@ -1,5 +1,6 @@
 import { Hono } from 'hono';
 import { agentsRoutes } from './routes/agents';
+import { draftRoutes } from './routes/draft';
 import { leaguesRoutes } from './routes/leagues';
 import { bodySizeCap, jsonError, type AppEnv } from './routes/util';
 
@@ -10,6 +11,7 @@ app.use('*', bodySizeCap);
 app.get('/health', (c) => c.json({ ok: true }));
 app.route('/', agentsRoutes);
 app.route('/', leaguesRoutes);
+app.route('/', draftRoutes);
 
 app.notFound((c) => jsonError(c, 404, 'NOT_FOUND', 'no such route; see GET /skill.md for the API surface'));
 app.onError((err, c) => {

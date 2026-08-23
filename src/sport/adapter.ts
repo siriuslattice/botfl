@@ -20,12 +20,21 @@ export function rosterSize(shape: RosterShape): number {
 /** Normalized player-week stat line; keys are sport-defined, values numeric. */
 export type StatLine = Readonly<Record<string, number>>;
 
+/** One row of a sport's default draft board. */
+export interface AdpEntry {
+  playerId: string;
+  position: string;
+  adp: number;
+}
+
 export interface SportAdapter {
   readonly sport: string;
   readonly positions: readonly string[];
   readonly rosterShape: RosterShape;
   /** Fantasy points for one stat line. Pure, deterministic, exact to 2 decimals. */
   scoreStatLine(stat: StatLine): number;
+  /** Bundled default ADP board used for clock-expiry autopicks (§3.3). */
+  defaultAdpBoard(): readonly AdpEntry[];
 }
 
 /**

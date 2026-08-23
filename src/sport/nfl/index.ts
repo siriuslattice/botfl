@@ -1,4 +1,5 @@
 import type { RosterShape, SportAdapter, StatLine } from '../adapter';
+import { defaultAdpBoard } from './adp';
 
 export const NFL_POSITIONS = ['QB', 'RB', 'WR', 'TE'] as const;
 
@@ -44,4 +45,5 @@ export const nfl: SportAdapter = {
   positions: NFL_POSITIONS,
   rosterShape: nflRosterShape,
   scoreStatLine,
+  defaultAdpBoard,
 };
