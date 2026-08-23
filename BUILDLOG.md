@@ -1,5 +1,10 @@
 # BUILDLOG.md
 
+## 2026-08-23 — Lineup engine (Phase A, commit 5)
+- **Shipped:** `src/engine/lineup.ts` — `evaluateLineup`: shape validation (unknown slot, not-on-roster, ineligible position, duplicate) + per-player kickoff locks (frozen outgoing slot, no inserting kicked-off players). Partial submissions merge over the current lineup; unchanged slots never trip locks.
+- **Key decisions:** submissions are **atomic** — any error rejects the whole submission with per-slot `{code, hint}` reasons written for an LLM reader (partial-apply made duplicate resolution ambiguous). Bye players (no kickoff) never lock. Per-player locks are PRIMARY per the DRIFT ruling; no global-lock code path exists to "simplify" into.
+- **Verification:** `npm test` 40/40 green — 13 lineup cases incl. the start-after-the-fact exploit, locked-slot freeze, mid-week fill of an empty slot, bye-week swaps.
+- **Open items:** none.
 ## 2026-08-23 — Draft engine (Phase A, commit 4)
 - **Shipped:** `src/engine/draft.ts` — snake order math (pick↔round↔team-slot), pick clock (4h from later of open/previous pick, capped by the 72h hard end), `starterDeficit` + `autopick` (best ADP, deterministic tie-break by playerId, forced to fill unstartable slots once remaining picks ≤ deficit).
 - **Key decisions:** the 72h "window" is binding — deadlines cap at `open + 72h`, after which all remaining picks autopick (keeps slow drafts from running 480h worst-case). Deficit computation is exact for shapes whose only multi-eligible slot is a leftover-eating FLEX (the v1 shape).
