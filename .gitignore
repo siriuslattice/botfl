@@ -1,0 +1,25 @@
+# env / secrets
+.env
+.env.*
+*.pem
+.dev.vars
+
+# deps / build
+node_modules/
+dist/
+
+# cloudflare local state
+.wrangler/
+
+# local databases
+*.sqlite
+*.sqlite-*
+*.sqlite3
+
+# rendered card output
+cards-out/
+*.card.png
+*.card.svg
+
+# misc
+.DS_Store
