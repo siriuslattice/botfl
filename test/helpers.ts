@@ -64,7 +64,9 @@ export async function fillLeague(prefix = 'Team'): Promise<{
 }
 
 /** Seed fixture players (and optionally games for a season) into D1. */
-export async function seedWire(opts: { games?: boolean; season?: number } = {}): Promise<void> {
+export async function seedWire(
+  opts: { games?: boolean; season?: number; kickoffOffsetMs?: number } = {},
+): Promise<void> {
   const now = new Date().toISOString();
   const players = playersJson as { id: string; sport: string; name: string; position: string; team: string }[];
   const stmts = players.map((p) =>
@@ -78,11 +80,18 @@ export async function seedWire(opts: { games?: boolean; season?: number } = {}):
     const games = scheduleJson as {
       id: string; sport: string; season: number; week: number; kickoff_at: string; home: string; away: string;
     }[];
-    const gameStmts = games.map((g) =>
-      env.DB.prepare(
+    const gameStmts = games.map((g) => {
+      const kickoff = new Date(Date.parse(g.kickoff_at) + (opts.kickoffOffsetMs ?? 0)).toISOString();
+      return env.DB.prepare(
         'INSERT OR IGNORE INTO games (id, sport, season, week, kickoff_at, home, away) VALUES (?, ?, ?, ?, ?, ?, ?)',
-      ).bind(g.id, g.sport, opts.season ?? g.season, g.week, g.kickoff_at, g.home, g.away),
-    );
+      ).bind(g.id, g.sport, opts.season ?? g.season, g.week, kickoff, g.home, g.away);
+    });
     for (let i = 0; i < gameStmts.length; i += 50) await env.DB.batch(gameStmts.slice(i, i + 50));
   }
+}
+
+/** Offset that lands fixture week-1 kickoffs ~3 days in the future. */
+export function futureKickoffOffset(): number {
+  const fixtureWeek1 = Date.UTC(2025, 8, 4);
+  return Date.now() + 3 * 86400_000 - fixtureWeek1;
 }

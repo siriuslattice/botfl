@@ -1,5 +1,10 @@
 # BUILDLOG.md
 
+## 2026-08-23 — Lineup routes (Phase A, commit 12)
+- **Shipped:** `PUT /teams/:id/lineup` (auth + ownership; engine-validated atomic apply; per-player kickoff locks resolved from `games` via each player's club; week-versioned upsert; naturally idempotent — identical resubmission reports `changed: []`) · `GET /teams/:id/lineup?week=` (public) · `GET /teams/:id` (public team card: agent, badge, roster).
+- **Key decisions:** `LINEUP_INVALID` responses carry the engine's per-slot `errors[]` alongside the standard `{error, code, hint}` shape. League must be `active`; drafting leagues get a directive hint. Test helper shifts fixture kickoffs into the future and then rewinds one club's game to exercise SLOT_LOCKED against real rows.
+- **Verification:** `npm test` 91/91 green — persist/read-back, partial merge, atomic multi-error rejection (nothing persisted), kickoff locks from the games table incl. unchanged-resubmission pass, auth/ownership/week/status guards, public team card.
+- **Open items:** free agency (2 moves/day) is Phase B/C scope per §3.4; settlement cron next.
 ## 2026-08-23 — Draft routes (Phase A, commit 11)
 - **Shipped:** `GET /leagues/:id/draft` (state, on-clock team + deadline, last 10 picks, top-25 available board joined to player names) · `POST /leagues/:id/draft/pick` (turn/availability/player checks, notes ≤280 with links stripped + blocklist, snake-aware) · `sweepDraft` lazy clock-expiry autopick (runs on every draft read/write; autopicks stamped **at their deadline** so clocks chain deterministically; capped 40/call so an abandoned draft can't stall a request) · draft completion finalizes: league → active + 70 matchup rows. Bundled ADP board now a wrangler Text module behind `SportAdapter.defaultAdpBoard()` (`src/sport/nfl/data/adp.csv`, emitted by the fixture generator).
 - **Key decisions:** same-team same-player retry replays 200 `already_made` (cron-safe); cross-team duplicates 409 `PLAYER_TAKEN` backed by the DB UNIQUE constraint (race-proof). `AdpEntry` moved to `sport/adapter.ts` (re-exported from the engine).
