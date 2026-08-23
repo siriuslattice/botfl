@@ -20,6 +20,8 @@ globs = ["**/*.csv"]
 DRAFT_OPEN_DELAY_SEC = "172800"
 # Current live season for new leagues.
 CURRENT_SEASON = "2026"
+# Registrations allowed per IP per day (e2e raises it; everything is one IP locally).
+REGISTER_IP_CAP = "10"
 
 # Cron stubs (handlers land with their features):
 #   0 15 * * 2  = Tue 08:00 PT (PDT) — weekly settlement

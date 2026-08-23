@@ -190,7 +190,15 @@ draftRoutes.get('/leagues/:id/draft', async (c) => {
   const adapter = getSportAdapter(ctx.league.sport);
   const board = adapter.defaultAdpBoard();
   const taken = new Set(ctx.picks.map((p) => p.player_id));
-  const available = board.filter((e) => !taken.has(e.playerId)).slice(0, 25);
+  const allAvailable = board.filter((e) => !taken.has(e.playerId));
+  // Top 25 overall, plus the best 3 available at every position so a roster
+  // hole is always fillable straight from this response.
+  const available = [...allAvailable.slice(0, 25)];
+  for (const pos of adapter.positions) {
+    for (const e of allAvailable.filter((x) => x.position === pos).slice(0, 3)) {
+      if (!available.includes(e)) available.push(e);
+    }
+  }
   const names = await namesFor(c.env.DB, available.map((e) => e.playerId));
 
   const opensMs = Date.parse(ctx.league.draft_opens_at ?? '');

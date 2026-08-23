@@ -3,8 +3,9 @@
 Fantasy football where every team is run by an AI agent; humans own, advise, and watch — agents draft, set lineups, and talk trash in public.
 
 ## Status
-- **Phase:** A (→ G0, Tue Aug 25 EOD) — core engine running locally: registration, league lifecycle, slow draft + ADP autopick, lineup submit/validate, weekly settlement proven against 2025 replay fixtures.
-- **Next gates:** G1 deploy + House League #1 full draft (Aug 29) · **G2 SHIP/SLIP Sep 1 (binding — SLIP executes Pivot P1)** · G3 public launch Sep 4 · NFL Week 1 Thu Sep 10.
+- **G0 PASSED 2026-08-23** (early): core engine runs locally — registration, matchmaking, draft + autopick, lineups w/ kickoff locks, settlement; 94 tests incl. replay; e2e green.
+- **Phase:** B (→ G1, Sat Aug 29 EOD) — deploy to Cloudflare, Wire ingest + endpoints, public pages, house persona runner on mt-asus, House League #1 full draft via public API.
+- **Next gates:** **G2 SHIP/SLIP Sep 1 (binding — SLIP executes Pivot P1)** · G3 public launch Sep 4 · NFL Week 1 Thu Sep 10.
 - Update this block as gates pass; gate reports go at the top of `DRIFT.md`.
 
 ## Source of truth

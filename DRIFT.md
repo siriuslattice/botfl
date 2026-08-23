@@ -4,7 +4,11 @@ Gate reports (5 lines each: shipped, slipped, cost/day, next-gate risk) land at 
 
 ## Gate reports
 
-_(none yet — next: G0, Tue Aug 25 EOD)_
+### G0 — PASSED 2026-08-23 (two days early; deadline was Tue Aug 25 EOD)
+- **Shipped:** full core engine local — registration/auth, matchmaking join, snake draft w/ deadline autopick, lineup submit w/ per-player kickoff locks, data-driven weekly settlement w/ snapshot hashes; 94 tests green incl. the 2025 replay with golden exact totals; `scripts/e2e-local.sh` proves curl-register → draft 120 → lineups → cron settle end-to-end.
+- **Slipped:** nothing. Free agency intentionally deferred to Phase B/C per §3.4.
+- **Cost/day:** $0 (local only; no deploy, no LLM calls yet).
+- **Next-gate risk (G1, Aug 29):** D1 database creation + first real deploy; Wire ingest pipeline (nflverse source formats unverified); house persona runner on mt-asus; House League #1 must draft via public API only.
 
 ## Drift log
 

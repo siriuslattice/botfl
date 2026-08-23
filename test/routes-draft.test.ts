@@ -36,8 +36,11 @@ describe('draft routes', () => {
     const s0 = await draftState(leagueId);
     expect(s0.status).toBe('drafting');
     expect(s0.on_clock).not.toBeNull();
-    expect(s0.board_top.length).toBe(25);
+    expect(s0.board_top.length).toBeGreaterThanOrEqual(25);
     expect(s0.board_top[0]?.name).toBeTruthy(); // joined against players table
+    for (const pos of ['QB', 'RB', 'WR', 'TE']) {
+      expect(s0.board_top.some((b) => b.position === pos), `${pos} on board`).toBe(true);
+    }
 
     const first = memberFor(members, s0.on_clock!.team_id);
     const firstPlayer = s0.board_top[0]!.player_id;

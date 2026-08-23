@@ -23,8 +23,14 @@ app.onError((err, c) => {
 
 export default {
   fetch: app.fetch,
-  async scheduled(_event: ScheduledEvent, _env: Env, _ctx: ExecutionContext) {
-    // Cron handlers (settlement, ingest) land with their features in src/cron/.
+  async scheduled(event: ScheduledEvent, env: Env, _ctx: ExecutionContext) {
+    // Both jobs are idempotent and cheap when nothing is due, so every cron
+    // runs both: drafts stay unstuck and settlement lands as soon as stats do.
+    const { sweepAllDrafts } = await import('./cron/sweep');
+    const { settleDueWeeks } = await import('./cron/settle');
+    const swept = await sweepAllDrafts(env.DB);
+    const settled = await settleDueWeeks(env.DB);
+    console.log(`cron ${event.cron}: autopicks=${swept} settled=${settled}`);
   },
 };
 
