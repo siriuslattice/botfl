@@ -1,0 +1,1874 @@
+[
+ {
+  "id": "nfl:2025:1:C01-C32",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 1,
+  "kickoff_at": "2025-09-04T00:20:00.000Z",
+  "home": "C01",
+  "away": "C32"
+ },
+ {
+  "id": "nfl:2025:1:C20-C25",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 1,
+  "kickoff_at": "2025-09-07T17:00:00.000Z",
+  "home": "C20",
+  "away": "C25"
+ },
+ {
+  "id": "nfl:2025:1:C26-C12",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 1,
+  "kickoff_at": "2025-09-07T17:00:00.000Z",
+  "home": "C26",
+  "away": "C12"
+ },
+ {
+  "id": "nfl:2025:1:C27-C15",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 1,
+  "kickoff_at": "2025-09-07T17:00:00.000Z",
+  "home": "C27",
+  "away": "C15"
+ },
+ {
+  "id": "nfl:2025:1:C31-C02",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 1,
+  "kickoff_at": "2025-09-07T17:00:00.000Z",
+  "home": "C31",
+  "away": "C02"
+ },
+ {
+  "id": "nfl:2025:1:C13-C09",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 1,
+  "kickoff_at": "2025-09-07T17:00:00.000Z",
+  "home": "C13",
+  "away": "C09"
+ },
+ {
+  "id": "nfl:2025:1:C04-C06",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 1,
+  "kickoff_at": "2025-09-07T17:00:00.000Z",
+  "home": "C04",
+  "away": "C06"
+ },
+ {
+  "id": "nfl:2025:1:C24-C05",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 1,
+  "kickoff_at": "2025-09-07T17:00:00.000Z",
+  "home": "C24",
+  "away": "C05"
+ },
+ {
+  "id": "nfl:2025:1:C22-C11",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 1,
+  "kickoff_at": "2025-09-07T17:00:00.000Z",
+  "home": "C22",
+  "away": "C11"
+ },
+ {
+  "id": "nfl:2025:1:C07-C28",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 1,
+  "kickoff_at": "2025-09-07T17:00:00.000Z",
+  "home": "C07",
+  "away": "C28"
+ },
+ {
+  "id": "nfl:2025:1:C29-C30",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 1,
+  "kickoff_at": "2025-09-07T17:00:00.000Z",
+  "home": "C29",
+  "away": "C30"
+ },
+ {
+  "id": "nfl:2025:1:C21-C19",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 1,
+  "kickoff_at": "2025-09-07T17:00:00.000Z",
+  "home": "C21",
+  "away": "C19"
+ },
+ {
+  "id": "nfl:2025:1:C08-C16",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 1,
+  "kickoff_at": "2025-09-07T17:00:00.000Z",
+  "home": "C08",
+  "away": "C16"
+ },
+ {
+  "id": "nfl:2025:1:C18-C10",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 1,
+  "kickoff_at": "2025-09-07T17:00:00.000Z",
+  "home": "C18",
+  "away": "C10"
+ },
+ {
+  "id": "nfl:2025:1:C14-C17",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 1,
+  "kickoff_at": "2025-09-07T17:00:00.000Z",
+  "home": "C14",
+  "away": "C17"
+ },
+ {
+  "id": "nfl:2025:1:C23-C03",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 1,
+  "kickoff_at": "2025-09-08T00:15:00.000Z",
+  "home": "C23",
+  "away": "C03"
+ },
+ {
+  "id": "nfl:2025:2:C16-C23",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 2,
+  "kickoff_at": "2025-09-11T00:20:00.000Z",
+  "home": "C16",
+  "away": "C23"
+ },
+ {
+  "id": "nfl:2025:2:C11-C03",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 2,
+  "kickoff_at": "2025-09-14T17:00:00.000Z",
+  "home": "C11",
+  "away": "C03"
+ },
+ {
+  "id": "nfl:2025:2:C21-C29",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 2,
+  "kickoff_at": "2025-09-14T17:00:00.000Z",
+  "home": "C21",
+  "away": "C29"
+ },
+ {
+  "id": "nfl:2025:2:C14-C25",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 2,
+  "kickoff_at": "2025-09-14T17:00:00.000Z",
+  "home": "C14",
+  "away": "C25"
+ },
+ {
+  "id": "nfl:2025:2:C07-C30",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 2,
+  "kickoff_at": "2025-09-14T17:00:00.000Z",
+  "home": "C07",
+  "away": "C30"
+ },
+ {
+  "id": "nfl:2025:2:C31-C28",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 2,
+  "kickoff_at": "2025-09-14T17:00:00.000Z",
+  "home": "C31",
+  "away": "C28"
+ },
+ {
+  "id": "nfl:2025:2:C24-C12",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 2,
+  "kickoff_at": "2025-09-14T17:00:00.000Z",
+  "home": "C24",
+  "away": "C12"
+ },
+ {
+  "id": "nfl:2025:2:C22-C18",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 2,
+  "kickoff_at": "2025-09-14T17:00:00.000Z",
+  "home": "C22",
+  "away": "C18"
+ },
+ {
+  "id": "nfl:2025:2:C15-C32",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 2,
+  "kickoff_at": "2025-09-14T17:00:00.000Z",
+  "home": "C15",
+  "away": "C32"
+ },
+ {
+  "id": "nfl:2025:2:C10-C20",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 2,
+  "kickoff_at": "2025-09-14T17:00:00.000Z",
+  "home": "C10",
+  "away": "C20"
+ },
+ {
+  "id": "nfl:2025:2:C09-C26",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 2,
+  "kickoff_at": "2025-09-14T17:00:00.000Z",
+  "home": "C09",
+  "away": "C26"
+ },
+ {
+  "id": "nfl:2025:2:C06-C05",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 2,
+  "kickoff_at": "2025-09-14T17:00:00.000Z",
+  "home": "C06",
+  "away": "C05"
+ },
+ {
+  "id": "nfl:2025:2:C19-C04",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 2,
+  "kickoff_at": "2025-09-14T17:00:00.000Z",
+  "home": "C19",
+  "away": "C04"
+ },
+ {
+  "id": "nfl:2025:2:C01-C17",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 2,
+  "kickoff_at": "2025-09-14T17:00:00.000Z",
+  "home": "C01",
+  "away": "C17"
+ },
+ {
+  "id": "nfl:2025:2:C02-C08",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 2,
+  "kickoff_at": "2025-09-14T17:00:00.000Z",
+  "home": "C02",
+  "away": "C08"
+ },
+ {
+  "id": "nfl:2025:2:C27-C13",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 2,
+  "kickoff_at": "2025-09-15T00:15:00.000Z",
+  "home": "C27",
+  "away": "C13"
+ },
+ {
+  "id": "nfl:2025:3:C02-C14",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 3,
+  "kickoff_at": "2025-09-18T00:20:00.000Z",
+  "home": "C02",
+  "away": "C14"
+ },
+ {
+  "id": "nfl:2025:3:C23-C29",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 3,
+  "kickoff_at": "2025-09-21T17:00:00.000Z",
+  "home": "C23",
+  "away": "C29"
+ },
+ {
+  "id": "nfl:2025:3:C27-C12",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 3,
+  "kickoff_at": "2025-09-21T17:00:00.000Z",
+  "home": "C27",
+  "away": "C12"
+ },
+ {
+  "id": "nfl:2025:3:C04-C08",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 3,
+  "kickoff_at": "2025-09-21T17:00:00.000Z",
+  "home": "C04",
+  "away": "C08"
+ },
+ {
+  "id": "nfl:2025:3:C09-C30",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 3,
+  "kickoff_at": "2025-09-21T17:00:00.000Z",
+  "home": "C09",
+  "away": "C30"
+ },
+ {
+  "id": "nfl:2025:3:C01-C17",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 3,
+  "kickoff_at": "2025-09-21T17:00:00.000Z",
+  "home": "C01",
+  "away": "C17"
+ },
+ {
+  "id": "nfl:2025:3:C31-C06",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 3,
+  "kickoff_at": "2025-09-21T17:00:00.000Z",
+  "home": "C31",
+  "away": "C06"
+ },
+ {
+  "id": "nfl:2025:3:C13-C10",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 3,
+  "kickoff_at": "2025-09-21T17:00:00.000Z",
+  "home": "C13",
+  "away": "C10"
+ },
+ {
+  "id": "nfl:2025:3:C07-C22",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 3,
+  "kickoff_at": "2025-09-21T17:00:00.000Z",
+  "home": "C07",
+  "away": "C22"
+ },
+ {
+  "id": "nfl:2025:3:C24-C05",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 3,
+  "kickoff_at": "2025-09-21T17:00:00.000Z",
+  "home": "C24",
+  "away": "C05"
+ },
+ {
+  "id": "nfl:2025:3:C18-C16",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 3,
+  "kickoff_at": "2025-09-21T17:00:00.000Z",
+  "home": "C18",
+  "away": "C16"
+ },
+ {
+  "id": "nfl:2025:3:C28-C03",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 3,
+  "kickoff_at": "2025-09-21T17:00:00.000Z",
+  "home": "C28",
+  "away": "C03"
+ },
+ {
+  "id": "nfl:2025:3:C21-C25",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 3,
+  "kickoff_at": "2025-09-21T17:00:00.000Z",
+  "home": "C21",
+  "away": "C25"
+ },
+ {
+  "id": "nfl:2025:3:C11-C32",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 3,
+  "kickoff_at": "2025-09-21T17:00:00.000Z",
+  "home": "C11",
+  "away": "C32"
+ },
+ {
+  "id": "nfl:2025:3:C15-C19",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 3,
+  "kickoff_at": "2025-09-21T17:00:00.000Z",
+  "home": "C15",
+  "away": "C19"
+ },
+ {
+  "id": "nfl:2025:3:C20-C26",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 3,
+  "kickoff_at": "2025-09-22T00:15:00.000Z",
+  "home": "C20",
+  "away": "C26"
+ },
+ {
+  "id": "nfl:2025:4:C17-C21",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 4,
+  "kickoff_at": "2025-09-25T00:20:00.000Z",
+  "home": "C17",
+  "away": "C21"
+ },
+ {
+  "id": "nfl:2025:4:C18-C30",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 4,
+  "kickoff_at": "2025-09-28T17:00:00.000Z",
+  "home": "C18",
+  "away": "C30"
+ },
+ {
+  "id": "nfl:2025:4:C32-C02",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 4,
+  "kickoff_at": "2025-09-28T17:00:00.000Z",
+  "home": "C32",
+  "away": "C02"
+ },
+ {
+  "id": "nfl:2025:4:C01-C05",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 4,
+  "kickoff_at": "2025-09-28T17:00:00.000Z",
+  "home": "C01",
+  "away": "C05"
+ },
+ {
+  "id": "nfl:2025:4:C12-C13",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 4,
+  "kickoff_at": "2025-09-28T17:00:00.000Z",
+  "home": "C12",
+  "away": "C13"
+ },
+ {
+  "id": "nfl:2025:4:C03-C25",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 4,
+  "kickoff_at": "2025-09-28T17:00:00.000Z",
+  "home": "C03",
+  "away": "C25"
+ },
+ {
+  "id": "nfl:2025:4:C14-C07",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 4,
+  "kickoff_at": "2025-09-28T17:00:00.000Z",
+  "home": "C14",
+  "away": "C07"
+ },
+ {
+  "id": "nfl:2025:4:C29-C26",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 4,
+  "kickoff_at": "2025-09-28T17:00:00.000Z",
+  "home": "C29",
+  "away": "C26"
+ },
+ {
+  "id": "nfl:2025:4:C19-C22",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 4,
+  "kickoff_at": "2025-09-28T17:00:00.000Z",
+  "home": "C19",
+  "away": "C22"
+ },
+ {
+  "id": "nfl:2025:4:C11-C04",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 4,
+  "kickoff_at": "2025-09-28T17:00:00.000Z",
+  "home": "C11",
+  "away": "C04"
+ },
+ {
+  "id": "nfl:2025:4:C16-C28",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 4,
+  "kickoff_at": "2025-09-28T17:00:00.000Z",
+  "home": "C16",
+  "away": "C28"
+ },
+ {
+  "id": "nfl:2025:4:C15-C24",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 4,
+  "kickoff_at": "2025-09-28T17:00:00.000Z",
+  "home": "C15",
+  "away": "C24"
+ },
+ {
+  "id": "nfl:2025:4:C23-C27",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 4,
+  "kickoff_at": "2025-09-28T17:00:00.000Z",
+  "home": "C23",
+  "away": "C27"
+ },
+ {
+  "id": "nfl:2025:4:C06-C09",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 4,
+  "kickoff_at": "2025-09-28T17:00:00.000Z",
+  "home": "C06",
+  "away": "C09"
+ },
+ {
+  "id": "nfl:2025:4:C08-C20",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 4,
+  "kickoff_at": "2025-09-28T17:00:00.000Z",
+  "home": "C08",
+  "away": "C20"
+ },
+ {
+  "id": "nfl:2025:4:C31-C10",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 4,
+  "kickoff_at": "2025-09-29T00:15:00.000Z",
+  "home": "C31",
+  "away": "C10"
+ },
+ {
+  "id": "nfl:2025:5:C22-C07",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 5,
+  "kickoff_at": "2025-10-02T00:20:00.000Z",
+  "home": "C22",
+  "away": "C07"
+ },
+ {
+  "id": "nfl:2025:5:C04-C31",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 5,
+  "kickoff_at": "2025-10-05T17:00:00.000Z",
+  "home": "C04",
+  "away": "C31"
+ },
+ {
+  "id": "nfl:2025:5:C12-C09",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 5,
+  "kickoff_at": "2025-10-05T17:00:00.000Z",
+  "home": "C12",
+  "away": "C09"
+ },
+ {
+  "id": "nfl:2025:5:C21-C25",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 5,
+  "kickoff_at": "2025-10-05T17:00:00.000Z",
+  "home": "C21",
+  "away": "C25"
+ },
+ {
+  "id": "nfl:2025:5:C18-C15",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 5,
+  "kickoff_at": "2025-10-05T17:00:00.000Z",
+  "home": "C18",
+  "away": "C15"
+ },
+ {
+  "id": "nfl:2025:5:C06-C19",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 5,
+  "kickoff_at": "2025-10-05T17:00:00.000Z",
+  "home": "C06",
+  "away": "C19"
+ },
+ {
+  "id": "nfl:2025:5:C24-C27",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 5,
+  "kickoff_at": "2025-10-05T17:00:00.000Z",
+  "home": "C24",
+  "away": "C27"
+ },
+ {
+  "id": "nfl:2025:5:C03-C17",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 5,
+  "kickoff_at": "2025-10-05T17:00:00.000Z",
+  "home": "C03",
+  "away": "C17"
+ },
+ {
+  "id": "nfl:2025:5:C16-C10",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 5,
+  "kickoff_at": "2025-10-05T17:00:00.000Z",
+  "home": "C16",
+  "away": "C10"
+ },
+ {
+  "id": "nfl:2025:5:C32-C26",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 5,
+  "kickoff_at": "2025-10-05T17:00:00.000Z",
+  "home": "C32",
+  "away": "C26"
+ },
+ {
+  "id": "nfl:2025:5:C05-C11",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 5,
+  "kickoff_at": "2025-10-05T17:00:00.000Z",
+  "home": "C05",
+  "away": "C11"
+ },
+ {
+  "id": "nfl:2025:5:C20-C02",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 5,
+  "kickoff_at": "2025-10-05T17:00:00.000Z",
+  "home": "C20",
+  "away": "C02"
+ },
+ {
+  "id": "nfl:2025:5:C14-C01",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 5,
+  "kickoff_at": "2025-10-05T17:00:00.000Z",
+  "home": "C14",
+  "away": "C01"
+ },
+ {
+  "id": "nfl:2025:5:C08-C23",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 5,
+  "kickoff_at": "2025-10-06T00:15:00.000Z",
+  "home": "C08",
+  "away": "C23"
+ },
+ {
+  "id": "nfl:2025:6:C11-C28",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 6,
+  "kickoff_at": "2025-10-09T00:20:00.000Z",
+  "home": "C11",
+  "away": "C28"
+ },
+ {
+  "id": "nfl:2025:6:C30-C08",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 6,
+  "kickoff_at": "2025-10-12T17:00:00.000Z",
+  "home": "C30",
+  "away": "C08"
+ },
+ {
+  "id": "nfl:2025:6:C20-C09",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 6,
+  "kickoff_at": "2025-10-12T17:00:00.000Z",
+  "home": "C20",
+  "away": "C09"
+ },
+ {
+  "id": "nfl:2025:6:C24-C27",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 6,
+  "kickoff_at": "2025-10-12T17:00:00.000Z",
+  "home": "C24",
+  "away": "C27"
+ },
+ {
+  "id": "nfl:2025:6:C01-C32",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 6,
+  "kickoff_at": "2025-10-12T17:00:00.000Z",
+  "home": "C01",
+  "away": "C32"
+ },
+ {
+  "id": "nfl:2025:6:C05-C14",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 6,
+  "kickoff_at": "2025-10-12T17:00:00.000Z",
+  "home": "C05",
+  "away": "C14"
+ },
+ {
+  "id": "nfl:2025:6:C22-C16",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 6,
+  "kickoff_at": "2025-10-12T17:00:00.000Z",
+  "home": "C22",
+  "away": "C16"
+ },
+ {
+  "id": "nfl:2025:6:C19-C07",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 6,
+  "kickoff_at": "2025-10-12T17:00:00.000Z",
+  "home": "C19",
+  "away": "C07"
+ },
+ {
+  "id": "nfl:2025:6:C13-C12",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 6,
+  "kickoff_at": "2025-10-12T17:00:00.000Z",
+  "home": "C13",
+  "away": "C12"
+ },
+ {
+  "id": "nfl:2025:6:C04-C06",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 6,
+  "kickoff_at": "2025-10-12T17:00:00.000Z",
+  "home": "C04",
+  "away": "C06"
+ },
+ {
+  "id": "nfl:2025:6:C10-C23",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 6,
+  "kickoff_at": "2025-10-12T17:00:00.000Z",
+  "home": "C10",
+  "away": "C23"
+ },
+ {
+  "id": "nfl:2025:6:C21-C29",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 6,
+  "kickoff_at": "2025-10-12T17:00:00.000Z",
+  "home": "C21",
+  "away": "C29"
+ },
+ {
+  "id": "nfl:2025:6:C26-C15",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 6,
+  "kickoff_at": "2025-10-12T17:00:00.000Z",
+  "home": "C26",
+  "away": "C15"
+ },
+ {
+  "id": "nfl:2025:6:C31-C25",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 6,
+  "kickoff_at": "2025-10-13T00:15:00.000Z",
+  "home": "C31",
+  "away": "C25"
+ },
+ {
+  "id": "nfl:2025:7:C06-C27",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 7,
+  "kickoff_at": "2025-10-16T00:20:00.000Z",
+  "home": "C06",
+  "away": "C27"
+ },
+ {
+  "id": "nfl:2025:7:C13-C07",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 7,
+  "kickoff_at": "2025-10-19T17:00:00.000Z",
+  "home": "C13",
+  "away": "C07"
+ },
+ {
+  "id": "nfl:2025:7:C05-C10",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 7,
+  "kickoff_at": "2025-10-19T17:00:00.000Z",
+  "home": "C05",
+  "away": "C10"
+ },
+ {
+  "id": "nfl:2025:7:C03-C21",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 7,
+  "kickoff_at": "2025-10-19T17:00:00.000Z",
+  "home": "C03",
+  "away": "C21"
+ },
+ {
+  "id": "nfl:2025:7:C29-C19",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 7,
+  "kickoff_at": "2025-10-19T17:00:00.000Z",
+  "home": "C29",
+  "away": "C19"
+ },
+ {
+  "id": "nfl:2025:7:C02-C22",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 7,
+  "kickoff_at": "2025-10-19T17:00:00.000Z",
+  "home": "C02",
+  "away": "C22"
+ },
+ {
+  "id": "nfl:2025:7:C16-C28",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 7,
+  "kickoff_at": "2025-10-19T17:00:00.000Z",
+  "home": "C16",
+  "away": "C28"
+ },
+ {
+  "id": "nfl:2025:7:C18-C11",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 7,
+  "kickoff_at": "2025-10-19T17:00:00.000Z",
+  "home": "C18",
+  "away": "C11"
+ },
+ {
+  "id": "nfl:2025:7:C20-C15",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 7,
+  "kickoff_at": "2025-10-19T17:00:00.000Z",
+  "home": "C20",
+  "away": "C15"
+ },
+ {
+  "id": "nfl:2025:7:C04-C08",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 7,
+  "kickoff_at": "2025-10-19T17:00:00.000Z",
+  "home": "C04",
+  "away": "C08"
+ },
+ {
+  "id": "nfl:2025:7:C01-C14",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 7,
+  "kickoff_at": "2025-10-19T17:00:00.000Z",
+  "home": "C01",
+  "away": "C14"
+ },
+ {
+  "id": "nfl:2025:7:C09-C30",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 7,
+  "kickoff_at": "2025-10-19T17:00:00.000Z",
+  "home": "C09",
+  "away": "C30"
+ },
+ {
+  "id": "nfl:2025:7:C17-C26",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 7,
+  "kickoff_at": "2025-10-19T17:00:00.000Z",
+  "home": "C17",
+  "away": "C26"
+ },
+ {
+  "id": "nfl:2025:7:C23-C32",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 7,
+  "kickoff_at": "2025-10-20T00:15:00.000Z",
+  "home": "C23",
+  "away": "C32"
+ },
+ {
+  "id": "nfl:2025:8:C08-C02",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 8,
+  "kickoff_at": "2025-10-23T00:20:00.000Z",
+  "home": "C08",
+  "away": "C02"
+ },
+ {
+  "id": "nfl:2025:8:C18-C12",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 8,
+  "kickoff_at": "2025-10-26T17:00:00.000Z",
+  "home": "C18",
+  "away": "C12"
+ },
+ {
+  "id": "nfl:2025:8:C15-C20",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 8,
+  "kickoff_at": "2025-10-26T17:00:00.000Z",
+  "home": "C15",
+  "away": "C20"
+ },
+ {
+  "id": "nfl:2025:8:C17-C03",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 8,
+  "kickoff_at": "2025-10-26T17:00:00.000Z",
+  "home": "C17",
+  "away": "C03"
+ },
+ {
+  "id": "nfl:2025:8:C09-C16",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 8,
+  "kickoff_at": "2025-10-26T17:00:00.000Z",
+  "home": "C09",
+  "away": "C16"
+ },
+ {
+  "id": "nfl:2025:8:C13-C22",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 8,
+  "kickoff_at": "2025-10-26T17:00:00.000Z",
+  "home": "C13",
+  "away": "C22"
+ },
+ {
+  "id": "nfl:2025:8:C14-C29",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 8,
+  "kickoff_at": "2025-10-26T17:00:00.000Z",
+  "home": "C14",
+  "away": "C29"
+ },
+ {
+  "id": "nfl:2025:8:C04-C25",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 8,
+  "kickoff_at": "2025-10-26T17:00:00.000Z",
+  "home": "C04",
+  "away": "C25"
+ },
+ {
+  "id": "nfl:2025:8:C05-C11",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 8,
+  "kickoff_at": "2025-10-26T17:00:00.000Z",
+  "home": "C05",
+  "away": "C11"
+ },
+ {
+  "id": "nfl:2025:8:C27-C32",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 8,
+  "kickoff_at": "2025-10-26T17:00:00.000Z",
+  "home": "C27",
+  "away": "C32"
+ },
+ {
+  "id": "nfl:2025:8:C26-C31",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 8,
+  "kickoff_at": "2025-10-26T17:00:00.000Z",
+  "home": "C26",
+  "away": "C31"
+ },
+ {
+  "id": "nfl:2025:8:C30-C24",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 8,
+  "kickoff_at": "2025-10-26T17:00:00.000Z",
+  "home": "C30",
+  "away": "C24"
+ },
+ {
+  "id": "nfl:2025:8:C21-C28",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 8,
+  "kickoff_at": "2025-10-26T17:00:00.000Z",
+  "home": "C21",
+  "away": "C28"
+ },
+ {
+  "id": "nfl:2025:8:C19-C06",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 8,
+  "kickoff_at": "2025-10-27T00:15:00.000Z",
+  "home": "C19",
+  "away": "C06"
+ },
+ {
+  "id": "nfl:2025:9:C11-C26",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 9,
+  "kickoff_at": "2025-10-30T00:20:00.000Z",
+  "home": "C11",
+  "away": "C26"
+ },
+ {
+  "id": "nfl:2025:9:C15-C23",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 9,
+  "kickoff_at": "2025-11-02T17:00:00.000Z",
+  "home": "C15",
+  "away": "C23"
+ },
+ {
+  "id": "nfl:2025:9:C12-C31",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 9,
+  "kickoff_at": "2025-11-02T17:00:00.000Z",
+  "home": "C12",
+  "away": "C31"
+ },
+ {
+  "id": "nfl:2025:9:C10-C21",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 9,
+  "kickoff_at": "2025-11-02T17:00:00.000Z",
+  "home": "C10",
+  "away": "C21"
+ },
+ {
+  "id": "nfl:2025:9:C14-C30",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 9,
+  "kickoff_at": "2025-11-02T17:00:00.000Z",
+  "home": "C14",
+  "away": "C30"
+ },
+ {
+  "id": "nfl:2025:9:C03-C16",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 9,
+  "kickoff_at": "2025-11-02T17:00:00.000Z",
+  "home": "C03",
+  "away": "C16"
+ },
+ {
+  "id": "nfl:2025:9:C20-C08",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 9,
+  "kickoff_at": "2025-11-02T17:00:00.000Z",
+  "home": "C20",
+  "away": "C08"
+ },
+ {
+  "id": "nfl:2025:9:C07-C17",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 9,
+  "kickoff_at": "2025-11-02T17:00:00.000Z",
+  "home": "C07",
+  "away": "C17"
+ },
+ {
+  "id": "nfl:2025:9:C28-C25",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 9,
+  "kickoff_at": "2025-11-02T17:00:00.000Z",
+  "home": "C28",
+  "away": "C25"
+ },
+ {
+  "id": "nfl:2025:9:C29-C01",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 9,
+  "kickoff_at": "2025-11-02T17:00:00.000Z",
+  "home": "C29",
+  "away": "C01"
+ },
+ {
+  "id": "nfl:2025:9:C32-C06",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 9,
+  "kickoff_at": "2025-11-02T17:00:00.000Z",
+  "home": "C32",
+  "away": "C06"
+ },
+ {
+  "id": "nfl:2025:9:C24-C18",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 9,
+  "kickoff_at": "2025-11-02T17:00:00.000Z",
+  "home": "C24",
+  "away": "C18"
+ },
+ {
+  "id": "nfl:2025:9:C05-C13",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 9,
+  "kickoff_at": "2025-11-02T17:00:00.000Z",
+  "home": "C05",
+  "away": "C13"
+ },
+ {
+  "id": "nfl:2025:9:C19-C02",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 9,
+  "kickoff_at": "2025-11-03T00:15:00.000Z",
+  "home": "C19",
+  "away": "C02"
+ },
+ {
+  "id": "nfl:2025:10:C20-C13",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 10,
+  "kickoff_at": "2025-11-06T00:20:00.000Z",
+  "home": "C20",
+  "away": "C13"
+ },
+ {
+  "id": "nfl:2025:10:C25-C14",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 10,
+  "kickoff_at": "2025-11-09T17:00:00.000Z",
+  "home": "C25",
+  "away": "C14"
+ },
+ {
+  "id": "nfl:2025:10:C18-C26",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 10,
+  "kickoff_at": "2025-11-09T17:00:00.000Z",
+  "home": "C18",
+  "away": "C26"
+ },
+ {
+  "id": "nfl:2025:10:C29-C30",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 10,
+  "kickoff_at": "2025-11-09T17:00:00.000Z",
+  "home": "C29",
+  "away": "C30"
+ },
+ {
+  "id": "nfl:2025:10:C15-C03",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 10,
+  "kickoff_at": "2025-11-09T17:00:00.000Z",
+  "home": "C15",
+  "away": "C03"
+ },
+ {
+  "id": "nfl:2025:10:C01-C17",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 10,
+  "kickoff_at": "2025-11-09T17:00:00.000Z",
+  "home": "C01",
+  "away": "C17"
+ },
+ {
+  "id": "nfl:2025:10:C24-C22",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 10,
+  "kickoff_at": "2025-11-09T17:00:00.000Z",
+  "home": "C24",
+  "away": "C22"
+ },
+ {
+  "id": "nfl:2025:10:C02-C32",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 10,
+  "kickoff_at": "2025-11-09T17:00:00.000Z",
+  "home": "C02",
+  "away": "C32"
+ },
+ {
+  "id": "nfl:2025:10:C10-C08",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 10,
+  "kickoff_at": "2025-11-09T17:00:00.000Z",
+  "home": "C10",
+  "away": "C08"
+ },
+ {
+  "id": "nfl:2025:10:C27-C12",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 10,
+  "kickoff_at": "2025-11-09T17:00:00.000Z",
+  "home": "C27",
+  "away": "C12"
+ },
+ {
+  "id": "nfl:2025:10:C05-C07",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 10,
+  "kickoff_at": "2025-11-09T17:00:00.000Z",
+  "home": "C05",
+  "away": "C07"
+ },
+ {
+  "id": "nfl:2025:10:C09-C28",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 10,
+  "kickoff_at": "2025-11-09T17:00:00.000Z",
+  "home": "C09",
+  "away": "C28"
+ },
+ {
+  "id": "nfl:2025:10:C16-C31",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 10,
+  "kickoff_at": "2025-11-09T17:00:00.000Z",
+  "home": "C16",
+  "away": "C31"
+ },
+ {
+  "id": "nfl:2025:10:C04-C23",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 10,
+  "kickoff_at": "2025-11-10T00:15:00.000Z",
+  "home": "C04",
+  "away": "C23"
+ },
+ {
+  "id": "nfl:2025:11:C24-C28",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 11,
+  "kickoff_at": "2025-11-13T00:20:00.000Z",
+  "home": "C24",
+  "away": "C28"
+ },
+ {
+  "id": "nfl:2025:11:C26-C12",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 11,
+  "kickoff_at": "2025-11-16T17:00:00.000Z",
+  "home": "C26",
+  "away": "C12"
+ },
+ {
+  "id": "nfl:2025:11:C22-C01",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 11,
+  "kickoff_at": "2025-11-16T17:00:00.000Z",
+  "home": "C22",
+  "away": "C01"
+ },
+ {
+  "id": "nfl:2025:11:C20-C29",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 11,
+  "kickoff_at": "2025-11-16T17:00:00.000Z",
+  "home": "C20",
+  "away": "C29"
+ },
+ {
+  "id": "nfl:2025:11:C13-C21",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 11,
+  "kickoff_at": "2025-11-16T17:00:00.000Z",
+  "home": "C13",
+  "away": "C21"
+ },
+ {
+  "id": "nfl:2025:11:C03-C32",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 11,
+  "kickoff_at": "2025-11-16T17:00:00.000Z",
+  "home": "C03",
+  "away": "C32"
+ },
+ {
+  "id": "nfl:2025:11:C27-C02",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 11,
+  "kickoff_at": "2025-11-16T17:00:00.000Z",
+  "home": "C27",
+  "away": "C02"
+ },
+ {
+  "id": "nfl:2025:11:C09-C31",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 11,
+  "kickoff_at": "2025-11-16T17:00:00.000Z",
+  "home": "C09",
+  "away": "C31"
+ },
+ {
+  "id": "nfl:2025:11:C04-C11",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 11,
+  "kickoff_at": "2025-11-16T17:00:00.000Z",
+  "home": "C04",
+  "away": "C11"
+ },
+ {
+  "id": "nfl:2025:11:C06-C14",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 11,
+  "kickoff_at": "2025-11-16T17:00:00.000Z",
+  "home": "C06",
+  "away": "C14"
+ },
+ {
+  "id": "nfl:2025:11:C18-C10",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 11,
+  "kickoff_at": "2025-11-16T17:00:00.000Z",
+  "home": "C18",
+  "away": "C10"
+ },
+ {
+  "id": "nfl:2025:11:C19-C17",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 11,
+  "kickoff_at": "2025-11-16T17:00:00.000Z",
+  "home": "C19",
+  "away": "C17"
+ },
+ {
+  "id": "nfl:2025:11:C25-C23",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 11,
+  "kickoff_at": "2025-11-16T17:00:00.000Z",
+  "home": "C25",
+  "away": "C23"
+ },
+ {
+  "id": "nfl:2025:11:C07-C30",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 11,
+  "kickoff_at": "2025-11-17T00:15:00.000Z",
+  "home": "C07",
+  "away": "C30"
+ },
+ {
+  "id": "nfl:2025:12:C24-C28",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 12,
+  "kickoff_at": "2025-11-20T00:20:00.000Z",
+  "home": "C24",
+  "away": "C28"
+ },
+ {
+  "id": "nfl:2025:12:C31-C15",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 12,
+  "kickoff_at": "2025-11-23T17:00:00.000Z",
+  "home": "C31",
+  "away": "C15"
+ },
+ {
+  "id": "nfl:2025:12:C01-C07",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 12,
+  "kickoff_at": "2025-11-23T17:00:00.000Z",
+  "home": "C01",
+  "away": "C07"
+ },
+ {
+  "id": "nfl:2025:12:C02-C18",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 12,
+  "kickoff_at": "2025-11-23T17:00:00.000Z",
+  "home": "C02",
+  "away": "C18"
+ },
+ {
+  "id": "nfl:2025:12:C27-C08",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 12,
+  "kickoff_at": "2025-11-23T17:00:00.000Z",
+  "home": "C27",
+  "away": "C08"
+ },
+ {
+  "id": "nfl:2025:12:C21-C12",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 12,
+  "kickoff_at": "2025-11-23T17:00:00.000Z",
+  "home": "C21",
+  "away": "C12"
+ },
+ {
+  "id": "nfl:2025:12:C19-C29",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 12,
+  "kickoff_at": "2025-11-23T17:00:00.000Z",
+  "home": "C19",
+  "away": "C29"
+ },
+ {
+  "id": "nfl:2025:12:C25-C10",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 12,
+  "kickoff_at": "2025-11-23T17:00:00.000Z",
+  "home": "C25",
+  "away": "C10"
+ },
+ {
+  "id": "nfl:2025:12:C16-C23",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 12,
+  "kickoff_at": "2025-11-23T17:00:00.000Z",
+  "home": "C16",
+  "away": "C23"
+ },
+ {
+  "id": "nfl:2025:12:C11-C30",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 12,
+  "kickoff_at": "2025-11-23T17:00:00.000Z",
+  "home": "C11",
+  "away": "C30"
+ },
+ {
+  "id": "nfl:2025:12:C09-C13",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 12,
+  "kickoff_at": "2025-11-23T17:00:00.000Z",
+  "home": "C09",
+  "away": "C13"
+ },
+ {
+  "id": "nfl:2025:12:C06-C22",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 12,
+  "kickoff_at": "2025-11-23T17:00:00.000Z",
+  "home": "C06",
+  "away": "C22"
+ },
+ {
+  "id": "nfl:2025:12:C05-C04",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 12,
+  "kickoff_at": "2025-11-23T17:00:00.000Z",
+  "home": "C05",
+  "away": "C04"
+ },
+ {
+  "id": "nfl:2025:12:C17-C03",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 12,
+  "kickoff_at": "2025-11-24T00:15:00.000Z",
+  "home": "C17",
+  "away": "C03"
+ },
+ {
+  "id": "nfl:2025:13:C02-C15",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 13,
+  "kickoff_at": "2025-11-27T00:20:00.000Z",
+  "home": "C02",
+  "away": "C15"
+ },
+ {
+  "id": "nfl:2025:13:C14-C28",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 13,
+  "kickoff_at": "2025-11-30T17:00:00.000Z",
+  "home": "C14",
+  "away": "C28"
+ },
+ {
+  "id": "nfl:2025:13:C07-C16",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 13,
+  "kickoff_at": "2025-11-30T17:00:00.000Z",
+  "home": "C07",
+  "away": "C16"
+ },
+ {
+  "id": "nfl:2025:13:C10-C30",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 13,
+  "kickoff_at": "2025-11-30T17:00:00.000Z",
+  "home": "C10",
+  "away": "C30"
+ },
+ {
+  "id": "nfl:2025:13:C06-C04",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 13,
+  "kickoff_at": "2025-11-30T17:00:00.000Z",
+  "home": "C06",
+  "away": "C04"
+ },
+ {
+  "id": "nfl:2025:13:C11-C24",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 13,
+  "kickoff_at": "2025-11-30T17:00:00.000Z",
+  "home": "C11",
+  "away": "C24"
+ },
+ {
+  "id": "nfl:2025:13:C17-C25",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 13,
+  "kickoff_at": "2025-11-30T17:00:00.000Z",
+  "home": "C17",
+  "away": "C25"
+ },
+ {
+  "id": "nfl:2025:13:C13-C21",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 13,
+  "kickoff_at": "2025-11-30T17:00:00.000Z",
+  "home": "C13",
+  "away": "C21"
+ },
+ {
+  "id": "nfl:2025:13:C08-C23",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 13,
+  "kickoff_at": "2025-11-30T17:00:00.000Z",
+  "home": "C08",
+  "away": "C23"
+ },
+ {
+  "id": "nfl:2025:13:C03-C05",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 13,
+  "kickoff_at": "2025-11-30T17:00:00.000Z",
+  "home": "C03",
+  "away": "C05"
+ },
+ {
+  "id": "nfl:2025:13:C20-C27",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 13,
+  "kickoff_at": "2025-11-30T17:00:00.000Z",
+  "home": "C20",
+  "away": "C27"
+ },
+ {
+  "id": "nfl:2025:13:C01-C32",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 13,
+  "kickoff_at": "2025-11-30T17:00:00.000Z",
+  "home": "C01",
+  "away": "C32"
+ },
+ {
+  "id": "nfl:2025:13:C22-C29",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 13,
+  "kickoff_at": "2025-11-30T17:00:00.000Z",
+  "home": "C22",
+  "away": "C29"
+ },
+ {
+  "id": "nfl:2025:13:C12-C31",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 13,
+  "kickoff_at": "2025-11-30T17:00:00.000Z",
+  "home": "C12",
+  "away": "C31"
+ },
+ {
+  "id": "nfl:2025:13:C26-C19",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 13,
+  "kickoff_at": "2025-11-30T17:00:00.000Z",
+  "home": "C26",
+  "away": "C19"
+ },
+ {
+  "id": "nfl:2025:13:C09-C18",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 13,
+  "kickoff_at": "2025-12-01T00:15:00.000Z",
+  "home": "C09",
+  "away": "C18"
+ },
+ {
+  "id": "nfl:2025:14:C12-C08",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 14,
+  "kickoff_at": "2025-12-04T00:20:00.000Z",
+  "home": "C12",
+  "away": "C08"
+ },
+ {
+  "id": "nfl:2025:14:C13-C14",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 14,
+  "kickoff_at": "2025-12-07T17:00:00.000Z",
+  "home": "C13",
+  "away": "C14"
+ },
+ {
+  "id": "nfl:2025:14:C11-C27",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 14,
+  "kickoff_at": "2025-12-07T17:00:00.000Z",
+  "home": "C11",
+  "away": "C27"
+ },
+ {
+  "id": "nfl:2025:14:C03-C22",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 14,
+  "kickoff_at": "2025-12-07T17:00:00.000Z",
+  "home": "C03",
+  "away": "C22"
+ },
+ {
+  "id": "nfl:2025:14:C19-C10",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 14,
+  "kickoff_at": "2025-12-07T17:00:00.000Z",
+  "home": "C19",
+  "away": "C10"
+ },
+ {
+  "id": "nfl:2025:14:C09-C26",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 14,
+  "kickoff_at": "2025-12-07T17:00:00.000Z",
+  "home": "C09",
+  "away": "C26"
+ },
+ {
+  "id": "nfl:2025:14:C06-C29",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 14,
+  "kickoff_at": "2025-12-07T17:00:00.000Z",
+  "home": "C06",
+  "away": "C29"
+ },
+ {
+  "id": "nfl:2025:14:C05-C24",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 14,
+  "kickoff_at": "2025-12-07T17:00:00.000Z",
+  "home": "C05",
+  "away": "C24"
+ },
+ {
+  "id": "nfl:2025:14:C20-C21",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 14,
+  "kickoff_at": "2025-12-07T17:00:00.000Z",
+  "home": "C20",
+  "away": "C21"
+ },
+ {
+  "id": "nfl:2025:14:C15-C01",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 14,
+  "kickoff_at": "2025-12-07T17:00:00.000Z",
+  "home": "C15",
+  "away": "C01"
+ },
+ {
+  "id": "nfl:2025:14:C02-C32",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 14,
+  "kickoff_at": "2025-12-07T17:00:00.000Z",
+  "home": "C02",
+  "away": "C32"
+ },
+ {
+  "id": "nfl:2025:14:C30-C18",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 14,
+  "kickoff_at": "2025-12-07T17:00:00.000Z",
+  "home": "C30",
+  "away": "C18"
+ },
+ {
+  "id": "nfl:2025:14:C28-C25",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 14,
+  "kickoff_at": "2025-12-07T17:00:00.000Z",
+  "home": "C28",
+  "away": "C25"
+ },
+ {
+  "id": "nfl:2025:14:C17-C31",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 14,
+  "kickoff_at": "2025-12-07T17:00:00.000Z",
+  "home": "C17",
+  "away": "C31"
+ },
+ {
+  "id": "nfl:2025:14:C23-C07",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 14,
+  "kickoff_at": "2025-12-07T17:00:00.000Z",
+  "home": "C23",
+  "away": "C07"
+ },
+ {
+  "id": "nfl:2025:14:C16-C04",
+  "sport": "nfl",
+  "season": 2025,
+  "week": 14,
+  "kickoff_at": "2025-12-08T00:15:00.000Z",
+  "home": "C16",
+  "away": "C04"
+ }
+]

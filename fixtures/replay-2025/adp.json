@@ -1,0 +1,982 @@
+[
+ {
+  "playerId": "nfl:p030",
+  "position": "RB",
+  "adp": 1
+ },
+ {
+  "playerId": "nfl:p033",
+  "position": "RB",
+  "adp": 2
+ },
+ {
+  "playerId": "nfl:p027",
+  "position": "RB",
+  "adp": 3
+ },
+ {
+  "playerId": "nfl:p035",
+  "position": "RB",
+  "adp": 4
+ },
+ {
+  "playerId": "nfl:p095",
+  "position": "WR",
+  "adp": 5
+ },
+ {
+  "playerId": "nfl:p089",
+  "position": "WR",
+  "adp": 6
+ },
+ {
+  "playerId": "nfl:p028",
+  "position": "RB",
+  "adp": 7
+ },
+ {
+  "playerId": "nfl:p092",
+  "position": "WR",
+  "adp": 8
+ },
+ {
+  "playerId": "nfl:p029",
+  "position": "RB",
+  "adp": 9
+ },
+ {
+  "playerId": "nfl:p094",
+  "position": "WR",
+  "adp": 10
+ },
+ {
+  "playerId": "nfl:p105",
+  "position": "WR",
+  "adp": 11
+ },
+ {
+  "playerId": "nfl:p090",
+  "position": "WR",
+  "adp": 12
+ },
+ {
+  "playerId": "nfl:p099",
+  "position": "WR",
+  "adp": 13
+ },
+ {
+  "playerId": "nfl:p102",
+  "position": "WR",
+  "adp": 14
+ },
+ {
+  "playerId": "nfl:p098",
+  "position": "WR",
+  "adp": 15
+ },
+ {
+  "playerId": "nfl:p091",
+  "position": "WR",
+  "adp": 16
+ },
+ {
+  "playerId": "nfl:p109",
+  "position": "WR",
+  "adp": 17
+ },
+ {
+  "playerId": "nfl:p031",
+  "position": "RB",
+  "adp": 18
+ },
+ {
+  "playerId": "nfl:p041",
+  "position": "RB",
+  "adp": 19
+ },
+ {
+  "playerId": "nfl:p047",
+  "position": "RB",
+  "adp": 20
+ },
+ {
+  "playerId": "nfl:p093",
+  "position": "WR",
+  "adp": 21
+ },
+ {
+  "playerId": "nfl:p034",
+  "position": "RB",
+  "adp": 22
+ },
+ {
+  "playerId": "nfl:p032",
+  "position": "RB",
+  "adp": 23
+ },
+ {
+  "playerId": "nfl:p049",
+  "position": "RB",
+  "adp": 24
+ },
+ {
+  "playerId": "nfl:p040",
+  "position": "RB",
+  "adp": 25
+ },
+ {
+  "playerId": "nfl:p167",
+  "position": "TE",
+  "adp": 26
+ },
+ {
+  "playerId": "nfl:p005",
+  "position": "QB",
+  "adp": 27
+ },
+ {
+  "playerId": "nfl:p038",
+  "position": "RB",
+  "adp": 28
+ },
+ {
+  "playerId": "nfl:p001",
+  "position": "QB",
+  "adp": 29
+ },
+ {
+  "playerId": "nfl:p052",
+  "position": "RB",
+  "adp": 30
+ },
+ {
+  "playerId": "nfl:p096",
+  "position": "WR",
+  "adp": 31
+ },
+ {
+  "playerId": "nfl:p037",
+  "position": "RB",
+  "adp": 32
+ },
+ {
+  "playerId": "nfl:p120",
+  "position": "WR",
+  "adp": 33
+ },
+ {
+  "playerId": "nfl:p003",
+  "position": "QB",
+  "adp": 34
+ },
+ {
+  "playerId": "nfl:p039",
+  "position": "RB",
+  "adp": 35
+ },
+ {
+  "playerId": "nfl:p036",
+  "position": "RB",
+  "adp": 36
+ },
+ {
+  "playerId": "nfl:p112",
+  "position": "WR",
+  "adp": 37
+ },
+ {
+  "playerId": "nfl:p104",
+  "position": "WR",
+  "adp": 38
+ },
+ {
+  "playerId": "nfl:p046",
+  "position": "RB",
+  "adp": 39
+ },
+ {
+  "playerId": "nfl:p097",
+  "position": "WR",
+  "adp": 40
+ },
+ {
+  "playerId": "nfl:p008",
+  "position": "QB",
+  "adp": 41
+ },
+ {
+  "playerId": "nfl:p101",
+  "position": "WR",
+  "adp": 42
+ },
+ {
+  "playerId": "nfl:p042",
+  "position": "RB",
+  "adp": 43
+ },
+ {
+  "playerId": "nfl:p111",
+  "position": "WR",
+  "adp": 44
+ },
+ {
+  "playerId": "nfl:p169",
+  "position": "TE",
+  "adp": 45
+ },
+ {
+  "playerId": "nfl:p053",
+  "position": "RB",
+  "adp": 46
+ },
+ {
+  "playerId": "nfl:p100",
+  "position": "WR",
+  "adp": 47
+ },
+ {
+  "playerId": "nfl:p107",
+  "position": "WR",
+  "adp": 48
+ },
+ {
+  "playerId": "nfl:p007",
+  "position": "QB",
+  "adp": 49
+ },
+ {
+  "playerId": "nfl:p170",
+  "position": "TE",
+  "adp": 50
+ },
+ {
+  "playerId": "nfl:p168",
+  "position": "TE",
+  "adp": 51
+ },
+ {
+  "playerId": "nfl:p124",
+  "position": "WR",
+  "adp": 52
+ },
+ {
+  "playerId": "nfl:p174",
+  "position": "TE",
+  "adp": 53
+ },
+ {
+  "playerId": "nfl:p044",
+  "position": "RB",
+  "adp": 54
+ },
+ {
+  "playerId": "nfl:p002",
+  "position": "QB",
+  "adp": 55
+ },
+ {
+  "playerId": "nfl:p043",
+  "position": "RB",
+  "adp": 56
+ },
+ {
+  "playerId": "nfl:p127",
+  "position": "WR",
+  "adp": 57
+ },
+ {
+  "playerId": "nfl:p103",
+  "position": "WR",
+  "adp": 58
+ },
+ {
+  "playerId": "nfl:p106",
+  "position": "WR",
+  "adp": 59
+ },
+ {
+  "playerId": "nfl:p123",
+  "position": "WR",
+  "adp": 60
+ },
+ {
+  "playerId": "nfl:p058",
+  "position": "RB",
+  "adp": 61
+ },
+ {
+  "playerId": "nfl:p165",
+  "position": "TE",
+  "adp": 62
+ },
+ {
+  "playerId": "nfl:p056",
+  "position": "RB",
+  "adp": 63
+ },
+ {
+  "playerId": "nfl:p059",
+  "position": "RB",
+  "adp": 64
+ },
+ {
+  "playerId": "nfl:p115",
+  "position": "WR",
+  "adp": 65
+ },
+ {
+  "playerId": "nfl:p004",
+  "position": "QB",
+  "adp": 66
+ },
+ {
+  "playerId": "nfl:p126",
+  "position": "WR",
+  "adp": 67
+ },
+ {
+  "playerId": "nfl:p176",
+  "position": "TE",
+  "adp": 68
+ },
+ {
+  "playerId": "nfl:p055",
+  "position": "RB",
+  "adp": 69
+ },
+ {
+  "playerId": "nfl:p116",
+  "position": "WR",
+  "adp": 70
+ },
+ {
+  "playerId": "nfl:p110",
+  "position": "WR",
+  "adp": 71
+ },
+ {
+  "playerId": "nfl:p171",
+  "position": "TE",
+  "adp": 72
+ },
+ {
+  "playerId": "nfl:p119",
+  "position": "WR",
+  "adp": 73
+ },
+ {
+  "playerId": "nfl:p113",
+  "position": "WR",
+  "adp": 74
+ },
+ {
+  "playerId": "nfl:p045",
+  "position": "RB",
+  "adp": 75
+ },
+ {
+  "playerId": "nfl:p006",
+  "position": "QB",
+  "adp": 76
+ },
+ {
+  "playerId": "nfl:p108",
+  "position": "WR",
+  "adp": 77
+ },
+ {
+  "playerId": "nfl:p166",
+  "position": "TE",
+  "adp": 78
+ },
+ {
+  "playerId": "nfl:p130",
+  "position": "WR",
+  "adp": 79
+ },
+ {
+  "playerId": "nfl:p114",
+  "position": "WR",
+  "adp": 80
+ },
+ {
+  "playerId": "nfl:p178",
+  "position": "TE",
+  "adp": 81
+ },
+ {
+  "playerId": "nfl:p125",
+  "position": "WR",
+  "adp": 82
+ },
+ {
+  "playerId": "nfl:p048",
+  "position": "RB",
+  "adp": 83
+ },
+ {
+  "playerId": "nfl:p009",
+  "position": "QB",
+  "adp": 84
+ },
+ {
+  "playerId": "nfl:p118",
+  "position": "WR",
+  "adp": 85
+ },
+ {
+  "playerId": "nfl:p129",
+  "position": "WR",
+  "adp": 86
+ },
+ {
+  "playerId": "nfl:p051",
+  "position": "RB",
+  "adp": 87
+ },
+ {
+  "playerId": "nfl:p015",
+  "position": "QB",
+  "adp": 88
+ },
+ {
+  "playerId": "nfl:p061",
+  "position": "RB",
+  "adp": 89
+ },
+ {
+  "playerId": "nfl:p122",
+  "position": "WR",
+  "adp": 90
+ },
+ {
+  "playerId": "nfl:p177",
+  "position": "TE",
+  "adp": 91
+ },
+ {
+  "playerId": "nfl:p050",
+  "position": "RB",
+  "adp": 92
+ },
+ {
+  "playerId": "nfl:p011",
+  "position": "QB",
+  "adp": 93
+ },
+ {
+  "playerId": "nfl:p057",
+  "position": "RB",
+  "adp": 94
+ },
+ {
+  "playerId": "nfl:p173",
+  "position": "TE",
+  "adp": 95
+ },
+ {
+  "playerId": "nfl:p065",
+  "position": "RB",
+  "adp": 96
+ },
+ {
+  "playerId": "nfl:p117",
+  "position": "WR",
+  "adp": 97
+ },
+ {
+  "playerId": "nfl:p172",
+  "position": "TE",
+  "adp": 98
+ },
+ {
+  "playerId": "nfl:p128",
+  "position": "WR",
+  "adp": 99
+ },
+ {
+  "playerId": "nfl:p131",
+  "position": "WR",
+  "adp": 100
+ },
+ {
+  "playerId": "nfl:p183",
+  "position": "TE",
+  "adp": 101
+ },
+ {
+  "playerId": "nfl:p054",
+  "position": "RB",
+  "adp": 102
+ },
+ {
+  "playerId": "nfl:p062",
+  "position": "RB",
+  "adp": 103
+ },
+ {
+  "playerId": "nfl:p136",
+  "position": "WR",
+  "adp": 104
+ },
+ {
+  "playerId": "nfl:p132",
+  "position": "WR",
+  "adp": 105
+ },
+ {
+  "playerId": "nfl:p181",
+  "position": "TE",
+  "adp": 106
+ },
+ {
+  "playerId": "nfl:p175",
+  "position": "TE",
+  "adp": 107
+ },
+ {
+  "playerId": "nfl:p147",
+  "position": "WR",
+  "adp": 108
+ },
+ {
+  "playerId": "nfl:p010",
+  "position": "QB",
+  "adp": 109
+ },
+ {
+  "playerId": "nfl:p121",
+  "position": "WR",
+  "adp": 110
+ },
+ {
+  "playerId": "nfl:p141",
+  "position": "WR",
+  "adp": 111
+ },
+ {
+  "playerId": "nfl:p073",
+  "position": "RB",
+  "adp": 112
+ },
+ {
+  "playerId": "nfl:p148",
+  "position": "WR",
+  "adp": 113
+ },
+ {
+  "playerId": "nfl:p014",
+  "position": "QB",
+  "adp": 114
+ },
+ {
+  "playerId": "nfl:p146",
+  "position": "WR",
+  "adp": 115
+ },
+ {
+  "playerId": "nfl:p067",
+  "position": "RB",
+  "adp": 116
+ },
+ {
+  "playerId": "nfl:p063",
+  "position": "RB",
+  "adp": 117
+ },
+ {
+  "playerId": "nfl:p179",
+  "position": "TE",
+  "adp": 118
+ },
+ {
+  "playerId": "nfl:p137",
+  "position": "WR",
+  "adp": 119
+ },
+ {
+  "playerId": "nfl:p012",
+  "position": "QB",
+  "adp": 120
+ },
+ {
+  "playerId": "nfl:p134",
+  "position": "WR",
+  "adp": 121
+ },
+ {
+  "playerId": "nfl:p017",
+  "position": "QB",
+  "adp": 122
+ },
+ {
+  "playerId": "nfl:p149",
+  "position": "WR",
+  "adp": 123
+ },
+ {
+  "playerId": "nfl:p013",
+  "position": "QB",
+  "adp": 124
+ },
+ {
+  "playerId": "nfl:p064",
+  "position": "RB",
+  "adp": 125
+ },
+ {
+  "playerId": "nfl:p068",
+  "position": "RB",
+  "adp": 126
+ },
+ {
+  "playerId": "nfl:p077",
+  "position": "RB",
+  "adp": 127
+ },
+ {
+  "playerId": "nfl:p060",
+  "position": "RB",
+  "adp": 128
+ },
+ {
+  "playerId": "nfl:p139",
+  "position": "WR",
+  "adp": 129
+ },
+ {
+  "playerId": "nfl:p142",
+  "position": "WR",
+  "adp": 130
+ },
+ {
+  "playerId": "nfl:p145",
+  "position": "WR",
+  "adp": 131
+ },
+ {
+  "playerId": "nfl:p140",
+  "position": "WR",
+  "adp": 132
+ },
+ {
+  "playerId": "nfl:p143",
+  "position": "WR",
+  "adp": 133
+ },
+ {
+  "playerId": "nfl:p016",
+  "position": "QB",
+  "adp": 134
+ },
+ {
+  "playerId": "nfl:p180",
+  "position": "TE",
+  "adp": 135
+ },
+ {
+  "playerId": "nfl:p070",
+  "position": "RB",
+  "adp": 136
+ },
+ {
+  "playerId": "nfl:p081",
+  "position": "RB",
+  "adp": 137
+ },
+ {
+  "playerId": "nfl:p184",
+  "position": "TE",
+  "adp": 138
+ },
+ {
+  "playerId": "nfl:p185",
+  "position": "TE",
+  "adp": 139
+ },
+ {
+  "playerId": "nfl:p019",
+  "position": "QB",
+  "adp": 140
+ },
+ {
+  "playerId": "nfl:p182",
+  "position": "TE",
+  "adp": 141
+ },
+ {
+  "playerId": "nfl:p084",
+  "position": "RB",
+  "adp": 142
+ },
+ {
+  "playerId": "nfl:p071",
+  "position": "RB",
+  "adp": 143
+ },
+ {
+  "playerId": "nfl:p135",
+  "position": "WR",
+  "adp": 144
+ },
+ {
+  "playerId": "nfl:p133",
+  "position": "WR",
+  "adp": 145
+ },
+ {
+  "playerId": "nfl:p187",
+  "position": "TE",
+  "adp": 146
+ },
+ {
+  "playerId": "nfl:p066",
+  "position": "RB",
+  "adp": 147
+ },
+ {
+  "playerId": "nfl:p152",
+  "position": "WR",
+  "adp": 148
+ },
+ {
+  "playerId": "nfl:p155",
+  "position": "WR",
+  "adp": 149
+ },
+ {
+  "playerId": "nfl:p078",
+  "position": "RB",
+  "adp": 150
+ },
+ {
+  "playerId": "nfl:p076",
+  "position": "RB",
+  "adp": 151
+ },
+ {
+  "playerId": "nfl:p192",
+  "position": "TE",
+  "adp": 152
+ },
+ {
+  "playerId": "nfl:p022",
+  "position": "QB",
+  "adp": 153
+ },
+ {
+  "playerId": "nfl:p018",
+  "position": "QB",
+  "adp": 154
+ },
+ {
+  "playerId": "nfl:p069",
+  "position": "RB",
+  "adp": 155
+ },
+ {
+  "playerId": "nfl:p186",
+  "position": "TE",
+  "adp": 156
+ },
+ {
+  "playerId": "nfl:p087",
+  "position": "RB",
+  "adp": 157
+ },
+ {
+  "playerId": "nfl:p156",
+  "position": "WR",
+  "adp": 158
+ },
+ {
+  "playerId": "nfl:p075",
+  "position": "RB",
+  "adp": 159
+ },
+ {
+  "playerId": "nfl:p150",
+  "position": "WR",
+  "adp": 160
+ },
+ {
+  "playerId": "nfl:p138",
+  "position": "WR",
+  "adp": 161
+ },
+ {
+  "playerId": "nfl:p020",
+  "position": "QB",
+  "adp": 162
+ },
+ {
+  "playerId": "nfl:p154",
+  "position": "WR",
+  "adp": 163
+ },
+ {
+  "playerId": "nfl:p158",
+  "position": "WR",
+  "adp": 164
+ },
+ {
+  "playerId": "nfl:p190",
+  "position": "TE",
+  "adp": 165
+ },
+ {
+  "playerId": "nfl:p024",
+  "position": "QB",
+  "adp": 166
+ },
+ {
+  "playerId": "nfl:p194",
+  "position": "TE",
+  "adp": 167
+ },
+ {
+  "playerId": "nfl:p086",
+  "position": "RB",
+  "adp": 168
+ },
+ {
+  "playerId": "nfl:p157",
+  "position": "WR",
+  "adp": 169
+ },
+ {
+  "playerId": "nfl:p072",
+  "position": "RB",
+  "adp": 170
+ },
+ {
+  "playerId": "nfl:p164",
+  "position": "WR",
+  "adp": 171
+ },
+ {
+  "playerId": "nfl:p160",
+  "position": "WR",
+  "adp": 172
+ },
+ {
+  "playerId": "nfl:p074",
+  "position": "RB",
+  "adp": 173
+ },
+ {
+  "playerId": "nfl:p023",
+  "position": "QB",
+  "adp": 174
+ },
+ {
+  "playerId": "nfl:p144",
+  "position": "WR",
+  "adp": 175
+ },
+ {
+  "playerId": "nfl:p161",
+  "position": "WR",
+  "adp": 176
+ },
+ {
+  "playerId": "nfl:p085",
+  "position": "RB",
+  "adp": 177
+ },
+ {
+  "playerId": "nfl:p151",
+  "position": "WR",
+  "adp": 178
+ },
+ {
+  "playerId": "nfl:p153",
+  "position": "WR",
+  "adp": 179
+ },
+ {
+  "playerId": "nfl:p162",
+  "position": "WR",
+  "adp": 180
+ },
+ {
+  "playerId": "nfl:p189",
+  "position": "TE",
+  "adp": 181
+ },
+ {
+  "playerId": "nfl:p188",
+  "position": "TE",
+  "adp": 182
+ },
+ {
+  "playerId": "nfl:p021",
+  "position": "QB",
+  "adp": 183
+ },
+ {
+  "playerId": "nfl:p163",
+  "position": "WR",
+  "adp": 184
+ },
+ {
+  "playerId": "nfl:p083",
+  "position": "RB",
+  "adp": 185
+ },
+ {
+  "playerId": "nfl:p079",
+  "position": "RB",
+  "adp": 186
+ },
+ {
+  "playerId": "nfl:p193",
+  "position": "TE",
+  "adp": 187
+ },
+ {
+  "playerId": "nfl:p025",
+  "position": "QB",
+  "adp": 188
+ },
+ {
+  "playerId": "nfl:p082",
+  "position": "RB",
+  "adp": 189
+ },
+ {
+  "playerId": "nfl:p159",
+  "position": "WR",
+  "adp": 190
+ },
+ {
+  "playerId": "nfl:p080",
+  "position": "RB",
+  "adp": 191
+ },
+ {
+  "playerId": "nfl:p191",
+  "position": "TE",
+  "adp": 192
+ },
+ {
+  "playerId": "nfl:p088",
+  "position": "RB",
+  "adp": 193
+ },
+ {
+  "playerId": "nfl:p026",
+  "position": "QB",
+  "adp": 194
+ },
+ {
+  "playerId": "nfl:p196",
+  "position": "TE",
+  "adp": 195
+ },
+ {
+  "playerId": "nfl:p195",
+  "position": "TE",
+  "adp": 196
+ }
+]

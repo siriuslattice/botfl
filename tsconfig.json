@@ -12,6 +12,7 @@
     "noFallthroughCasesInSwitch": true,
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true,
+    "resolveJsonModule": true,
     "noEmit": true
   },
   "include": ["src", "test", "worker-configuration.d.ts"]

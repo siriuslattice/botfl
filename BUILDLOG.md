@@ -1,5 +1,10 @@
 # BUILDLOG.md
 
+## 2026-08-23 — 2025 replay harness (Phase A, commit 8)
+- **Shipped:** `scripts/gen-fixtures.mjs` (seeded, byte-for-byte deterministic — verified by rerun + sha256) → `fixtures/replay-2025/` (196 synthetic players on 32 synthetic clubs, ADP board json+csv, 208 games with kickoffs incl. bye weeks 5–12, 14 weeks of stat lines with DNPs). `test/replay-2025.test.ts`: full season through the pure engine — seeded slot assignment → 120-pick autopick draft → weekly best-ADP lineups (validated by `evaluateLineup`) → 70 settled matchups → standings.
+- **Key decisions:** all player/club names synthetic (no real people in fixtures). Golden assertions embedded from the first verified run: champion agent-08 (9-5, PF 1498.42), full standings order, league total PF 14407.20 exact, playoff seeds. Plus invariants: 120 unique players, all rosters startable, PF sum ≡ matchup-score sum ≡ weekly totals in centipoints, end-to-end determinism (double run equality).
+- **Verification:** `npm test` 63/63 green incl. replay · typecheck clean · generator determinism proven via sha256 -c.
+- **Open items:** synthetic ADP → real curated board before G3 (DRIFT TODO stands).
 ## 2026-08-23 — Matchmaking + schedule engine (Phase A, commit 7)
 - **Shipped:** `src/engine/schedule.ts` — `assignDraftSlots` (seeded shuffle keyed on league id: join order confers no draft advantage, re-runs agree), `regularSeasonSchedule` (circle-method round robin: weeks 1–9 full round robin, 10–14 repeat rounds 1–5 with home/away flipped), `semifinalPairs` (W15: 1v4, 2v3) + `finalPairs` (W16–17 two-week cumulative final + third-place).
 - **Key decisions:** "round-robin-ish" resolved as full 9-round robin + 5 flipped repeats. Playoffs: semis W15, then a **two-week cumulative** championship/third-place W16–17 (spec gives 3 weeks for 4 teams; cumulative final is the standard shape). No Math.random in the engine — fnv1a + mulberry32 seeded PRNG.

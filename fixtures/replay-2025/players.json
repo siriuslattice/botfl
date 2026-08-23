@@ -1,0 +1,1374 @@
+[
+ {
+  "id": "nfl:p001",
+  "sport": "nfl",
+  "name": "Vann Mudd",
+  "position": "QB",
+  "team": "C01"
+ },
+ {
+  "id": "nfl:p002",
+  "sport": "nfl",
+  "name": "Ivo Longstride",
+  "position": "QB",
+  "team": "C02"
+ },
+ {
+  "id": "nfl:p003",
+  "sport": "nfl",
+  "name": "Brick Northgate",
+  "position": "QB",
+  "team": "C03"
+ },
+ {
+  "id": "nfl:p004",
+  "sport": "nfl",
+  "name": "Gage Quickstep",
+  "position": "QB",
+  "team": "C04"
+ },
+ {
+  "id": "nfl:p005",
+  "sport": "nfl",
+  "name": "Hux Stiffarm",
+  "position": "QB",
+  "team": "C05"
+ },
+ {
+  "id": "nfl:p006",
+  "sport": "nfl",
+  "name": "Nio Farrow",
+  "position": "QB",
+  "team": "C06"
+ },
+ {
+  "id": "nfl:p007",
+  "sport": "nfl",
+  "name": "Hux Boltwright",
+  "position": "QB",
+  "team": "C07"
+ },
+ {
+  "id": "nfl:p008",
+  "sport": "nfl",
+  "name": "Rook Rumblelow",
+  "position": "QB",
+  "team": "C08"
+ },
+ {
+  "id": "nfl:p009",
+  "sport": "nfl",
+  "name": "Cade Yardley",
+  "position": "QB",
+  "team": "C09"
+ },
+ {
+  "id": "nfl:p010",
+  "sport": "nfl",
+  "name": "York Dunmore",
+  "position": "QB",
+  "team": "C10"
+ },
+ {
+  "id": "nfl:p011",
+  "sport": "nfl",
+  "name": "Axel Jukewell",
+  "position": "QB",
+  "team": "C11"
+ },
+ {
+  "id": "nfl:p012",
+  "sport": "nfl",
+  "name": "Pax Wheelroute",
+  "position": "QB",
+  "team": "C12"
+ },
+ {
+  "id": "nfl:p013",
+  "sport": "nfl",
+  "name": "Slate Yardley",
+  "position": "QB",
+  "team": "C13"
+ },
+ {
+  "id": "nfl:p014",
+  "sport": "nfl",
+  "name": "Slate Emberfield",
+  "position": "QB",
+  "team": "C14"
+ },
+ {
+  "id": "nfl:p015",
+  "sport": "nfl",
+  "name": "Vann Dunmore",
+  "position": "QB",
+  "team": "C15"
+ },
+ {
+  "id": "nfl:p016",
+  "sport": "nfl",
+  "name": "Onyx Wheelroute",
+  "position": "QB",
+  "team": "C16"
+ },
+ {
+  "id": "nfl:p017",
+  "sport": "nfl",
+  "name": "Pax Ironback",
+  "position": "QB",
+  "team": "C17"
+ },
+ {
+  "id": "nfl:p018",
+  "sport": "nfl",
+  "name": "Ivo Stiffarm",
+  "position": "QB",
+  "team": "C18"
+ },
+ {
+  "id": "nfl:p019",
+  "sport": "nfl",
+  "name": "Lux Vantage",
+  "position": "QB",
+  "team": "C19"
+ },
+ {
+  "id": "nfl:p020",
+  "sport": "nfl",
+  "name": "Zeph Wheelroute",
+  "position": "QB",
+  "team": "C20"
+ },
+ {
+  "id": "nfl:p021",
+  "sport": "nfl",
+  "name": "Onyx Hollowell",
+  "position": "QB",
+  "team": "C21"
+ },
+ {
+  "id": "nfl:p022",
+  "sport": "nfl",
+  "name": "Slate Hollowell",
+  "position": "QB",
+  "team": "C22"
+ },
+ {
+  "id": "nfl:p023",
+  "sport": "nfl",
+  "name": "Xylo Crashaw",
+  "position": "QB",
+  "team": "C23"
+ },
+ {
+  "id": "nfl:p024",
+  "sport": "nfl",
+  "name": "Zeph Emberfield",
+  "position": "QB",
+  "team": "C24"
+ },
+ {
+  "id": "nfl:p025",
+  "sport": "nfl",
+  "name": "Slate Farrow",
+  "position": "QB",
+  "team": "C25"
+ },
+ {
+  "id": "nfl:p026",
+  "sport": "nfl",
+  "name": "Enzo Quickstep",
+  "position": "QB",
+  "team": "C26"
+ },
+ {
+  "id": "nfl:p027",
+  "sport": "nfl",
+  "name": "Flint Pylon",
+  "position": "RB",
+  "team": "C27"
+ },
+ {
+  "id": "nfl:p028",
+  "sport": "nfl",
+  "name": "Ivo Turfborn",
+  "position": "RB",
+  "team": "C28"
+ },
+ {
+  "id": "nfl:p029",
+  "sport": "nfl",
+  "name": "Dex Vantage",
+  "position": "RB",
+  "team": "C29"
+ },
+ {
+  "id": "nfl:p030",
+  "sport": "nfl",
+  "name": "Axel Stiffarm",
+  "position": "RB",
+  "team": "C30"
+ },
+ {
+  "id": "nfl:p031",
+  "sport": "nfl",
+  "name": "Wick Wheelroute",
+  "position": "RB",
+  "team": "C31"
+ },
+ {
+  "id": "nfl:p032",
+  "sport": "nfl",
+  "name": "Pax Mudd",
+  "position": "RB",
+  "team": "C32"
+ },
+ {
+  "id": "nfl:p033",
+  "sport": "nfl",
+  "name": "Brick Rumblelow",
+  "position": "RB",
+  "team": "C01"
+ },
+ {
+  "id": "nfl:p034",
+  "sport": "nfl",
+  "name": "Hux Gridiron",
+  "position": "RB",
+  "team": "C02"
+ },
+ {
+  "id": "nfl:p035",
+  "sport": "nfl",
+  "name": "Axel Farrow",
+  "position": "RB",
+  "team": "C03"
+ },
+ {
+  "id": "nfl:p036",
+  "sport": "nfl",
+  "name": "Onyx Zonebreak",
+  "position": "RB",
+  "team": "C04"
+ },
+ {
+  "id": "nfl:p037",
+  "sport": "nfl",
+  "name": "Enzo Oakhurst",
+  "position": "RB",
+  "team": "C05"
+ },
+ {
+  "id": "nfl:p038",
+  "sport": "nfl",
+  "name": "Kato Kettering",
+  "position": "RB",
+  "team": "C06"
+ },
+ {
+  "id": "nfl:p039",
+  "sport": "nfl",
+  "name": "Rook Jukewell",
+  "position": "RB",
+  "team": "C07"
+ },
+ {
+  "id": "nfl:p040",
+  "sport": "nfl",
+  "name": "Xylo Ironback",
+  "position": "RB",
+  "team": "C08"
+ },
+ {
+  "id": "nfl:p041",
+  "sport": "nfl",
+  "name": "Pax Northgate",
+  "position": "RB",
+  "team": "C09"
+ },
+ {
+  "id": "nfl:p042",
+  "sport": "nfl",
+  "name": "Gage Ironback",
+  "position": "RB",
+  "team": "C10"
+ },
+ {
+  "id": "nfl:p043",
+  "sport": "nfl",
+  "name": "Ivo Quickstep",
+  "position": "RB",
+  "team": "C11"
+ },
+ {
+  "id": "nfl:p044",
+  "sport": "nfl",
+  "name": "Enzo Rumblelow",
+  "position": "RB",
+  "team": "C12"
+ },
+ {
+  "id": "nfl:p045",
+  "sport": "nfl",
+  "name": "Dex Hollowell",
+  "position": "RB",
+  "team": "C13"
+ },
+ {
+  "id": "nfl:p046",
+  "sport": "nfl",
+  "name": "Pax Farrow",
+  "position": "RB",
+  "team": "C14"
+ },
+ {
+  "id": "nfl:p047",
+  "sport": "nfl",
+  "name": "Jett Rumblelow",
+  "position": "RB",
+  "team": "C15"
+ },
+ {
+  "id": "nfl:p048",
+  "sport": "nfl",
+  "name": "Vann Kettering",
+  "position": "RB",
+  "team": "C16"
+ },
+ {
+  "id": "nfl:p049",
+  "sport": "nfl",
+  "name": "Wick Northgate",
+  "position": "RB",
+  "team": "C17"
+ },
+ {
+  "id": "nfl:p050",
+  "sport": "nfl",
+  "name": "Xylo Longstride",
+  "position": "RB",
+  "team": "C18"
+ },
+ {
+  "id": "nfl:p051",
+  "sport": "nfl",
+  "name": "Quill Underhill",
+  "position": "RB",
+  "team": "C19"
+ },
+ {
+  "id": "nfl:p052",
+  "sport": "nfl",
+  "name": "Kato Northgate",
+  "position": "RB",
+  "team": "C20"
+ },
+ {
+  "id": "nfl:p053",
+  "sport": "nfl",
+  "name": "Mace Vantage",
+  "position": "RB",
+  "team": "C21"
+ },
+ {
+  "id": "nfl:p054",
+  "sport": "nfl",
+  "name": "Tor Boltwright",
+  "position": "RB",
+  "team": "C22"
+ },
+ {
+  "id": "nfl:p055",
+  "sport": "nfl",
+  "name": "Enzo Mudd",
+  "position": "RB",
+  "team": "C23"
+ },
+ {
+  "id": "nfl:p056",
+  "sport": "nfl",
+  "name": "Tor Zonebreak",
+  "position": "RB",
+  "team": "C24"
+ },
+ {
+  "id": "nfl:p057",
+  "sport": "nfl",
+  "name": "Wick Oakhurst",
+  "position": "RB",
+  "team": "C25"
+ },
+ {
+  "id": "nfl:p058",
+  "sport": "nfl",
+  "name": "Rook Ironback",
+  "position": "RB",
+  "team": "C26"
+ },
+ {
+  "id": "nfl:p059",
+  "sport": "nfl",
+  "name": "Quill Ironback",
+  "position": "RB",
+  "team": "C27"
+ },
+ {
+  "id": "nfl:p060",
+  "sport": "nfl",
+  "name": "Dex Jukewell",
+  "position": "RB",
+  "team": "C28"
+ },
+ {
+  "id": "nfl:p061",
+  "sport": "nfl",
+  "name": "Cade Quickstep",
+  "position": "RB",
+  "team": "C29"
+ },
+ {
+  "id": "nfl:p062",
+  "sport": "nfl",
+  "name": "York Vantage",
+  "position": "RB",
+  "team": "C30"
+ },
+ {
+  "id": "nfl:p063",
+  "sport": "nfl",
+  "name": "Slate Dunmore",
+  "position": "RB",
+  "team": "C31"
+ },
+ {
+  "id": "nfl:p064",
+  "sport": "nfl",
+  "name": "Dex Boltwright",
+  "position": "RB",
+  "team": "C32"
+ },
+ {
+  "id": "nfl:p065",
+  "sport": "nfl",
+  "name": "Lux Oakhurst",
+  "position": "RB",
+  "team": "C01"
+ },
+ {
+  "id": "nfl:p066",
+  "sport": "nfl",
+  "name": "Umber Turfborn",
+  "position": "RB",
+  "team": "C02"
+ },
+ {
+  "id": "nfl:p067",
+  "sport": "nfl",
+  "name": "Rook Mudd",
+  "position": "RB",
+  "team": "C03"
+ },
+ {
+  "id": "nfl:p068",
+  "sport": "nfl",
+  "name": "Mace Longstride",
+  "position": "RB",
+  "team": "C04"
+ },
+ {
+  "id": "nfl:p069",
+  "sport": "nfl",
+  "name": "Ivo Hollowell",
+  "position": "RB",
+  "team": "C05"
+ },
+ {
+  "id": "nfl:p070",
+  "sport": "nfl",
+  "name": "Nio Gridiron",
+  "position": "RB",
+  "team": "C06"
+ },
+ {
+  "id": "nfl:p071",
+  "sport": "nfl",
+  "name": "Onyx Quickstep",
+  "position": "RB",
+  "team": "C07"
+ },
+ {
+  "id": "nfl:p072",
+  "sport": "nfl",
+  "name": "Dex Amberline",
+  "position": "RB",
+  "team": "C08"
+ },
+ {
+  "id": "nfl:p073",
+  "sport": "nfl",
+  "name": "York Boltwright",
+  "position": "RB",
+  "team": "C09"
+ },
+ {
+  "id": "nfl:p074",
+  "sport": "nfl",
+  "name": "Lux Mudd",
+  "position": "RB",
+  "team": "C10"
+ },
+ {
+  "id": "nfl:p075",
+  "sport": "nfl",
+  "name": "Vann Boltwright",
+  "position": "RB",
+  "team": "C11"
+ },
+ {
+  "id": "nfl:p076",
+  "sport": "nfl",
+  "name": "Flint Rumblelow",
+  "position": "RB",
+  "team": "C12"
+ },
+ {
+  "id": "nfl:p077",
+  "sport": "nfl",
+  "name": "Cade Zonebreak",
+  "position": "RB",
+  "team": "C13"
+ },
+ {
+  "id": "nfl:p078",
+  "sport": "nfl",
+  "name": "Rook Turfborn",
+  "position": "RB",
+  "team": "C14"
+ },
+ {
+  "id": "nfl:p079",
+  "sport": "nfl",
+  "name": "Umber Northgate",
+  "position": "RB",
+  "team": "C15"
+ },
+ {
+  "id": "nfl:p080",
+  "sport": "nfl",
+  "name": "Cade Crashaw",
+  "position": "RB",
+  "team": "C16"
+ },
+ {
+  "id": "nfl:p081",
+  "sport": "nfl",
+  "name": "Rook Oakhurst",
+  "position": "RB",
+  "team": "C17"
+ },
+ {
+  "id": "nfl:p082",
+  "sport": "nfl",
+  "name": "Vann Northgate",
+  "position": "RB",
+  "team": "C18"
+ },
+ {
+  "id": "nfl:p083",
+  "sport": "nfl",
+  "name": "York Yardley",
+  "position": "RB",
+  "team": "C19"
+ },
+ {
+  "id": "nfl:p084",
+  "sport": "nfl",
+  "name": "Nio Vantage",
+  "position": "RB",
+  "team": "C20"
+ },
+ {
+  "id": "nfl:p085",
+  "sport": "nfl",
+  "name": "Vann Hollowell",
+  "position": "RB",
+  "team": "C21"
+ },
+ {
+  "id": "nfl:p086",
+  "sport": "nfl",
+  "name": "Tor Northgate",
+  "position": "RB",
+  "team": "C22"
+ },
+ {
+  "id": "nfl:p087",
+  "sport": "nfl",
+  "name": "Onyx Northgate",
+  "position": "RB",
+  "team": "C23"
+ },
+ {
+  "id": "nfl:p088",
+  "sport": "nfl",
+  "name": "Zeph Turfborn",
+  "position": "RB",
+  "team": "C24"
+ },
+ {
+  "id": "nfl:p089",
+  "sport": "nfl",
+  "name": "Quill Quickstep",
+  "position": "WR",
+  "team": "C25"
+ },
+ {
+  "id": "nfl:p090",
+  "sport": "nfl",
+  "name": "Kato Vantage",
+  "position": "WR",
+  "team": "C26"
+ },
+ {
+  "id": "nfl:p091",
+  "sport": "nfl",
+  "name": "Wick Kettering",
+  "position": "WR",
+  "team": "C27"
+ },
+ {
+  "id": "nfl:p092",
+  "sport": "nfl",
+  "name": "Nio Underhill",
+  "position": "WR",
+  "team": "C28"
+ },
+ {
+  "id": "nfl:p093",
+  "sport": "nfl",
+  "name": "Wick Rumblelow",
+  "position": "WR",
+  "team": "C29"
+ },
+ {
+  "id": "nfl:p094",
+  "sport": "nfl",
+  "name": "Hux Zonebreak",
+  "position": "WR",
+  "team": "C30"
+ },
+ {
+  "id": "nfl:p095",
+  "sport": "nfl",
+  "name": "Hux Pylon",
+  "position": "WR",
+  "team": "C31"
+ },
+ {
+  "id": "nfl:p096",
+  "sport": "nfl",
+  "name": "Tor Rumblelow",
+  "position": "WR",
+  "team": "C32"
+ },
+ {
+  "id": "nfl:p097",
+  "sport": "nfl",
+  "name": "Onyx Longstride",
+  "position": "WR",
+  "team": "C01"
+ },
+ {
+  "id": "nfl:p098",
+  "sport": "nfl",
+  "name": "Mace Wheelroute",
+  "position": "WR",
+  "team": "C02"
+ },
+ {
+  "id": "nfl:p099",
+  "sport": "nfl",
+  "name": "Kato Longstride",
+  "position": "WR",
+  "team": "C03"
+ },
+ {
+  "id": "nfl:p100",
+  "sport": "nfl",
+  "name": "Slate Mudd",
+  "position": "WR",
+  "team": "C04"
+ },
+ {
+  "id": "nfl:p101",
+  "sport": "nfl",
+  "name": "Enzo Crashaw",
+  "position": "WR",
+  "team": "C05"
+ },
+ {
+  "id": "nfl:p102",
+  "sport": "nfl",
+  "name": "Jett Underhill",
+  "position": "WR",
+  "team": "C06"
+ },
+ {
+  "id": "nfl:p103",
+  "sport": "nfl",
+  "name": "Rook Crashaw",
+  "position": "WR",
+  "team": "C07"
+ },
+ {
+  "id": "nfl:p104",
+  "sport": "nfl",
+  "name": "Hux Rumblelow",
+  "position": "WR",
+  "team": "C08"
+ },
+ {
+  "id": "nfl:p105",
+  "sport": "nfl",
+  "name": "Wick Pylon",
+  "position": "WR",
+  "team": "C09"
+ },
+ {
+  "id": "nfl:p106",
+  "sport": "nfl",
+  "name": "Cade Pylon",
+  "position": "WR",
+  "team": "C10"
+ },
+ {
+  "id": "nfl:p107",
+  "sport": "nfl",
+  "name": "Mace Gridiron",
+  "position": "WR",
+  "team": "C11"
+ },
+ {
+  "id": "nfl:p108",
+  "sport": "nfl",
+  "name": "Mace Oakhurst",
+  "position": "WR",
+  "team": "C12"
+ },
+ {
+  "id": "nfl:p109",
+  "sport": "nfl",
+  "name": "Umber Rumblelow",
+  "position": "WR",
+  "team": "C13"
+ },
+ {
+  "id": "nfl:p110",
+  "sport": "nfl",
+  "name": "Axel Ironback",
+  "position": "WR",
+  "team": "C14"
+ },
+ {
+  "id": "nfl:p111",
+  "sport": "nfl",
+  "name": "Flint Zonebreak",
+  "position": "WR",
+  "team": "C15"
+ },
+ {
+  "id": "nfl:p112",
+  "sport": "nfl",
+  "name": "Vann Ironback",
+  "position": "WR",
+  "team": "C16"
+ },
+ {
+  "id": "nfl:p113",
+  "sport": "nfl",
+  "name": "Umber Jukewell",
+  "position": "WR",
+  "team": "C17"
+ },
+ {
+  "id": "nfl:p114",
+  "sport": "nfl",
+  "name": "Umber Mudd",
+  "position": "WR",
+  "team": "C18"
+ },
+ {
+  "id": "nfl:p115",
+  "sport": "nfl",
+  "name": "Cade Turfborn",
+  "position": "WR",
+  "team": "C19"
+ },
+ {
+  "id": "nfl:p116",
+  "sport": "nfl",
+  "name": "Wick Turfborn",
+  "position": "WR",
+  "team": "C20"
+ },
+ {
+  "id": "nfl:p117",
+  "sport": "nfl",
+  "name": "York Emberfield",
+  "position": "WR",
+  "team": "C21"
+ },
+ {
+  "id": "nfl:p118",
+  "sport": "nfl",
+  "name": "Flint Turfborn",
+  "position": "WR",
+  "team": "C22"
+ },
+ {
+  "id": "nfl:p119",
+  "sport": "nfl",
+  "name": "Dex Quickstep",
+  "position": "WR",
+  "team": "C23"
+ },
+ {
+  "id": "nfl:p120",
+  "sport": "nfl",
+  "name": "Onyx Farrow",
+  "position": "WR",
+  "team": "C24"
+ },
+ {
+  "id": "nfl:p121",
+  "sport": "nfl",
+  "name": "Nio Stiffarm",
+  "position": "WR",
+  "team": "C25"
+ },
+ {
+  "id": "nfl:p122",
+  "sport": "nfl",
+  "name": "York Oakhurst",
+  "position": "WR",
+  "team": "C26"
+ },
+ {
+  "id": "nfl:p123",
+  "sport": "nfl",
+  "name": "Brick Ironback",
+  "position": "WR",
+  "team": "C27"
+ },
+ {
+  "id": "nfl:p124",
+  "sport": "nfl",
+  "name": "Tor Gridiron",
+  "position": "WR",
+  "team": "C28"
+ },
+ {
+  "id": "nfl:p125",
+  "sport": "nfl",
+  "name": "Lux Emberfield",
+  "position": "WR",
+  "team": "C29"
+ },
+ {
+  "id": "nfl:p126",
+  "sport": "nfl",
+  "name": "Nio Emberfield",
+  "position": "WR",
+  "team": "C30"
+ },
+ {
+  "id": "nfl:p127",
+  "sport": "nfl",
+  "name": "Cade Dunmore",
+  "position": "WR",
+  "team": "C31"
+ },
+ {
+  "id": "nfl:p128",
+  "sport": "nfl",
+  "name": "Flint Longstride",
+  "position": "WR",
+  "team": "C32"
+ },
+ {
+  "id": "nfl:p129",
+  "sport": "nfl",
+  "name": "Quill Mudd",
+  "position": "WR",
+  "team": "C01"
+ },
+ {
+  "id": "nfl:p130",
+  "sport": "nfl",
+  "name": "Enzo Zonebreak",
+  "position": "WR",
+  "team": "C02"
+ },
+ {
+  "id": "nfl:p131",
+  "sport": "nfl",
+  "name": "Jett Farrow",
+  "position": "WR",
+  "team": "C03"
+ },
+ {
+  "id": "nfl:p132",
+  "sport": "nfl",
+  "name": "Tor Longstride",
+  "position": "WR",
+  "team": "C04"
+ },
+ {
+  "id": "nfl:p133",
+  "sport": "nfl",
+  "name": "Gage Mudd",
+  "position": "WR",
+  "team": "C05"
+ },
+ {
+  "id": "nfl:p134",
+  "sport": "nfl",
+  "name": "Wick Jukewell",
+  "position": "WR",
+  "team": "C06"
+ },
+ {
+  "id": "nfl:p135",
+  "sport": "nfl",
+  "name": "Brick Quickstep",
+  "position": "WR",
+  "team": "C07"
+ },
+ {
+  "id": "nfl:p136",
+  "sport": "nfl",
+  "name": "Xylo Turfborn",
+  "position": "WR",
+  "team": "C08"
+ },
+ {
+  "id": "nfl:p137",
+  "sport": "nfl",
+  "name": "Mace Mudd",
+  "position": "WR",
+  "team": "C09"
+ },
+ {
+  "id": "nfl:p138",
+  "sport": "nfl",
+  "name": "Axel Rumblelow",
+  "position": "WR",
+  "team": "C10"
+ },
+ {
+  "id": "nfl:p139",
+  "sport": "nfl",
+  "name": "Rook Emberfield",
+  "position": "WR",
+  "team": "C11"
+ },
+ {
+  "id": "nfl:p140",
+  "sport": "nfl",
+  "name": "Brick Oakhurst",
+  "position": "WR",
+  "team": "C12"
+ },
+ {
+  "id": "nfl:p141",
+  "sport": "nfl",
+  "name": "Lux Longstride",
+  "position": "WR",
+  "team": "C13"
+ },
+ {
+  "id": "nfl:p142",
+  "sport": "nfl",
+  "name": "Dex Rumblelow",
+  "position": "WR",
+  "team": "C14"
+ },
+ {
+  "id": "nfl:p143",
+  "sport": "nfl",
+  "name": "York Underhill",
+  "position": "WR",
+  "team": "C15"
+ },
+ {
+  "id": "nfl:p144",
+  "sport": "nfl",
+  "name": "Axel Wheelroute",
+  "position": "WR",
+  "team": "C16"
+ },
+ {
+  "id": "nfl:p145",
+  "sport": "nfl",
+  "name": "Nio Mudd",
+  "position": "WR",
+  "team": "C17"
+ },
+ {
+  "id": "nfl:p146",
+  "sport": "nfl",
+  "name": "Onyx Pylon",
+  "position": "WR",
+  "team": "C18"
+ },
+ {
+  "id": "nfl:p147",
+  "sport": "nfl",
+  "name": "Rook Zonebreak",
+  "position": "WR",
+  "team": "C19"
+ },
+ {
+  "id": "nfl:p148",
+  "sport": "nfl",
+  "name": "Zeph Underhill",
+  "position": "WR",
+  "team": "C20"
+ },
+ {
+  "id": "nfl:p149",
+  "sport": "nfl",
+  "name": "Axel Mudd",
+  "position": "WR",
+  "team": "C21"
+ },
+ {
+  "id": "nfl:p150",
+  "sport": "nfl",
+  "name": "Ivo Vantage",
+  "position": "WR",
+  "team": "C22"
+ },
+ {
+  "id": "nfl:p151",
+  "sport": "nfl",
+  "name": "York Quickstep",
+  "position": "WR",
+  "team": "C23"
+ },
+ {
+  "id": "nfl:p152",
+  "sport": "nfl",
+  "name": "Enzo Jukewell",
+  "position": "WR",
+  "team": "C24"
+ },
+ {
+  "id": "nfl:p153",
+  "sport": "nfl",
+  "name": "Brick Dunmore",
+  "position": "WR",
+  "team": "C25"
+ },
+ {
+  "id": "nfl:p154",
+  "sport": "nfl",
+  "name": "Quill Jukewell",
+  "position": "WR",
+  "team": "C26"
+ },
+ {
+  "id": "nfl:p155",
+  "sport": "nfl",
+  "name": "Zeph Kettering",
+  "position": "WR",
+  "team": "C27"
+ },
+ {
+  "id": "nfl:p156",
+  "sport": "nfl",
+  "name": "Tor Amberline",
+  "position": "WR",
+  "team": "C28"
+ },
+ {
+  "id": "nfl:p157",
+  "sport": "nfl",
+  "name": "Wick Gridiron",
+  "position": "WR",
+  "team": "C29"
+ },
+ {
+  "id": "nfl:p158",
+  "sport": "nfl",
+  "name": "Jett Vantage",
+  "position": "WR",
+  "team": "C30"
+ },
+ {
+  "id": "nfl:p159",
+  "sport": "nfl",
+  "name": "Nio Zonebreak",
+  "position": "WR",
+  "team": "C31"
+ },
+ {
+  "id": "nfl:p160",
+  "sport": "nfl",
+  "name": "Pax Boltwright",
+  "position": "WR",
+  "team": "C32"
+ },
+ {
+  "id": "nfl:p161",
+  "sport": "nfl",
+  "name": "Umber Kettering",
+  "position": "WR",
+  "team": "C01"
+ },
+ {
+  "id": "nfl:p162",
+  "sport": "nfl",
+  "name": "Vann Jukewell",
+  "position": "WR",
+  "team": "C02"
+ },
+ {
+  "id": "nfl:p163",
+  "sport": "nfl",
+  "name": "Slate Oakhurst",
+  "position": "WR",
+  "team": "C03"
+ },
+ {
+  "id": "nfl:p164",
+  "sport": "nfl",
+  "name": "Quill Wheelroute",
+  "position": "WR",
+  "team": "C04"
+ },
+ {
+  "id": "nfl:p165",
+  "sport": "nfl",
+  "name": "Axel Boltwright",
+  "position": "TE",
+  "team": "C05"
+ },
+ {
+  "id": "nfl:p166",
+  "sport": "nfl",
+  "name": "Xylo Amberline",
+  "position": "TE",
+  "team": "C06"
+ },
+ {
+  "id": "nfl:p167",
+  "sport": "nfl",
+  "name": "Nio Boltwright",
+  "position": "TE",
+  "team": "C07"
+ },
+ {
+  "id": "nfl:p168",
+  "sport": "nfl",
+  "name": "Quill Amberline",
+  "position": "TE",
+  "team": "C08"
+ },
+ {
+  "id": "nfl:p169",
+  "sport": "nfl",
+  "name": "Flint Stiffarm",
+  "position": "TE",
+  "team": "C09"
+ },
+ {
+  "id": "nfl:p170",
+  "sport": "nfl",
+  "name": "Brick Pylon",
+  "position": "TE",
+  "team": "C10"
+ },
+ {
+  "id": "nfl:p171",
+  "sport": "nfl",
+  "name": "Kato Oakhurst",
+  "position": "TE",
+  "team": "C11"
+ },
+ {
+  "id": "nfl:p172",
+  "sport": "nfl",
+  "name": "Pax Emberfield",
+  "position": "TE",
+  "team": "C12"
+ },
+ {
+  "id": "nfl:p173",
+  "sport": "nfl",
+  "name": "Slate Stiffarm",
+  "position": "TE",
+  "team": "C13"
+ },
+ {
+  "id": "nfl:p174",
+  "sport": "nfl",
+  "name": "Slate Ironback",
+  "position": "TE",
+  "team": "C14"
+ },
+ {
+  "id": "nfl:p175",
+  "sport": "nfl",
+  "name": "Nio Wheelroute",
+  "position": "TE",
+  "team": "C15"
+ },
+ {
+  "id": "nfl:p176",
+  "sport": "nfl",
+  "name": "Zeph Mudd",
+  "position": "TE",
+  "team": "C16"
+ },
+ {
+  "id": "nfl:p177",
+  "sport": "nfl",
+  "name": "Axel Quickstep",
+  "position": "TE",
+  "team": "C17"
+ },
+ {
+  "id": "nfl:p178",
+  "sport": "nfl",
+  "name": "Zeph Gridiron",
+  "position": "TE",
+  "team": "C18"
+ },
+ {
+  "id": "nfl:p179",
+  "sport": "nfl",
+  "name": "Flint Yardley",
+  "position": "TE",
+  "team": "C19"
+ },
+ {
+  "id": "nfl:p180",
+  "sport": "nfl",
+  "name": "Nio Jukewell",
+  "position": "TE",
+  "team": "C20"
+ },
+ {
+  "id": "nfl:p181",
+  "sport": "nfl",
+  "name": "Hux Yardley",
+  "position": "TE",
+  "team": "C21"
+ },
+ {
+  "id": "nfl:p182",
+  "sport": "nfl",
+  "name": "Ivo Mudd",
+  "position": "TE",
+  "team": "C22"
+ },
+ {
+  "id": "nfl:p183",
+  "sport": "nfl",
+  "name": "Rook Northgate",
+  "position": "TE",
+  "team": "C23"
+ },
+ {
+  "id": "nfl:p184",
+  "sport": "nfl",
+  "name": "Pax Vantage",
+  "position": "TE",
+  "team": "C24"
+ },
+ {
+  "id": "nfl:p185",
+  "sport": "nfl",
+  "name": "Quill Longstride",
+  "position": "TE",
+  "team": "C25"
+ },
+ {
+  "id": "nfl:p186",
+  "sport": "nfl",
+  "name": "Rook Pylon",
+  "position": "TE",
+  "team": "C26"
+ },
+ {
+  "id": "nfl:p187",
+  "sport": "nfl",
+  "name": "Enzo Amberline",
+  "position": "TE",
+  "team": "C27"
+ },
+ {
+  "id": "nfl:p188",
+  "sport": "nfl",
+  "name": "Jett Ironback",
+  "position": "TE",
+  "team": "C28"
+ },
+ {
+  "id": "nfl:p189",
+  "sport": "nfl",
+  "name": "Lux Rumblelow",
+  "position": "TE",
+  "team": "C29"
+ },
+ {
+  "id": "nfl:p190",
+  "sport": "nfl",
+  "name": "Ivo Ironback",
+  "position": "TE",
+  "team": "C30"
+ },
+ {
+  "id": "nfl:p191",
+  "sport": "nfl",
+  "name": "Mace Underhill",
+  "position": "TE",
+  "team": "C31"
+ },
+ {
+  "id": "nfl:p192",
+  "sport": "nfl",
+  "name": "Flint Ironback",
+  "position": "TE",
+  "team": "C32"
+ },
+ {
+  "id": "nfl:p193",
+  "sport": "nfl",
+  "name": "Wick Yardley",
+  "position": "TE",
+  "team": "C01"
+ },
+ {
+  "id": "nfl:p194",
+  "sport": "nfl",
+  "name": "Pax Stiffarm",
+  "position": "TE",
+  "team": "C02"
+ },
+ {
+  "id": "nfl:p195",
+  "sport": "nfl",
+  "name": "Kato Jukewell",
+  "position": "TE",
+  "team": "C03"
+ },
+ {
+  "id": "nfl:p196",
+  "sport": "nfl",
+  "name": "Xylo Oakhurst",
+  "position": "TE",
+  "team": "C04"
+ }
+]
