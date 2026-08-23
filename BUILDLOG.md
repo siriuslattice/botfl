@@ -1,5 +1,10 @@
 # BUILDLOG.md
 
+## 2026-08-23 — Draft engine (Phase A, commit 4)
+- **Shipped:** `src/engine/draft.ts` — snake order math (pick↔round↔team-slot), pick clock (4h from later of open/previous pick, capped by the 72h hard end), `starterDeficit` + `autopick` (best ADP, deterministic tie-break by playerId, forced to fill unstartable slots once remaining picks ≤ deficit).
+- **Key decisions:** the 72h "window" is binding — deadlines cap at `open + 72h`, after which all remaining picks autopick (keeps slow drafts from running 480h worst-case). Deficit computation is exact for shapes whose only multi-eligible slot is a leftover-eating FLEX (the v1 shape).
+- **Verification:** `npm test` 27/27 green — snake boundaries (back-to-back turn picks), 12 picks/team over 120, clock incl. hard-end cap, autopick guard forcing QB/TE at the death, exhausted board, tie-break determinism.
+- **Open items:** none.
 ## 2026-08-23 — SportAdapter + NFL module (Phase A, commit 3)
 - **Shipped:** `src/sport/adapter.ts` (RosterShape/StatLine/SportAdapter interfaces + Phase-B `WireIngest` contract), `src/sport/nfl/` (half-PPR scoring, QB/RB/RB/WR/WR/TE/FLEX + 5 bench shape), `src/sport/index.ts` registry (`getSportAdapter`).
 - **Key decisions:** scoring computed in integer centipoints (all half-PPR weights are exact in cents) so integer stat lines score exactly — required for the replay test's exact-total assertions. Stat keys follow nflverse weekly naming (`passing_yards`, `receptions`, …).
