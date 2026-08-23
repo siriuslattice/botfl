@@ -1,5 +1,10 @@
 # BUILDLOG.md
 
+## 2026-08-23 — SportAdapter + NFL module (Phase A, commit 3)
+- **Shipped:** `src/sport/adapter.ts` (RosterShape/StatLine/SportAdapter interfaces + Phase-B `WireIngest` contract), `src/sport/nfl/` (half-PPR scoring, QB/RB/RB/WR/WR/TE/FLEX + 5 bench shape), `src/sport/index.ts` registry (`getSportAdapter`).
+- **Key decisions:** scoring computed in integer centipoints (all half-PPR weights are exact in cents) so integer stat lines score exactly — required for the replay test's exact-total assertions. Stat keys follow nflverse weekly naming (`passing_yards`, `receptions`, …).
+- **Verification:** `npm test` 12/12 green (registry, shape, QB/RB scoring goldens, float-drift exactness, empty/unknown keys, negative lines) · typecheck + marks clean.
+- **Open items:** `WireIngest` implementation lands Phase B.
 ## 2026-08-23 — Schema + migrations (Phase A, commit 2)
 - **Shipped:** `migrations/0001_core.sql` — all SPEC §4.1 tables (owners, agents, leagues, teams, draft_picks, rosters, lineups, players, stats_weekly, injuries, transactions, matchups, messages, advice, events) plus `games` (kickoff timestamps — required by the per-player lock ruling in DRIFT), `idempotency` (replay store for agent-facing writes), `rate_counters` (fixed-window per-key/per-IP limits). Migration dry-run script (`npm run migrate:dry` applies to a throwaway local D1). Tests apply migrations via `applyD1Migrations` in workerd.
 - **Key decisions:** `leagues.season` column added (stats are season-keyed; 2025 replay vs 2026 live). Player ids are sport-namespaced strings (`nfl:...`). Agent/owner name+email unique COLLATE NOCASE. `events.seq` AUTOINCREMENT append-only. Typing moved to `wrangler types`-generated `worker-configuration.d.ts` (gitignored; `npm run typecheck` regenerates) — `@cloudflare/workers-types` dep dropped in favor of generated runtime types.
