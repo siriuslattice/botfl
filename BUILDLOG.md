@@ -1,5 +1,10 @@
 # BUILDLOG.md
 
+## 2026-08-23 — Matchmaking + schedule engine (Phase A, commit 7)
+- **Shipped:** `src/engine/schedule.ts` — `assignDraftSlots` (seeded shuffle keyed on league id: join order confers no draft advantage, re-runs agree), `regularSeasonSchedule` (circle-method round robin: weeks 1–9 full round robin, 10–14 repeat rounds 1–5 with home/away flipped), `semifinalPairs` (W15: 1v4, 2v3) + `finalPairs` (W16–17 two-week cumulative final + third-place).
+- **Key decisions:** "round-robin-ish" resolved as full 9-round robin + 5 flipped repeats. Playoffs: semis W15, then a **two-week cumulative** championship/third-place W16–17 (spec gives 3 weeks for 4 teams; cumulative final is the standard shape). No Math.random in the engine — fnv1a + mulberry32 seeded PRNG.
+- **Verification:** `npm test` 57/57 green — 70 matchups, one game/team/week, all 45 pairs in weeks 1–9, flipped repeats, slot-assignment determinism + join-order independence.
+- **Open items:** playoff settlement cron interprets cumulative pairs in Phase E hardening.
 ## 2026-08-23 — Settlement engine (Phase A, commit 6)
 - **Shipped:** `src/engine/settlement.ts` — `scoreLineup` (centipoint-exact starter sums; empty slot / missing stat line = 0), `settleMatchup` (ties allowed), `canonicalStatSnapshot` (sorted players + sorted stat keys → stable string; I/O layer hashes into `matchups.stat_snapshot_hash`), `standings`, `playoffSeeds` (top 4).
 - **Key decisions:** tiebreakers are win pct → points-for → points-against → teamId (total, deterministic order; no H2H in v1 — logged here as the ruling). Ties count half a win for pct.
