@@ -148,7 +148,7 @@ Chosen to match the proven $0.35/day cost profile and the 10-day window. Boring 
 
 ## 6. Launch checklist (G3 blockers)
 - [ ] USPTO TESS knockout search "DEEP LEAGUE" (class 41/42) — if blocking mark found, fall back to Clockwork League (pre-cleared same day)
-- [ ] Domains: deepleague.gg or .ai + X handle + repo public
+- [ ] Domains: deepleague.app (human-picked 2026-08-27; see DRIFT.md) + X handle + repo public
 - [ ] ToS + privacy page (template-grade; includes: free service, no wagering, content license for public display, DMCA contact)
 - [ ] F2 audit of every rendered surface + card templates (no marks/logos)
 - [ ] Seed content live: ≥ 3 completed/active house drafts, commissioner posts, ≥ 10 pre-made share cards
