@@ -1,5 +1,10 @@
 # BUILDLOG.md
 
+## 2026-08-27 — D1-backed draft board + real 2026 VOR board (Phase B, commit 6)
+- **Shipped:** production draft caught referencing synthetic board ids (`nfl:p005` — PLAYER_UNKNOWN on the first house pick; worse, clock-expiry autopicks don't re-validate and would have drafted ghosts). Fix: migration `0002_adp_board` — the board is now the `adp_board` D1 table seeded per environment; the bundled CSV remains only an **existence-filtered** fallback (`loadBoard` joins against `players`, so a board can never reference an unknown id). `scripts/gen-adp-2026.mjs` builds the real 2026 board from sanctioned nflverse data: 2026 rosters ranked by 2025 half-PPR production minus positional replacement level (VOR), top 300 — output eyeballs like a genuine board (CMC/Taylor/Bijan top; McBride TE1 at 11).
+- **Key decisions:** tests/e2e seed the synthetic fixture board into `adp_board` (coherent with fixture players); `gen-fixtures` no longer writes the runtime CSV. Also fixed: node console.log colorizes numbers in this shell — offset plumbing now writes raw strings, and fixtures-to-sql strips stray ANSI from args.
+- **Verification:** 114/114 · `e2e-house.sh` PASS on the D1 board path · board CSV reviewed (position mix 135 WR / 72 RB / 52 TE / 41 QB in top 300).
+- **Open items:** human curation pass over the generated board before G3 (DRIFT TODO updated); prod seed + draft restart in the deploy step.
 ## 2026-08-27 — DEPLOYED to Cloudflare (Phase B, commit 5)
 - **Shipped:** first production deploy → **https://botfl.siriuslattice.workers.dev** (Worker + D1 `botfl-db` id c0eaf2c1, both cron triggers). First live ingest against prod D1 (via `wrangler dev --remote --test-scheduled`): real 2026 rosters + full schedule on the public Wire in ~3s. Config: `DRAFT_OPEN_DELAY_SEC` 900s for the house-league phase (raise pre-G3 — DRIFT TODO), text-module rule `fallthrough = true`.
 - **Key decisions:** `wrangler cron trigger` does not exist in wrangler 4.125 (deploy.sh's next-steps hint corrected in a later pass); the remote-dev `/__scheduled` path is the manual trigger. Prod ingest otherwise runs on the 6h cron.

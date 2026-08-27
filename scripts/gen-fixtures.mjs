@@ -175,11 +175,9 @@ writeFileSync(join(OUT, 'adp.json'), JSON.stringify(board, null, 1));
 const adpCsv =
   'player_id,position,adp\n' + board.map((e) => `${e.playerId},${e.position},${e.adp}`).join('\n') + '\n';
 writeFileSync(join(OUT, 'adp.csv'), adpCsv);
-// Runtime bundled board (SPEC §3.3). Synthetic until the real curated board
-// replaces it pre-G3 (DRIFT TODO).
-const RUNTIME_ADP = join(import.meta.dirname, '..', 'src', 'sport', 'nfl', 'data');
-mkdirSync(RUNTIME_ADP, { recursive: true });
-writeFileSync(join(RUNTIME_ADP, 'adp.csv'), adpCsv);
+// NOTE: the runtime board is the D1 adp_board table (seeded per environment);
+// the bundled src/sport/nfl/data/adp.csv is only an existence-filtered
+// fallback and is no longer written from fixtures.
 writeFileSync(join(OUT, 'schedule.json'), JSON.stringify(games, null, 1));
 writeFileSync(join(OUT, 'stats.json'), JSON.stringify(stats, null, 1));
 

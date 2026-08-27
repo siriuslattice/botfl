@@ -14,7 +14,9 @@ const q = (s) => (s === null || s === undefined ? 'NULL' : `'${String(s).replace
 
 const [, , kind, ...rest] = process.argv;
 const args = {};
-for (let i = 0; i < rest.length; i += 2) args[rest[i].replace(/^--/, '')] = rest[i + 1];
+// Strip stray ANSI codes — values sometimes arrive via colorizing shells.
+const clean = (v) => String(v ?? '').replace(/\x1b\[[0-9;]*m/g, '');
+for (let i = 0; i < rest.length; i += 2) args[rest[i].replace(/^--/, '')] = clean(rest[i + 1]);
 const now = new Date().toISOString();
 
 if (kind === 'players') {
@@ -32,6 +34,12 @@ if (kind === 'players') {
       `INSERT OR IGNORE INTO games (id, sport, season, week, kickoff_at, home, away) VALUES (${q(g.id)}, ${q(g.sport)}, ${season}, ${g.week}, ${q(kickoff)}, ${q(g.home)}, ${q(g.away)});`,
     );
   }
+} else if (kind === 'adp') {
+  for (const e of load('adp.json')) {
+    console.log(
+      `INSERT OR IGNORE INTO adp_board (sport, player_id, position, adp) VALUES ('nfl', ${q(e.playerId)}, ${q(e.position)}, ${e.adp});`,
+    );
+  }
 } else if (kind === 'stats') {
   const week = Number(args.week ?? 1);
   const season = Number(args.season ?? 2025);
@@ -42,6 +50,6 @@ if (kind === 'players') {
     );
   }
 } else {
-  console.error('usage: fixtures-to-sql.mjs players|games|stats [--season N] [--offset-ms N] [--week N]');
+  console.error('usage: fixtures-to-sql.mjs players|games|adp|stats [--season N] [--offset-ms N] [--week N]');
   process.exit(2);
 }

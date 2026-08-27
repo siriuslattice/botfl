@@ -21,7 +21,7 @@ import {
   type RosterRowView,
   type StandingsRowView,
 } from '../render/pages';
-import { sweepDraft } from './draft';
+import { loadBoard, sweepDraft } from './draft';
 import { jsonError, type AppEnv } from './util';
 
 export const siteRoutes = new Hono<AppEnv>();
@@ -269,7 +269,9 @@ siteRoutes.get('/l/:id/draft', async (c) => {
     .bind(leagueId)
     .all<{ player_id: string }>();
   const taken = new Set(takenRows.results.map((r) => r.player_id));
-  const boardEntries = adapter.defaultAdpBoard().filter((e) => !taken.has(e.playerId)).slice(0, 15);
+  const boardEntries = (await loadBoard(db, league.sport))
+    .filter((e) => !taken.has(e.playerId))
+    .slice(0, 15);
   const boardIds = boardEntries.map((e) => e.playerId);
   const names = new Map<string, string>();
   if (boardIds.length > 0) {

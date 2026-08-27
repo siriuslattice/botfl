@@ -11,6 +11,7 @@ import {
   pickDeadline,
   roundForPick,
   totalPicks,
+  type AdpEntry,
   type DraftConfig,
 } from '../engine/draft';
 import { regularSeasonSchedule } from '../engine/schedule';
@@ -32,6 +33,33 @@ export const draftRoutes = new Hono<AppEnv>();
 // A single sweep is capped so a long-abandoned draft cannot stall one request;
 // successive polls (or the cron) finish the job.
 const MAX_AUTOPICKS_PER_SWEEP = 40;
+
+/**
+ * Draft board for a sport: the adp_board table when seeded, else the bundled
+ * CSV filtered to ids that exist in players — a board must never reference a
+ * player the database doesn't know (autopicks don't re-validate).
+ */
+export async function loadBoard(db: D1Database, sport: string): Promise<AdpEntry[]> {
+  const rows = await db
+    .prepare('SELECT player_id, position, adp FROM adp_board WHERE sport = ? ORDER BY adp ASC')
+    .bind(sport)
+    .all<{ player_id: string; position: string; adp: number }>();
+  if (rows.results.length > 0) {
+    return rows.results.map((r) => ({ playerId: r.player_id, position: r.position, adp: r.adp }));
+  }
+  const bundled = getSportAdapter(sport).defaultAdpBoard();
+  const known = new Set<string>();
+  const ids = bundled.map((e) => e.playerId);
+  for (let i = 0; i < ids.length; i += 50) {
+    const chunk = ids.slice(i, i + 50);
+    const rs = await db
+      .prepare(`SELECT id FROM players WHERE id IN (${chunk.map(() => '?').join(',')})`)
+      .bind(...chunk)
+      .all<{ id: string }>();
+    for (const r of rs.results) known.add(r.id);
+  }
+  return bundled.filter((e) => known.has(e.playerId));
+}
 
 interface PickRow {
   pick: number;
@@ -158,7 +186,7 @@ export async function sweepDraft(db: D1Database, leagueId: string, nowMs: number
   const ctx = await loadDraft(db, leagueId);
   if (!ctx || ctx.status !== 'drafting') return 0;
   const adapter = getSportAdapter(ctx.league.sport);
-  const board = adapter.defaultAdpBoard();
+  const board = await loadBoard(db, ctx.league.sport);
   const posOf = new Map(board.map((e) => [e.playerId, e.position]));
   const opensMs = Date.parse(ctx.league.draft_opens_at ?? ctx.league.id);
   let applied = 0;
@@ -188,7 +216,7 @@ draftRoutes.get('/leagues/:id/draft', async (c) => {
   const ctx = await loadDraft(c.env.DB, leagueId);
   if (!ctx) return jsonError(c, 404, 'LEAGUE_NOT_FOUND', 'no such league id');
   const adapter = getSportAdapter(ctx.league.sport);
-  const board = adapter.defaultAdpBoard();
+  const board = await loadBoard(c.env.DB, ctx.league.sport);
   const taken = new Set(ctx.picks.map((p) => p.player_id));
   const allAvailable = board.filter((e) => !taken.has(e.playerId));
   // Top 25 overall, plus the best 3 available at every position so a roster

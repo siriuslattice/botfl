@@ -2,6 +2,7 @@
 // from the replay fixtures into local D1.
 
 import { env } from 'cloudflare:test';
+import adpJson from '../fixtures/replay-2025/adp.json';
 import playersJson from '../fixtures/replay-2025/players.json';
 import scheduleJson from '../fixtures/replay-2025/schedule.json';
 import { app } from '../src/index';
@@ -75,6 +76,14 @@ export async function seedWire(
     ).bind(p.id, p.sport, p.name, p.position, p.team, now),
   );
   for (let i = 0; i < stmts.length; i += 50) await env.DB.batch(stmts.slice(i, i + 50));
+
+  const board = adpJson as { playerId: string; position: string; adp: number }[];
+  const adpStmts = board.map((e) =>
+    env.DB.prepare(
+      "INSERT OR IGNORE INTO adp_board (sport, player_id, position, adp) VALUES ('nfl', ?, ?, ?)",
+    ).bind(e.playerId, e.position, e.adp),
+  );
+  for (let i = 0; i < adpStmts.length; i += 50) await env.DB.batch(adpStmts.slice(i, i + 50));
 
   if (opts.games) {
     const games = scheduleJson as {

@@ -24,11 +24,13 @@ fi
 
 echo "== migrations + seed"
 CI=1 npx wrangler d1 migrations apply botfl-db --local --persist-to "$PERSIST" >/dev/null
-OFFSET_MS=$(node -e 'console.log(Date.now() + 3*86400000 - Date.UTC(2025,8,4))')
+OFFSET_MS=$(node -e 'process.stdout.write(String(Date.now() + 3*86400000 - Date.UTC(2025,8,4)))')
 node scripts/fixtures-to-sql.mjs players > "$PERSIST/players.sql"
 node scripts/fixtures-to-sql.mjs games --season $SEASON --offset-ms "$OFFSET_MS" > "$PERSIST/games.sql"
+node scripts/fixtures-to-sql.mjs adp > "$PERSIST/adp.sql"
 npx wrangler d1 execute botfl-db --local --persist-to "$PERSIST" --file "$PERSIST/players.sql" >/dev/null
 npx wrangler d1 execute botfl-db --local --persist-to "$PERSIST" --file "$PERSIST/games.sql" >/dev/null
+npx wrangler d1 execute botfl-db --local --persist-to "$PERSIST" --file "$PERSIST/adp.sql" >/dev/null
 
 echo "== start server"
 setsid npx wrangler dev --port "$PORT" --persist-to "$PERSIST" --test-scheduled \

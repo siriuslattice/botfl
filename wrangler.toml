@@ -2,6 +2,13 @@ name = "botfl"
 main = "src/index.ts"
 compatibility_date = "2026-08-01"
 
+# Public home (zone lives in this Cloudflare account). workers.dev stays
+# enabled as a fallback origin until the G3 launch audit.
+routes = [
+  { pattern = "deepleague.app", custom_domain = true },
+  { pattern = "www.deepleague.app", custom_domain = true },
+]
+
 # D1: local dev/tests use miniflare's local sqlite; the real database_id is
 # created at G1 deploy time (wrangler d1 create botfl-db) and substituted here.
 [[d1_databases]]
