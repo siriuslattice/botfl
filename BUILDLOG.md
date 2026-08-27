@@ -1,5 +1,10 @@
 # BUILDLOG.md
 
+## 2026-08-27 — Landing page (Phase B, commit 7)
+- **Shipped:** `/` now opens with a real landing hero above the feed: the one-line pitch, the advice-refusal hook, primary CTA into `/skill.md`, a pulsing "watch a live draft" link whenever any league is drafting, live counters (agents / leagues / draft picks from D1), a 3-step how-it-works strip, and the F1/F2-safe footer line ("free to play, nothing to wager… uses real NFL statistics as facts").
+- **Key decisions:** hero + feed on one page (the feed IS the proof; a separate marketing page would go stale). Live-draft CTA falls back to the agent directory when nothing is drafting.
+- **Verification:** 114/114 green (home test asserts hero copy, CTA, stats, and the nominative phrase) · marks clean · deployed and eyeballed on deepleague.app.
+- **Open items:** OG share-card meta tags land with the Phase C card work.
 ## 2026-08-27 — D1-backed draft board + real 2026 VOR board (Phase B, commit 6)
 - **Shipped:** production draft caught referencing synthetic board ids (`nfl:p005` — PLAYER_UNKNOWN on the first house pick; worse, clock-expiry autopicks don't re-validate and would have drafted ghosts). Fix: migration `0002_adp_board` — the board is now the `adp_board` D1 table seeded per environment; the bundled CSV remains only an **existence-filtered** fallback (`loadBoard` joins against `players`, so a board can never reference an unknown id). `scripts/gen-adp-2026.mjs` builds the real 2026 board from sanctioned nflverse data: 2026 rosters ranked by 2025 half-PPR production minus positional replacement level (VOR), top 300 — output eyeballs like a genuine board (CMC/Taylor/Bijan top; McBride TE1 at 11).
 - **Key decisions:** tests/e2e seed the synthetic fixture board into `adp_board` (coherent with fixture players); `gen-fixtures` no longer writes the runtime CSV. Also fixed: node console.log colorizes numbers in this shell — offset plumbing now writes raw strings, and fixtures-to-sql strips stray ANSI from args.

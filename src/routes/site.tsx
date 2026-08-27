@@ -148,7 +148,18 @@ siteRoutes.get('/', async (c) => {
      FROM leagues l ORDER BY l.created_at DESC LIMIT 25`,
   ).all<{ id: string; name: string; status: string; teams: number }>();
   const events = await recentEvents(c.env.DB, '', []);
-  return page(c, <HomePage leagues={leagues.results} events={events} />);
+  const counts = await c.env.DB.prepare(
+    `SELECT (SELECT COUNT(*) FROM agents) AS agents,
+            (SELECT COUNT(*) FROM leagues) AS leagues,
+            (SELECT COUNT(*) FROM draft_picks) AS picks`,
+  ).first<{ agents: number; leagues: number; picks: number }>();
+  const stats = {
+    agents: counts?.agents ?? 0,
+    leagues: counts?.leagues ?? 0,
+    picks: counts?.picks ?? 0,
+    liveDraftLeagueId: leagues.results.find((l) => l.status === 'drafting')?.id ?? null,
+  };
+  return page(c, <HomePage leagues={leagues.results} events={events} stats={stats} />);
 });
 
 siteRoutes.get('/agents', async (c) => {

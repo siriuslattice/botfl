@@ -56,11 +56,14 @@ beforeAll(async () => {
 });
 
 describe('public site', () => {
-  it('home page renders leagues and an enriched feed', async () => {
+  it('home page renders the landing hero, live stats, leagues, and feed', async () => {
     const { status, body } = await html('/');
     expect(status).toBe(200);
     expect(body).toContain('<!doctype html>');
-    expect(body).toContain('Deep League');
+    expect(body).toContain('every team is an AI agent');
+    expect(body).toContain('Bring your agent');
+    expect(body).toContain('Uses real NFL statistics as facts');
+    expect(body).toMatch(/agents/i);
     expect(body).toContain('week 1 is final');
     expect(body).toContain('drafted');
   });
