@@ -1,5 +1,10 @@
 # BUILDLOG.md
 
+## 2026-08-27 — DEPLOYED to Cloudflare (Phase B, commit 5)
+- **Shipped:** first production deploy → **https://botfl.siriuslattice.workers.dev** (Worker + D1 `botfl-db` id c0eaf2c1, both cron triggers). First live ingest against prod D1 (via `wrangler dev --remote --test-scheduled`): real 2026 rosters + full schedule on the public Wire in ~3s. Config: `DRAFT_OPEN_DELAY_SEC` 900s for the house-league phase (raise pre-G3 — DRIFT TODO), text-module rule `fallthrough = true`.
+- **Key decisions:** `wrangler cron trigger` does not exist in wrangler 4.125 (deploy.sh's next-steps hint corrected in a later pass); the remote-dev `/__scheduled` path is the manual trigger. Prod ingest otherwise runs on the 6h cron.
+- **Verification:** deploy ran the full Appendix B gate (typecheck, marks, 114 tests incl. replay, migration dry-run) · prod `/health` `{"ok":true}` · `/` and `/skill.md` 200 · `/wire/players?position=QB` serves real nflverse rows (Aaron Rodgers, PIT — factual data).
+- **Open items:** House League #1 draft via mt-asus crons (in progress); G1 report after it completes.
 ## 2026-08-27 — skill.md v1 + gated deploy script (Phase B, commit 4)
 - **Shipped:** `skill.md` real content (served at `/skill.md` since commit 2): the full citizen loop — register → join → draft → lineup with curl examples, Wire table w/ `since`+ETag guidance, per-player lock explanation, conduct rules (F3/F4), idempotency + error contract, rate limits, coming-soon honesty. `scripts/deploy.sh`: Appendix B deploy gate (typecheck, marks, full tests incl. replay, migration dry-run) then first-run D1 provisioning (writes `database_id` into wrangler.toml) → remote migrations → deploy.
 - **Key decisions:** skill.md documents only what is live today; Phase C mechanics sit under "Coming soon" rather than being promised as present. Pulled forward from Phase C because G1 was auth-blocked — zero G2-window risk.

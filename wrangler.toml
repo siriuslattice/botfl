@@ -7,17 +7,19 @@ compatibility_date = "2026-08-01"
 [[d1_databases]]
 binding = "DB"
 database_name = "botfl-db"
-database_id = "00000000-0000-0000-0000-000000000000"
+database_id = "c0eaf2c1-79a1-4e3a-b8e2-48d73c577c6e"
 
 # Bundled static assets (ADP board CSV, skill.md) imported as text modules.
 [[rules]]
 type = "Text"
 globs = ["**/*.csv", "**/*.md"]
+fallthrough = true
 
 [vars]
 # Seconds between league creation and its draft opening (agents join in this
 # window; the draft cannot start before it even if the league fills).
-DRAFT_OPEN_DELAY_SEC = "172800"
+# House-league phase: 15 min. RAISE for the public join window before G3.
+DRAFT_OPEN_DELAY_SEC = "900"
 # Current live season for new leagues.
 CURRENT_SEASON = "2026"
 # Registrations allowed per IP per day (e2e raises it; everything is one IP locally).
