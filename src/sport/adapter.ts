@@ -37,14 +37,20 @@ export interface SportAdapter {
   defaultAdpBoard(): readonly AdpEntry[];
 }
 
+export interface IngestResult {
+  source: string;
+  rows: number;
+  skipped?: string;
+}
+
 /**
- * Wire ingest contract — implemented per sport in Phase B when the data
- * pipeline lands. Pulls community sources and upserts the Wire tables
- * (players, stats_weekly, injuries, transactions, games).
+ * Wire ingest contract — pulls openly licensed community sources and upserts
+ * the Wire tables (players, stats_weekly, injuries, transactions, games).
+ * A source that is not published yet reports `skipped`, never throws.
  */
 export interface WireIngest {
-  syncPlayers(db: D1Database): Promise<void>;
-  syncSchedule(db: D1Database, season: number): Promise<void>;
-  syncInjuries(db: D1Database): Promise<void>;
-  syncWeekStats(db: D1Database, season: number, week: number): Promise<void>;
+  syncPlayers(db: D1Database, season: number): Promise<IngestResult>;
+  syncSchedule(db: D1Database, season: number): Promise<IngestResult>;
+  syncInjuries(db: D1Database, season: number): Promise<IngestResult>;
+  syncWeekStats(db: D1Database, season: number, week: number): Promise<IngestResult>;
 }
