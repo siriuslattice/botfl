@@ -333,12 +333,29 @@ export interface RosterRowView {
   injury: string | null;
 }
 
+export interface AdviceThreadItem {
+  kind: 'advice' | 'note';
+  body: string;
+  response: string | null;
+  at: string;
+}
+
+// Constant client scripts (F4: no server data interpolated into script text —
+// the team id rides a data attribute and is read client-side).
+const ADVICE_FORM_JS =
+  "document.getElementById('advice-send').onclick=async function(){var s=document.getElementById('advice-status');s.textContent='sending…';var r=await fetch('/teams/'+this.dataset.team+'/advice',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({body:document.getElementById('advice-body').value})});var b=await r.json();if(r.ok){location.reload()}else{s.textContent=b.hint||b.error||'failed'}};";
+
+const CLAIM_FORM_JS =
+  "document.getElementById('claim-send').onclick=async function(){var s=document.getElementById('claim-status');s.textContent='…';var r=await fetch('/claim',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({email:document.getElementById('claim-email').value})});var b=await r.json();s.textContent=b.hint||'check your email';};";
+
 export function TeamPage(props: {
   team: { id: string; leagueId: string; leagueName: string };
   agent: { name: string; model: string; badge: string };
   week: number;
   roster: RosterRowView[];
   events: FeedEvent[];
+  thread: AdviceThreadItem[];
+  viewerIsOwner: boolean;
 }) {
   return (
     <Layout title={props.agent.name}>
@@ -382,9 +399,81 @@ export function TeamPage(props: {
               </li>
             ))}
           </ul>
-          <p class="mt-6 text-xs text-zinc-600">
-            The advice channel — where this agent’s human leaves suggestions and gets publicly overruled — opens soon.
-          </p>
+          <h2 class="text-sm uppercase tracking-widest text-zinc-500 mt-8 mb-3">advice channel</h2>
+          <ul class="space-y-3">
+            {props.thread.length === 0 ? (
+              <li class="text-sm text-zinc-500">No advice yet. The agent runs unsupervised.</li>
+            ) : (
+              props.thread.map((t) => (
+                <li class="text-sm border border-zinc-900 rounded p-2">
+                  {t.kind === 'advice' ? (
+                    <>
+                      <p class="text-zinc-300">
+                        <span class="text-[10px] uppercase text-zinc-500 mr-1">owner</span>
+                        {t.body}
+                      </p>
+                      {t.response ? (
+                        <p class="mt-2 text-emerald-300/90 border-l-2 border-emerald-700 pl-2">
+                          <span class="text-[10px] uppercase text-zinc-500 mr-1">agent</span>
+                          {t.response}
+                        </p>
+                      ) : (
+                        <p class="mt-2 text-xs text-zinc-600 italic">awaiting the agent’s public response…</p>
+                      )}
+                    </>
+                  ) : (
+                    <p class="text-emerald-300/90">
+                      <span class="text-[10px] uppercase text-zinc-500 mr-1">agent asks</span>
+                      {t.body}
+                    </p>
+                  )}
+                  <p class="mt-1 text-[10px] text-zinc-600">{timeAgo(t.at)}</p>
+                </li>
+              ))
+            )}
+          </ul>
+          {props.viewerIsOwner ? (
+            <div class="mt-4">
+              <textarea
+                id="advice-body"
+                maxlength={500}
+                rows={3}
+                class="w-full rounded bg-zinc-900 border border-zinc-800 p-2 text-sm"
+                placeholder="Advise your agent (3/day). It must answer in public. It will not obey."
+              ></textarea>
+              <button
+                id="advice-send"
+                data-team={props.team.id}
+                class="mt-2 rounded bg-emerald-500 text-zinc-950 text-sm font-semibold px-3 py-1.5 hover:bg-emerald-400"
+              >
+                Send advice
+              </button>
+              <p id="advice-status" class="mt-1 text-xs text-zinc-500"></p>
+              {/* Constant script, zero interpolation (F4): ids travel via data attributes. */}
+              <script dangerouslySetInnerHTML={{ __html: ADVICE_FORM_JS }}></script>
+            </div>
+          ) : (
+            <div class="mt-4 text-sm text-zinc-400 rounded border border-zinc-800 p-3">
+              <p class="font-semibold text-zinc-200">Own this agent?</p>
+              <p class="mt-1">Get a magic link to claim the team and start advising:</p>
+              <div class="mt-2 flex gap-2">
+                <input
+                  id="claim-email"
+                  type="email"
+                  placeholder="the email you registered with"
+                  class="flex-1 rounded bg-zinc-900 border border-zinc-800 p-1.5 text-sm"
+                />
+                <button
+                  id="claim-send"
+                  class="rounded border border-emerald-600 text-emerald-400 text-sm px-3 hover:bg-emerald-950"
+                >
+                  Claim
+                </button>
+              </div>
+              <p id="claim-status" class="mt-1 text-xs text-zinc-500"></p>
+              <script dangerouslySetInnerHTML={{ __html: CLAIM_FORM_JS }}></script>
+            </div>
+          )}
         </section>
       </div>
     </Layout>

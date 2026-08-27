@@ -3,6 +3,7 @@ import { adminRoutes } from './routes/admin';
 import { agentsRoutes } from './routes/agents';
 import { draftRoutes } from './routes/draft';
 import { messagesRoutes } from './routes/messages';
+import { ownersRoutes } from './routes/owners';
 import { leaguesRoutes } from './routes/leagues';
 import { lineupsRoutes } from './routes/lineups';
 import { siteRoutes } from './routes/site';
@@ -20,6 +21,7 @@ app.route('/', draftRoutes);
 app.route('/', lineupsRoutes);
 app.route('/', wireRoutes);
 app.route('/', messagesRoutes);
+app.route('/', ownersRoutes);
 app.route('/', adminRoutes);
 app.route('/', siteRoutes);
 

@@ -22,7 +22,9 @@ import {
   type StandingsRowView,
 } from '../render/pages';
 import { loadBoard, sweepDraft } from './draft';
+import { ownerFromSession } from './owners';
 import { jsonError, type AppEnv } from './util';
+import type { AdviceThreadItem } from '../render/pages';
 
 export const siteRoutes = new Hono<AppEnv>();
 
@@ -364,6 +366,36 @@ siteRoutes.get('/t/:id', async (c) => {
     team.id,
   ], 15);
 
+  // Advice thread: owner advice (+ responses) interleaved with agent notes.
+  const adviceRows = await db
+    .prepare(
+      `SELECT ad.body, ad.created_at, m.body AS response
+       FROM advice ad LEFT JOIN messages m ON m.id = ad.agent_response_msg_id
+       WHERE ad.team_id = ? ORDER BY ad.created_at DESC LIMIT 30`,
+    )
+    .bind(team.id)
+    .all<{ body: string; created_at: string; response: string | null }>();
+  const noteRows = await db
+    .prepare(
+      `SELECT body, created_at FROM messages
+       WHERE channel_type = 'advice' AND channel_id = ? AND held = 0 AND hidden = 0
+         AND id NOT IN (SELECT agent_response_msg_id FROM advice WHERE team_id = ? AND agent_response_msg_id IS NOT NULL)
+       ORDER BY created_at DESC LIMIT 15`,
+    )
+    .bind(team.id, team.id)
+    .all<{ body: string; created_at: string }>();
+  const thread: AdviceThreadItem[] = [
+    ...adviceRows.results.map((a) => ({ kind: 'advice' as const, body: a.body, response: a.response, at: a.created_at })),
+    ...noteRows.results.map((n) => ({ kind: 'note' as const, body: n.body, response: null, at: n.created_at })),
+  ].sort((a, b) => b.at.localeCompare(a.at));
+
+  const sessionOwner = await ownerFromSession(c);
+  const ownerRow = await db
+    .prepare('SELECT a.owner_id FROM teams t JOIN agents a ON a.id = t.agent_id WHERE t.id = ?')
+    .bind(team.id)
+    .first<{ owner_id: string | null }>();
+  const viewerIsOwner = sessionOwner !== null && sessionOwner.id === ownerRow?.owner_id;
+
   return page(
     c,
     <TeamPage
@@ -372,6 +404,8 @@ siteRoutes.get('/t/:id', async (c) => {
       week={week}
       roster={rosterView}
       events={events}
+      thread={thread}
+      viewerIsOwner={viewerIsOwner}
     />,
   );
 });

@@ -7,6 +7,8 @@ interface Env {
   ADMIN_TOKEN?: string;
   ANTHROPIC_API_KEY?: string;
   RESEND_API_KEY?: string;
+  /** '1' only in tests/local e2e: claim responses include the magic link. */
+  DEV_EXPOSE_LINKS?: string;
 }
 
 declare namespace Cloudflare {
@@ -14,5 +16,6 @@ declare namespace Cloudflare {
     ADMIN_TOKEN?: string;
     ANTHROPIC_API_KEY?: string;
     RESEND_API_KEY?: string;
+    DEV_EXPOSE_LINKS?: string;
   }
 }

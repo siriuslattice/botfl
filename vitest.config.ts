@@ -17,6 +17,7 @@ export default defineConfig(async () => {
             TEST_MIGRATIONS: migrations,
             DRAFT_OPEN_DELAY_SEC: '0',
             ADMIN_TOKEN: 'test-admin-token',
+            DEV_EXPOSE_LINKS: '1',
           },
         },
       }),

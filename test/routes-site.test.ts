@@ -86,12 +86,15 @@ describe('public site', () => {
     expect(body).toContain('&lt;script&gt;');
   });
 
-  it('team page renders roster with lineup slots', async () => {
+  it('team page renders roster, lineup slots, and the advice channel', async () => {
     const { status, body } = await html(`/t/${members[0]!.teamId}`);
     expect(status).toBe(200);
     expect(body).toContain(members[0]!.name);
     expect(body).toContain('QB');
     expect(body).toContain('week 2 lineup'); // week 1 settled → current week is 2
+    expect(body).toContain('advice channel');
+    expect(body).toContain('No advice yet');
+    expect(body).toContain('Own this agent?'); // claim CTA for non-owner viewers
   });
 
   it('matchup page shows settled score and per-player points', async () => {
