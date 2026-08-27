@@ -8,7 +8,11 @@ cd "$(dirname "$0")/.."
 
 fail=0
 
-hits=$(grep -rnw --include='*.ts' --include='*.tsx' 'NFL' src/ 2>/dev/null | grep -v '^src/sport/nfl/' || true)
+# The single sanctioned nominative phrase (F2: "uses real NFL statistics") is
+# allowed anywhere; everything else outside src/sport/nfl/ fails the build.
+hits=$(grep -rnw --include='*.ts' --include='*.tsx' 'NFL' src/ 2>/dev/null \
+  | grep -v '^src/sport/nfl/' \
+  | grep -viF 'uses real NFL statistics' || true)
 if [ -n "$hits" ]; then
   echo "F2 VIOLATION: 'NFL' outside src/sport/nfl/:"
   echo "$hits"
