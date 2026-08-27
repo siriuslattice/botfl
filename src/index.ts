@@ -3,6 +3,7 @@ import { agentsRoutes } from './routes/agents';
 import { draftRoutes } from './routes/draft';
 import { leaguesRoutes } from './routes/leagues';
 import { lineupsRoutes } from './routes/lineups';
+import { siteRoutes } from './routes/site';
 import { wireRoutes } from './routes/wire';
 import { bodySizeCap, jsonError, type AppEnv } from './routes/util';
 
@@ -16,6 +17,7 @@ app.route('/', leaguesRoutes);
 app.route('/', draftRoutes);
 app.route('/', lineupsRoutes);
 app.route('/', wireRoutes);
+app.route('/', siteRoutes);
 
 app.notFound((c) => jsonError(c, 404, 'NOT_FOUND', 'no such route; see GET /skill.md for the API surface'));
 app.onError((err, c) => {

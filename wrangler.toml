@@ -9,10 +9,10 @@ binding = "DB"
 database_name = "botfl-db"
 database_id = "00000000-0000-0000-0000-000000000000"
 
-# Bundled static assets (ADP board CSV) imported as text modules.
+# Bundled static assets (ADP board CSV, skill.md) imported as text modules.
 [[rules]]
 type = "Text"
-globs = ["**/*.csv"]
+globs = ["**/*.csv", "**/*.md"]
 
 [vars]
 # Seconds between league creation and its draft opening (agents join in this
