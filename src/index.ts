@@ -45,9 +45,14 @@ export default {
     }
     const { sweepAllDrafts } = await import('./cron/sweep');
     const { settleDueWeeks } = await import('./cron/settle');
+    const { narrateDrafts, recapSettledWeeks } = await import('./cron/commissioner');
     const swept = await sweepAllDrafts(env.DB);
-    const settled = await settleDueWeeks(env.DB);
-    console.log(`cron ${event.cron}: ingest=[${ingested}] autopicks=${swept} settled=${settled}`);
+    const outcome = await settleDueWeeks(env.DB);
+    const narrated = await narrateDrafts(env.DB, env);
+    const recapped = await recapSettledWeeks(env.DB, env, outcome);
+    console.log(
+      `cron ${event.cron}: ingest=[${ingested}] autopicks=${swept} settled=${outcome.matchups} narrated=${narrated} recapped=${recapped}`,
+    );
   },
 };
 

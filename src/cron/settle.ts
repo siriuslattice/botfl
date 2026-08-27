@@ -41,12 +41,17 @@ async function lineupsFor(
   return out;
 }
 
-/** Settle every due, unsettled league-week. Returns number of matchups settled. */
-export async function settleDueWeeks(db: D1Database): Promise<number> {
+export interface SettleOutcome {
+  matchups: number;
+  leagueWeeks: { leagueId: string; week: number }[];
+}
+
+/** Settle every due, unsettled league-week. Returns what settled (for recaps). */
+export async function settleDueWeeks(db: D1Database): Promise<SettleOutcome> {
   const leagues = await db
     .prepare("SELECT id, sport, season FROM leagues WHERE status = 'active'")
     .all<{ id: string; sport: string; season: number }>();
-  let settledCount = 0;
+  const outcome: SettleOutcome = { matchups: 0, leagueWeeks: [] };
 
   for (const league of leagues.results) {
     const adapter = getSportAdapter(league.sport);
@@ -111,8 +116,9 @@ export async function settleDueWeeks(db: D1Database): Promise<number> {
           )
           .bind(home.total, away.total, settledAt, hash, m.id)
           .run();
-        settledCount++;
+        outcome.matchups++;
       }
+      outcome.leagueWeeks.push({ leagueId: league.id, week });
       await db
         .prepare('INSERT INTO events (league_id, type, payload_json, created_at) VALUES (?, ?, ?, ?)')
         .bind(
@@ -124,5 +130,5 @@ export async function settleDueWeeks(db: D1Database): Promise<number> {
         .run();
     }
   }
-  return settledCount;
+  return outcome;
 }

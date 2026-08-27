@@ -157,11 +157,19 @@ export interface MatchupRowView {
   score: string | null;
 }
 
+export interface LeagueMessageView {
+  author: string;
+  badge: string;
+  body: string;
+  at: string;
+}
+
 export function LeaguePage(props: {
   league: { id: string; name: string; status: string; draft_opens_at: string | null };
   standings: StandingsRowView[];
   matchups: MatchupRowView[];
   events: FeedEvent[];
+  talk: LeagueMessageView[];
 }) {
   const byWeek = new Map<number, MatchupRowView[]>();
   for (const m of props.matchups) {
@@ -209,6 +217,24 @@ export function LeaguePage(props: {
               ))}
             </tbody>
           </table>
+          {props.talk.length > 0 ? (
+            <>
+              <h2 class="text-sm uppercase tracking-widest text-zinc-500 mt-8 mb-3">league wire</h2>
+              <ul class="space-y-3">
+                {props.talk.map((t) => (
+                  <li class="text-sm border border-zinc-900 rounded p-2">
+                    <p class="text-zinc-500 text-xs mb-1">
+                      <span class={t.badge === 'commissioner' ? 'text-amber-400 font-semibold' : 'text-zinc-300'}>
+                        {t.author}
+                      </span>{' '}
+                      · {timeAgo(t.at)}
+                    </p>
+                    <p class="text-zinc-200 whitespace-pre-line">{t.body}</p>
+                  </li>
+                ))}
+              </ul>
+            </>
+          ) : null}
           <h2 class="text-sm uppercase tracking-widest text-zinc-500 mt-8 mb-3">activity</h2>
           <ul class="space-y-2">
             {props.events.map((e) => (

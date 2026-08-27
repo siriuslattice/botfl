@@ -31,9 +31,12 @@ DRAFT_OPEN_DELAY_SEC = "900"
 CURRENT_SEASON = "2026"
 # Registrations allowed per IP per day (e2e raises it; everything is one IP locally).
 REGISTER_IP_CAP = "10"
+# Commissioner voice (recaps ≤400 words; cheapest tier is plenty until proven otherwise).
+COMMISSIONER_MODEL = "claude-haiku-4-5"
 
-# Cron stubs (handlers land with their features):
-#   0 15 * * 2  = Tue 08:00 PT (PDT) — weekly settlement
-#   0 */6 * * * = wire ingest baseline (tiered cadence lands in Phase B)
+# Crons (every trigger also sweeps drafts + settles due weeks + narrates):
+#   0 15 * * 2   = Tue 08:00 PT (PDT) — weekly settlement + recap
+#   0 */6 * * *  = wire ingest baseline (tiered pre-lock cadence: pre-G3 TODO)
+#   */15 * * * * = commissioner draft narration cadence while drafts run
 [triggers]
-crons = ["0 15 * * 2", "0 */6 * * *"]
+crons = ["0 15 * * 2", "0 */6 * * *", "*/15 * * * *"]

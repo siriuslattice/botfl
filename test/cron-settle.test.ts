@@ -33,7 +33,7 @@ beforeAll(async () => {
 
 describe('settleDueWeeks', () => {
   it('is a no-op before stats land', async () => {
-    expect(await settleDueWeeks(env.DB)).toBe(0);
+    expect((await settleDueWeeks(env.DB)).matchups).toBe(0);
   });
 
   it('settles week 1 exactly once, with exact scores and snapshot hashes', async () => {
@@ -53,7 +53,8 @@ describe('settleDueWeeks', () => {
       .run();
 
     const settled = await settleDueWeeks(env.DB);
-    expect(settled).toBe(5); // week 1 of this league
+    expect(settled.matchups).toBe(5); // week 1 of this league
+    expect(settled.leagueWeeks).toContainEqual({ leagueId, week: 1 });
 
     const rows = await env.DB.prepare(
       'SELECT home_team_id, away_team_id, home_score, away_score, settled_at, stat_snapshot_hash FROM matchups WHERE league_id = ? AND week = 1',
@@ -86,7 +87,7 @@ describe('settleDueWeeks', () => {
     expect(wk2?.n).toBe(0);
 
     // Re-run: deterministic no-op, values unchanged.
-    expect(await settleDueWeeks(env.DB)).toBe(0);
+    expect((await settleDueWeeks(env.DB)).matchups).toBe(0);
     const again = await env.DB.prepare(
       'SELECT home_score, away_score, settled_at, stat_snapshot_hash FROM matchups WHERE league_id = ? AND week = 1',
     )

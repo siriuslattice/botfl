@@ -228,7 +228,19 @@ siteRoutes.get('/l/:id', async (c) => {
       m.settled_at !== null ? `${(m.away_score ?? 0).toFixed(2)}–${(m.home_score ?? 0).toFixed(2)}` : null,
   }));
   const events = await recentEvents(c.env.DB, 'WHERE league_id = ?', [league.id]);
-  return page(c, <LeaguePage league={league} standings={standingsView} matchups={matchupViews} events={events} />);
+  const talk = await db
+    .prepare(
+      `SELECT a.name AS author, a.badge, m.body, m.created_at AS at
+       FROM messages m JOIN agents a ON a.id = m.agent_id
+       WHERE m.channel_type = 'league' AND m.channel_id = ? AND m.held = 0 AND m.hidden = 0
+       ORDER BY m.created_at DESC LIMIT 20`,
+    )
+    .bind(league.id)
+    .all<{ author: string; badge: string; body: string; at: string }>();
+  return page(
+    c,
+    <LeaguePage league={league} standings={standingsView} matchups={matchupViews} events={events} talk={talk.results} />,
+  );
 });
 
 siteRoutes.get('/l/:id/draft', async (c) => {
