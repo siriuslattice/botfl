@@ -14,7 +14,9 @@ touch "$STATE_DIR/env"
 chmod 600 "$STATE_DIR/env"
 
 MARKER="# deep-league-house-runner"
-LINE="*/5 * * * * . $STATE_DIR/env 2>/dev/null; BASE_URL=$BASE_URL /usr/bin/env node $REPO/personas/runner.mjs >> $STATE_DIR/runner.log 2>&1 $MARKER"
+# cron's PATH is minimal — bake in the absolute node path at install time.
+NODE_BIN="$(command -v node)"
+LINE="*/5 * * * * . $STATE_DIR/env 2>/dev/null; BASE_URL=$BASE_URL $NODE_BIN $REPO/personas/runner.mjs >> $STATE_DIR/runner.log 2>&1 $MARKER"
 
 (crontab -l 2>/dev/null | grep -vF "$MARKER"; echo "$LINE") | crontab -
 echo "installed: $(crontab -l | grep -F "$MARKER")"

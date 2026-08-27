@@ -107,3 +107,4 @@
 - **Key decisions:** stubs only — no toolchain or feature code before the Phase A plan is approved (SPEC Appendix A step 6).
 - **Verification:** tree matches Appendix B layout; initial commit pushed to origin/main.
 - **Open items:** Phase A build plan awaiting human review; toolchain setup (wrangler/TS/vitest) is its first commit.
+- **2026-08-27 addendum (commit 8):** house cron was silently dead — `/usr/bin/env node` fails under cron's minimal PATH (node lives in ~/.local/bin). install-cron.sh now bakes in the absolute node path at install time; verified pick flow resumed.
