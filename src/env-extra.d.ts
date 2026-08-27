@@ -9,6 +9,8 @@ interface Env {
   RESEND_API_KEY?: string;
   /** '1' only in tests/local e2e: claim responses include the magic link. */
   DEV_EXPOSE_LINKS?: string;
+  /** R2 card cache. Optional until R2 is enabled on the account (cards render uncached without it). */
+  CARDS?: R2Bucket;
 }
 
 declare namespace Cloudflare {
@@ -17,5 +19,6 @@ declare namespace Cloudflare {
     ANTHROPIC_API_KEY?: string;
     RESEND_API_KEY?: string;
     DEV_EXPOSE_LINKS?: string;
+    CARDS?: R2Bucket;
   }
 }

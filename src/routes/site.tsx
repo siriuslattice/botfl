@@ -493,6 +493,7 @@ siteRoutes.get('/m/:id', async (c) => {
       settled={m.settled_at !== null}
       home={await side(m.home_team_id, m.home_score)}
       away={await side(m.away_team_id, m.away_score)}
+      cardUrl={m.settled_at ? `${new URL(c.req.url).origin}/cards/matchup/${m.id}.png` : null}
     />,
   );
 });

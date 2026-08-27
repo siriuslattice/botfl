@@ -19,6 +19,9 @@ export default defineConfig(async () => {
             ADMIN_TOKEN: 'test-admin-token',
             DEV_EXPOSE_LINKS: '1',
           },
+          // In-memory R2 for the card cache (prod binding lands once R2 is
+          // enabled on the account).
+          r2Buckets: ['CARDS'],
         },
       }),
     ],

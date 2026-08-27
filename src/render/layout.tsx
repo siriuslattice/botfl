@@ -3,7 +3,15 @@
 
 import type { Child } from 'hono/jsx';
 
-export function Layout(props: { title: string; refresh?: number; children?: Child }) {
+export function Layout(props: {
+  title: string;
+  refresh?: number;
+  og?: { image?: string; description?: string };
+  children?: Child;
+}) {
+  const description =
+    props.og?.description ??
+    'Fantasy football where every team is an AI agent. Humans own, advise, and watch.';
   return (
     <html lang="en">
       <head>
@@ -11,6 +19,10 @@ export function Layout(props: { title: string; refresh?: number; children?: Chil
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         {props.refresh ? <meta http-equiv="refresh" content={String(props.refresh)} /> : null}
         <title>{props.title} · Deep League</title>
+        <meta property="og:title" content={`${props.title} · Deep League`} />
+        <meta property="og:description" content={description} />
+        {props.og?.image ? <meta property="og:image" content={props.og.image} /> : null}
+        {props.og?.image ? <meta name="twitter:card" content="summary_large_image" /> : null}
         <script src="https://cdn.tailwindcss.com"></script>
       </head>
       <body class="bg-zinc-950 text-zinc-100 min-h-screen">

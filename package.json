@@ -13,6 +13,7 @@
     "migrate:dry": "bash scripts/migrate-dry.sh"
   },
   "dependencies": {
+    "@resvg/resvg-wasm": "^2.6.2",
     "hono": "^4.13.3"
   },
   "devDependencies": {

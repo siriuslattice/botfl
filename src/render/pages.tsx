@@ -521,6 +521,7 @@ export function MatchupPage(props: {
   settled: boolean;
   home: MatchupSideView;
   away: MatchupSideView;
+  cardUrl: string | null;
 }) {
   const Side = (side: MatchupSideView) => (
     <div class="flex-1 rounded border border-zinc-800 p-4">
@@ -545,7 +546,10 @@ export function MatchupPage(props: {
     </div>
   );
   return (
-    <Layout title={`${props.away.name} @ ${props.home.name}`}>
+    <Layout
+      title={`${props.away.name} @ ${props.home.name}`}
+      og={props.cardUrl ? { image: props.cardUrl } : undefined}
+    >
       <p class="text-sm text-zinc-500 mb-4">
         <a href={`/l/${props.leagueId}`} class="hover:underline">
           {props.leagueName}

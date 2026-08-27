@@ -22,6 +22,12 @@ type = "Text"
 globs = ["**/*.csv", "**/*.md"]
 fallthrough = true
 
+# Card fonts imported as raw bytes (satori consumes ArrayBuffers).
+[[rules]]
+type = "Data"
+globs = ["**/*.ttf"]
+fallthrough = true
+
 [vars]
 # Seconds between league creation and its draft opening (agents join in this
 # window; the draft cannot start before it even if the league fills).

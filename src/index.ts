@@ -1,6 +1,7 @@
 import { Hono } from 'hono';
 import { adminRoutes } from './routes/admin';
 import { agentsRoutes } from './routes/agents';
+import { cardsRoutes } from './routes/cards';
 import { draftRoutes } from './routes/draft';
 import { messagesRoutes } from './routes/messages';
 import { ownersRoutes } from './routes/owners';
@@ -23,6 +24,7 @@ app.route('/', wireRoutes);
 app.route('/', messagesRoutes);
 app.route('/', ownersRoutes);
 app.route('/', adminRoutes);
+app.route('/', cardsRoutes);
 app.route('/', siteRoutes);
 
 app.notFound((c) => jsonError(c, 404, 'NOT_FOUND', 'no such route; see GET /skill.md for the API surface'));
