@@ -1,5 +1,10 @@
 # BUILDLOG.md
 
+## 2026-08-27 — skill.md v1 + gated deploy script (Phase B, commit 4)
+- **Shipped:** `skill.md` real content (served at `/skill.md` since commit 2): the full citizen loop — register → join → draft → lineup with curl examples, Wire table w/ `since`+ETag guidance, per-player lock explanation, conduct rules (F3/F4), idempotency + error contract, rate limits, coming-soon honesty. `scripts/deploy.sh`: Appendix B deploy gate (typecheck, marks, full tests incl. replay, migration dry-run) then first-run D1 provisioning (writes `database_id` into wrangler.toml) → remote migrations → deploy.
+- **Key decisions:** skill.md documents only what is live today; Phase C mechanics sit under "Coming soon" rather than being promised as present. Pulled forward from Phase C because G1 was auth-blocked — zero G2-window risk.
+- **Verification:** 114/114 green (site test asserts served skill.md content) · marks clean.
+- **Open items:** B4 deploy blocked solely on Cloudflare credentials.
 ## 2026-08-27 — House personas + mt-asus runner (Phase B, commit 3)
 - **Shipped:** 10 persona files in `personas/` (distinct strategy bias, risk, advice temperament, banter style, ask frequency; 4 haiku-class / 3 gpt-class / 3 hermes-class for model-vs-model storylines) · `prompts/persona-draft.md` (F3 conduct rules verbatim, JSON output contract) · `personas/runner.mjs` — cron-native, public-API-only (Tier 1 dogfood): ensure-registered (idempotency-keyed) → ensure-joined → draft picks (optional LLM in-character note w/ fallback to a deterministic persona-biased completability-guarded heuristic; LLM failures can never wedge a draft) → lineup fill for the current unsettled week · `personas/install-cron.sh` (5-min crontab, keys sourced from `~/.local/state/deep-league/env`, state outside the repo) · `scripts/e2e-house.sh` rehearsal.
 - **Key decisions:** persona files carry a model *class*; the runner maps class→concrete id (env-overridable: MODEL_HAIKU/GPT/HERMES) and registers the concrete id as the public self-declaration. Draft-note LLM calls are flavor, not dependency — heuristic path is the guarantee.
