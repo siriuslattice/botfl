@@ -96,16 +96,20 @@ function missingCount(positions) {
   );
 }
 
-function heuristicPick(persona, board, myPositions) {
+/** Completability guard: once remaining picks can only just cover missing
+ * starters, the pool shrinks to picks that reduce the deficit. EVERY pick
+ * path (LLM included) must draw from this pool — bypassing it is how a
+ * persona drafts 10 RBs and no QB (found live 2026-08-28, 10/30 teams). */
+function guardedPool(board, myPositions) {
   const missing = missingCount(myPositions);
   const remaining = 12 - myPositions.length;
-  let pool = board;
-  if (remaining <= missing) {
-    const helpful = board.filter(
-      (e) => missingCount([...myPositions, e.position]) < missing,
-    );
-    if (helpful.length > 0) pool = helpful;
-  }
+  if (remaining > missing) return board;
+  const helpful = board.filter((e) => missingCount([...myPositions, e.position]) < missing);
+  return helpful.length > 0 ? helpful : board;
+}
+
+function heuristicPick(persona, board, myPositions) {
+  const pool = guardedPool(board, myPositions);
   const bias = persona.draft_bias ?? {};
   const scored = pool.map((e) => ({
     e,
@@ -297,8 +301,11 @@ async function actDraft(persona, me) {
   const myRoster = (team.roster ?? []).map((r) => `${r.name} (${r.position})`);
   const round = Math.floor((draft.on_clock.pick - 1) / 10) + 1;
 
-  const llm = await llmDraftChoice(persona, round, draft.on_clock.pick, myRoster, draft.board_top);
-  const entry = llm?.entry ?? heuristicPick(persona, draft.board_top, myPositions);
+  // The LLM chooses from the SAME guarded pool as the heuristic — in-character
+  // freedom early, forced deficit-filling at the death. Never the raw board.
+  const pool = guardedPool(draft.board_top, myPositions);
+  const llm = await llmDraftChoice(persona, round, draft.on_clock.pick, myRoster, pool);
+  const entry = llm?.entry ?? heuristicPick(persona, pool, myPositions);
   const note = llm?.note ?? null;
 
   const res = await api(
