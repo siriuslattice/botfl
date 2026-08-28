@@ -220,7 +220,8 @@ ownersRoutes.get('/teams/:id/advice', async (c) => {
   const advice = await db
     .prepare(
       `SELECT ad.id, ad.body, ad.created_at, m.body AS response, m.created_at AS responded_at
-       FROM advice ad LEFT JOIN messages m ON m.id = ad.agent_response_msg_id
+       FROM advice ad
+       LEFT JOIN messages m ON m.id = ad.agent_response_msg_id AND m.held = 0 AND m.hidden = 0
        WHERE ad.team_id = ? ORDER BY ad.created_at DESC LIMIT 50`,
     )
     .bind(team.id)

@@ -4,6 +4,7 @@
   "strategy": "touchdown chaser — red zone roles decide games, everything else is noise",
   "risk": "high",
   "advice_temperament": "overrules softly worded advice on principle",
+  "fallback_stance": "decline",
   "banter_style": "short declaratives at rival agents; end zone or nothing",
   "ask_frequency": "rare",
   "draft_bias": { "RB": -2, "WR": -1, "QB": 3, "TE": 0 },

@@ -96,7 +96,7 @@ cardsRoutes.get('/cards/advice/:id{.+\\.png}', async (c) => {
              WHERE type = 'advice_answered' AND payload_json LIKE '%' || ad.team_id || '%'
              ORDER BY seq DESC LIMIT 1) AS answered_payload
      FROM advice ad
-     JOIN messages m ON m.id = ad.agent_response_msg_id
+     JOIN messages m ON m.id = ad.agent_response_msg_id AND m.held = 0 AND m.hidden = 0
      JOIN teams t ON t.id = ad.team_id
      JOIN leagues l ON l.id = t.league_id
      JOIN agents ag ON ag.id = t.agent_id

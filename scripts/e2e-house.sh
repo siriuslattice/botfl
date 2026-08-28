@@ -10,6 +10,7 @@ BASE="http://localhost:$PORT"
 PERSIST="$(mktemp -d)"
 SEASON=2025
 STATE="$PERSIST/house-state.json"
+HOUSE_EMAIL="house-e2e@example.com"
 
 cleanup() {
   [ -n "${DEV_PID:-}" ] && kill -- "-$DEV_PID" 2>/dev/null || true
@@ -35,6 +36,7 @@ npx wrangler d1 execute botfl-db --local --persist-to "$PERSIST" --file "$PERSIS
 echo "== start server"
 setsid npx wrangler dev --port "$PORT" --persist-to "$PERSIST" --test-scheduled \
   --var DRAFT_OPEN_DELAY_SEC:0 --var CURRENT_SEASON:$SEASON --var REGISTER_IP_CAP:100 \
+  --var DEV_EXPOSE_LINKS:1 \
   >"$PERSIST/wrangler.log" 2>&1 &
 DEV_PID=$!
 for i in $(seq 1 60); do
@@ -44,7 +46,8 @@ for i in $(seq 1 60); do
 done
 
 echo "== persona runner drafts House League #1 (heuristics, no keys)"
-BASE_URL="$BASE" STATE_FILE="$STATE" node personas/runner.mjs --loop 1 --until-active
+ANTHROPIC_API_KEY= OPENROUTER_API_KEY= BASE_URL="$BASE" STATE_FILE="$STATE" \
+  HOUSE_OWNER_EMAIL="$HOUSE_EMAIL" node personas/runner.mjs --loop 1 --until-active
 
 echo "== verify"
 LEAGUE_ID=$(node -pe 'const s=JSON.parse(require("fs").readFileSync(process.env.STATE,"utf8")); Object.values(s.personas)[0].league_id' STATE="$STATE" 2>/dev/null || \
@@ -56,4 +59,35 @@ curl -sf "$BASE/leagues/$LEAGUE_ID/draft" | node -e '
 '
 curl -sf "$BASE/l/$LEAGUE_ID/draft" | grep -q 'auto\|drafted' && echo "   draft room page renders"
 curl -sf "$BASE/l/$LEAGUE_ID" | grep -qi 'standings' && echo "   league page renders"
+
+echo "== C6: owner claims the house teams and leaves advice"
+TEAM_ID=$(STATE="$STATE" node -pe 'const s=JSON.parse(require("fs").readFileSync(process.env.STATE,"utf8")); Object.values(s.personas)[0].team_id')
+LINK=$(curl -sf -X POST "$BASE/claim" -H 'content-type: application/json' -d "{\"email\":\"$HOUSE_EMAIL\"}" \
+  | node -pe 'JSON.parse(require("fs").readFileSync(0,"utf8")).dev_magic_link')
+# wrangler dev reports the custom-domain origin in req.url, so follow the
+# link's PATH against the local server (same trick as the vitest claim test).
+CLAIM_PATH=$(node -pe 'new URL(process.argv[1]).pathname' "$LINK")
+COOKIE=$(curl -sf -D - -o /dev/null "$BASE$CLAIM_PATH" | tr -d '\r' | sed -n 's/^[Ss]et-[Cc]ookie: dl_owner=\([^;]*\).*/\1/p')
+[ -n "$COOKIE" ] || { echo "C6 FAIL: no owner session cookie"; exit 1; }
+curl -sf -X POST "$BASE/teams/$TEAM_ID/advice" -H "cookie: dl_owner=$COOKIE" -H 'content-type: application/json' \
+  -d '{"body":"Consider a higher-upside FLEX this week. Your call, of course."}' >/dev/null
+
+echo "== C6: second runner pass — greeting + public response (fallback path)"
+ANTHROPIC_API_KEY= OPENROUTER_API_KEY= BASE_URL="$BASE" STATE_FILE="$STATE" \
+  HOUSE_OWNER_EMAIL="$HOUSE_EMAIL" node personas/runner.mjs
+
+curl -sf "$BASE/teams/$TEAM_ID/advice" | node -e '
+  const b = JSON.parse(require("fs").readFileSync(0, "utf8"));
+  const answered = (b.advice ?? []).filter((a) => a.response);
+  const notes = b.agent_notes ?? [];
+  if (answered.length < 1) { console.error("C6 FAIL: advice unanswered", JSON.stringify(b).slice(0, 300)); process.exit(1); }
+  if (notes.length < 1) { console.error("C6 FAIL: no greeting note"); process.exit(1); }
+  console.log("   advice answered:", JSON.stringify(answered[0].response).slice(0, 72));
+  console.log("   greeting posted:", JSON.stringify(notes[notes.length - 1].body).slice(0, 72));
+'
+curl -sf "$BASE/teams/$TEAM_ID" | node -e '
+  const b = JSON.parse(require("fs").readFileSync(0, "utf8"));
+  if (b.owner_claimed !== true) { console.error("C6 FAIL: owner_claimed not exposed"); process.exit(1); }
+  console.log("   team card: owner_claimed true");
+'
 echo "HOUSE E2E: PASS"

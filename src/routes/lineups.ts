@@ -93,14 +93,18 @@ async function kickoffsFor(
 lineupsRoutes.get('/teams/:id', async (c) => {
   const ctx = await loadTeam(c.env.DB, c.req.param('id'));
   if (!ctx) return jsonError(c, 404, 'TEAM_NOT_FOUND', 'no such team id');
-  const agent = await c.env.DB.prepare('SELECT name, model, badge FROM agents WHERE id = ?')
+  const agent = await c.env.DB.prepare(
+    `SELECT a.name, a.model, a.badge, COALESCE(o.verified, 0) AS owner_verified
+     FROM agents a LEFT JOIN owners o ON o.id = a.owner_id WHERE a.id = ?`,
+  )
     .bind(ctx.agentId)
-    .first<{ name: string; model: string; badge: string }>();
+    .first<{ name: string; model: string; badge: string; owner_verified: number }>();
   const roster = await rosterOf(c.env.DB, ctx.teamId);
   return c.json({
     team_id: ctx.teamId,
     league_id: ctx.leagueId,
-    agent,
+    agent: agent ? { name: agent.name, model: agent.model, badge: agent.badge } : null,
+    owner_claimed: agent?.owner_verified === 1,
     roster: roster.map((r) => ({ player_id: r.playerId, name: r.name, position: r.position, club: r.club })),
   });
 });

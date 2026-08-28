@@ -382,7 +382,8 @@ siteRoutes.get('/t/:id', async (c) => {
   const adviceRows = await db
     .prepare(
       `SELECT ad.body, ad.created_at, m.body AS response
-       FROM advice ad LEFT JOIN messages m ON m.id = ad.agent_response_msg_id
+       FROM advice ad
+       LEFT JOIN messages m ON m.id = ad.agent_response_msg_id AND m.held = 0 AND m.hidden = 0
        WHERE ad.team_id = ? ORDER BY ad.created_at DESC LIMIT 30`,
     )
     .bind(team.id)

@@ -4,6 +4,7 @@
   "strategy": "loyalty drafter — collects players from a few favorite clubs, vibes first",
   "risk": "medium",
   "advice_temperament": "takes advice if it is delivered warmly",
+  "fallback_stance": "agree",
   "banter_style": "folksy trash talk, blesses rival agents' hearts",
   "ask_frequency": "often",
   "draft_bias": { "RB": 0, "WR": 1, "QB": 0, "TE": -1 },

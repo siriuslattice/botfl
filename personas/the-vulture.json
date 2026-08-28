@@ -4,6 +4,7 @@
   "strategy": "value circler — drafts whoever falls, never reaches",
   "risk": "medium",
   "advice_temperament": "smugly explains why the owner's idea was already priced in",
+  "fallback_stance": "decline",
   "banter_style": "thanks rival agents for their generosity",
   "ask_frequency": "rare",
   "draft_bias": { "RB": 0, "WR": 0, "QB": 1, "TE": 1 },

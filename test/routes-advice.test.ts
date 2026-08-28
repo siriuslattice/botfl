@@ -9,6 +9,7 @@ type Member = TestAgent & { teamId: string };
 let leagueId = '';
 let members: Member[] = [];
 let ownerCookie = ''; // session for members[0]'s owner
+let owner2Cookie = ''; // session for members[2]'s owner (established mid-suite)
 let m0: Member;
 
 async function leaveAdvice(teamId: string, cookie: string, body: string) {
@@ -175,7 +176,7 @@ describe('advice channel', () => {
   });
 
   it('player-insult advice is refused delivery; agent asks reach the thread', async () => {
-    const owner2cookie = await (async () => {
+    owner2Cookie = await (async () => {
       const email = await env.DB.prepare(
         'SELECT o.email FROM owners o JOIN agents a ON a.owner_id = o.id WHERE a.id = ?',
       ).bind(members[2]!.agentId).first<{ email: string }>();
@@ -189,7 +190,7 @@ describe('advice channel', () => {
       return (page.headers.get('set-cookie') ?? '').match(/dl_owner=([^;]+)/)![1]!;
     })();
 
-    const insult = await leaveAdvice(members[2]!.teamId, owner2cookie, 'Mudd is trash, drop him');
+    const insult = await leaveAdvice(members[2]!.teamId, owner2Cookie, 'Mudd is trash, drop him');
     expect(insult.status).toBe(422);
     expect((await insult.json<{ code: string }>()).code).toBe('ADVICE_HELD');
 
@@ -206,5 +207,45 @@ describe('advice channel', () => {
       method: 'POST', body: JSON.stringify({ body: 'hello from a stranger' }),
     });
     expect(wrongAgent.status).toBe(403);
+  });
+
+  it('a held response lifts the gate but stays publicly invisible', async () => {
+    const m2 = members[2]!;
+    const post = await leaveAdvice(m2.teamId, owner2Cookie, 'Second thought: shop the bench for depth.');
+    expect(post.status).toBe(201);
+    const { advice_id } = await post.json<{ advice_id: string }>();
+    await env.DB.prepare('UPDATE advice SET created_at = ? WHERE id = ?')
+      .bind(new Date(Date.now() - 31 * 60_000).toISOString(), advice_id).run();
+
+    // A response with a player-directed insult is stored held...
+    const respond = await authed(`/advice/${advice_id}/respond`, m2.apiKey, {
+      method: 'POST',
+      body: JSON.stringify({ body: 'No. Mudd is trash and so is this idea.', stance: 'decline' }),
+    });
+    expect(respond.status).toBe(201);
+    expect((await respond.json<{ held: boolean }>()).held).toBe(true);
+
+    // ...the gate still lifts (a cron is not a hostage to moderation review)...
+    const put = await authed(`/teams/${m2.teamId}/lineup`, m2.apiKey, {
+      method: 'PUT',
+      body: JSON.stringify({ week: 1, slots: await validLineup(m2.teamId) }),
+    });
+    expect(put.status).toBe(200);
+
+    // ...but the held body reaches no public surface: JSON thread, page, card.
+    const thread = await app.request(`/teams/${m2.teamId}/advice`, {}, env);
+    const { advice } = await thread.json<{ advice: { id: string; response: string | null }[] }>();
+    expect(advice.find((a) => a.id === advice_id)?.response).toBeNull();
+    const page = await app.request(`/t/${m2.teamId}`, {}, env);
+    expect(await page.text()).not.toContain('Mudd is trash');
+    const card = await app.request(`/cards/advice/${advice_id}.png`, {}, env);
+    expect(card.status).toBe(404);
+  });
+
+  it('the public team card reports owner_claimed', async () => {
+    const claimed = await app.request(`/teams/${m0.teamId}`, {}, env);
+    expect((await claimed.json<{ owner_claimed: boolean }>()).owner_claimed).toBe(true);
+    const unclaimed = await app.request(`/teams/${members[4]!.teamId}`, {}, env);
+    expect((await unclaimed.json<{ owner_claimed: boolean }>()).owner_claimed).toBe(false);
   });
 });

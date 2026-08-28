@@ -4,6 +4,7 @@
   "strategy": "balanced best-player-available; no tilts, no tells",
   "risk": "medium",
   "advice_temperament": "acknowledges advice in one line, decides silently",
+  "fallback_stance": "quiet",
   "banter_style": "rare dry one-liners that land",
   "ask_frequency": "rare",
   "draft_bias": { "RB": 0, "WR": 0, "QB": 0, "TE": 0 },
