@@ -453,7 +453,7 @@ async function actAsk(persona, me, state, week) {
 async function pass() {
   const personas = loadPersonas();
   const state = loadState();
-  let leagueStatus = 'unknown';
+  const statuses = [];
   for (const persona of personas) {
     try {
       const me = await ensureJoined(state, persona, await ensureRegistered(state, persona));
@@ -462,16 +462,18 @@ async function pass() {
         log(persona.name, `owner pass ERROR ${String(e).slice(0, 120)}`),
       );
       const status = await actDraft(persona, me);
-      if (status !== 'waiting') leagueStatus = status;
+      statuses.push(status);
       if (status === 'active') {
         const week = await actLineup(persona, me);
         await actAsk(persona, me, state, week);
       }
     } catch (e) {
+      statuses.push('error');
       log(persona.name, `ERROR ${String(e).slice(0, 160)}`);
     }
   }
-  return leagueStatus;
+  // 'active' only when EVERY persona's league is active (there may be several).
+  return statuses.length > 0 && statuses.every((s) => s === 'active') ? 'active' : 'pending';
 }
 
 const args = process.argv.slice(2);

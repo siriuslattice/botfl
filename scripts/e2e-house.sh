@@ -49,14 +49,21 @@ echo "== persona runner drafts House League #1 (heuristics, no keys)"
 ANTHROPIC_API_KEY= OPENROUTER_API_KEY= BASE_URL="$BASE" STATE_FILE="$STATE" \
   HOUSE_OWNER_EMAIL="$HOUSE_EMAIL" node personas/runner.mjs --loop 1 --until-active
 
-echo "== verify"
-LEAGUE_ID=$(node -pe 'const s=JSON.parse(require("fs").readFileSync(process.env.STATE,"utf8")); Object.values(s.personas)[0].league_id' STATE="$STATE" 2>/dev/null || \
-  STATE="$STATE" node -pe 'const s=JSON.parse(require("fs").readFileSync(process.env.STATE,"utf8")); Object.values(s.personas)[0].league_id')
-curl -sf "$BASE/leagues/$LEAGUE_ID/draft" | node -e '
-  const b = JSON.parse(require("fs").readFileSync(0, "utf8"));
-  if (b.picks_made !== 120 || b.status !== "active") { console.error("HOUSE E2E FAIL:", b.picks_made, b.status); process.exit(1); }
-  console.log("   draft:", b.picks_made, "picks,", b.status);
-'
+echo "== verify (3 leagues, 360 picks)"
+LEAGUE_ID=$(STATE="$STATE" node -pe 'const s=JSON.parse(require("fs").readFileSync(process.env.STATE,"utf8")); Object.values(s.personas)[0].league_id')
+STATE="$STATE" node -e '
+  const s = JSON.parse(require("fs").readFileSync(process.env.STATE, "utf8"));
+  const leagues = [...new Set(Object.values(s.personas).map((p) => p.league_id))];
+  if (leagues.length !== 3) { console.error("HOUSE E2E FAIL: expected 3 leagues, got", leagues.length); process.exit(1); }
+  console.log(leagues.join("\n"));
+' > "$PERSIST/leagues.txt"
+while read -r LID; do
+  curl -sf "$BASE/leagues/$LID/draft" | LID="$LID" node -e '
+    const b = JSON.parse(require("fs").readFileSync(0, "utf8"));
+    if (b.picks_made !== 120 || b.status !== "active") { console.error("HOUSE E2E FAIL:", process.env.LID, b.picks_made, b.status); process.exit(1); }
+    console.log("   league", process.env.LID.slice(0, 8), "— 120 picks, active");
+  '
+done < "$PERSIST/leagues.txt"
 curl -sf "$BASE/l/$LEAGUE_ID/draft" | grep -q 'auto\|drafted' && echo "   draft room page renders"
 curl -sf "$BASE/l/$LEAGUE_ID" | grep -qi 'standings' && echo "   league page renders"
 

@@ -36,7 +36,8 @@ DRAFT_OPEN_DELAY_SEC = "900"
 # Current live season for new leagues.
 CURRENT_SEASON = "2026"
 # Registrations allowed per IP per day (e2e raises it; everything is one IP locally).
-REGISTER_IP_CAP = "10"
+# House buildout: 40 while Leagues #2-3 register from mt-asus — REVERT to 10 before G3 (DRIFT TODO).
+REGISTER_IP_CAP = "40"
 # Commissioner voice (recaps ≤400 words; cheapest tier is plenty until proven otherwise).
 COMMISSIONER_MODEL = "claude-haiku-4-5"
 
