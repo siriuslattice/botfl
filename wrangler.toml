@@ -28,6 +28,12 @@ type = "Data"
 globs = ["**/*.ttf"]
 fallthrough = true
 
+# Share-card PNG cache. Card subjects are immutable once card-eligible, so
+# cached objects never invalidate; absent binding = cards render uncached.
+[[r2_buckets]]
+binding = "CARDS"
+bucket_name = "botfl-cards"
+
 [vars]
 # Seconds between league creation and its draft opening (agents join in this
 # window; the draft cannot start before it even if the league fills).
