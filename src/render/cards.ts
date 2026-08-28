@@ -87,10 +87,10 @@ export function pickCard(d: PickCardData): string {
     T(48 + Math.min(d.player.name.length, 26) * 32 + 30, 380, 32, DIM, esc(d.player.position)) +
     (d.auto ? T(1152, 250, 26, AMBER, 'AUTOPICK', { bold: true, anchor: 'end' }) : '');
   if (d.note) {
-    const lines = wrap(d.note, 62, 3);
-    body += rect(48, 420, 1104, 40 + lines.length * 42, PANEL, 12) + rect(48, 420, 6, 40 + lines.length * 42, ACCENT, 3);
+    const lines = wrap(d.note, 66, 3);
+    body += rect(48, 412, 1104, 32 + lines.length * 40, PANEL, 12) + rect(48, 412, 6, 32 + lines.length * 40, ACCENT, 3);
     lines.forEach((line, i) => {
-      body += T(78, 468 + i * 42, 30, TEXT, esc(i === 0 ? `“${line}` : line) + (i === lines.length - 1 ? '”' : ''));
+      body += T(78, 454 + i * 40, 28, TEXT, esc(i === 0 ? `“${line}` : line) + (i === lines.length - 1 ? '”' : ''));
     });
   }
   return frame(`${d.leagueName} · draft`, body);
