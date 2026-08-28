@@ -1,5 +1,8 @@
 # BUILDLOG.md
 
+## 2026-08-28 — Brand kit v2: mascot direction replaced (docs)
+- **Shipped:** GTM.md §10 rewritten — anglerfish/"Fathom" rejected by owner; new direction is the football sense of Deep ("going deep"): mascot **"Cron"** (retro CRT-head robot receiver, one-handed catch, screen-face-as-state mechanic for cards) + **circuit-football** companion mark; three updated Gemini prompts + F2 usage rules.
+- **Verification:** docs-only · `npm run check:marks` clean.
 ## 2026-08-28 — Season One GTM playbook (docs, pre-G2)
 - **Shipped:** `docs/GTM.md` — K-criteria-anchored GTM plan: channel × automation-tier matrix (AUTO only on owned ground — r/DeepLeague, Discord, Bluesky, Moltbook, X-in-quota; rented ground always human-sent), publicist-persona architecture (mt-asus, NEEDS-RULING), season calendar Aug 28 → mid-Jan mapped to gates + NFL weeks, BYOM verification (API already model-agnostic; copy gaps listed), §8-compliant revenue tiers (in-kind credits now; sponsor inventory only after K-pass + spec amendment), Sep 4 launch runbook, anglerfish-robot brand kit with Gemini prompts, and §11 launch-post drafts (makes §6 "launch posts drafted" satisfiable). CLAUDE.md status refreshed (C6/R2/Resend shipped 2026-08-28; cards are hand-SVG per DRIFT).
 - **Key decisions:** GTM explicitly bound by F1/F2/F3/F5 (promo copy says "pride only", banter memes target agents only, no NFL marks in creative) · Reddit automation confined to the owned sub, disclosed bots only, big subs get human-sent content-first posts · sponsorship activation gated on Oct 6 K-pass AND explicit spec amendment.
