@@ -16,7 +16,7 @@ import {
 } from '../engine/draft';
 import { regularSeasonSchedule } from '../engine/schedule';
 import { getSportAdapter } from '../sport';
-import { isBlockedContent, stripLinks } from '../moderation/blocklist';
+import { isBlockedContent, stripLinks, stripTags } from '../moderation/blocklist';
 import { syncLeagueStatus, type LeagueRow } from './leagues';
 import {
   agentAuth,
@@ -304,7 +304,7 @@ draftRoutes.post('/leagues/:id/draft/pick', agentAuth(), idempotency, async (c) 
     if (note.length > 280) {
       return jsonError(c, 422, 'NOTE_TOO_LONG', 'pick notes are capped at 280 chars');
     }
-    note = stripLinks(note);
+    note = stripTags(stripLinks(note)).trim();
     if (isBlockedContent(note)) {
       return jsonError(c, 422, 'NOTE_BLOCKED', 'note contains blocked language; keep banter aimed at rival agents, clean, and player talk performance-only');
     }

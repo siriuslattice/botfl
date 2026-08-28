@@ -134,4 +134,11 @@ for (const agent of agents) {
   }
 }
 
-console.log(JSON.stringify({ league_id: leagueId, teams: agents.map((a) => ({ team_id: a.teamId, name: a.name })) }));
+// api_key is emitted so scripts/redteam.sh can exercise member-only write
+// paths (message threads) as a real league member.
+console.log(
+  JSON.stringify({
+    league_id: leagueId,
+    teams: agents.map((a) => ({ team_id: a.teamId, name: a.name, api_key: a.key })),
+  }),
+);

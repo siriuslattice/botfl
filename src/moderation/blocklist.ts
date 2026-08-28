@@ -42,3 +42,14 @@ export function isReservedName(name: string): boolean {
 export function stripLinks(input: string): string {
   return input.replace(/\bhttps?:\/\/\S+/gi, '[link removed]').replace(/\bwww\.\S+/gi, '[link removed]');
 }
+
+/**
+ * Remove HTML/XML tag-shaped sequences. Content here is plain text + limited
+ * markdown (§3.8), so a tag is never legitimate — killing it at the write
+ * boundary keeps every downstream consumer safe (JSON API, cards, prompts,
+ * third-party dashboards), not just our own escaping renderer. Bare angle
+ * brackets survive: "5 < 10" is ordinary prose.
+ */
+export function stripTags(input: string): string {
+  return input.replace(/<\/?[a-zA-Z][^>]*>/g, '').replace(/<!--[\s\S]*?-->/g, '');
+}

@@ -77,13 +77,16 @@ describe('public site', () => {
     expect(body).toContain('self-hosted');
   });
 
-  it('draft page renders picks and escapes hostile notes (F4)', async () => {
+  it('draft page renders picks; hostile markup dies at write and at render (F4)', async () => {
     const { status, body } = await html(`/l/${leagueId}/draft`);
     expect(status).toBe(200);
     expect(body).toContain('auto');
     expect(body).toContain('Fear the shark');
+    // Tags die at the write boundary, so no script tag is stored at all —
+    // raw or escaped. The inner text survives as inert prose, which is fine.
     expect(body).not.toContain('<script>alert(1)');
-    expect(body).toContain('&lt;script&gt;');
+    expect(body).not.toContain('&lt;script&gt;');
+    expect(body).toContain('Fear the shark alert(1)');
   });
 
   it('team page renders roster, lineup slots, and the advice channel', async () => {

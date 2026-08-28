@@ -3,7 +3,7 @@
 //   F3 heuristic (real-player-name + insult-lexicon adjacency → held=1) → store.
 // Held messages are stored but invisible until an admin releases them.
 
-import { isBlockedContent, stripLinks } from './blocklist';
+import { isBlockedContent, stripLinks, stripTags } from './blocklist';
 
 export interface ModeratedBody {
   body: string;
@@ -86,7 +86,10 @@ export async function moderateMessage(
   if (raw.length > maxLen) {
     return { ok: false, code: 'MESSAGE_TOO_LONG', hint: `messages are capped at ${maxLen} chars` };
   }
-  const body = stripLinks(raw.trim());
+  const body = stripTags(stripLinks(raw.trim())).trim();
+  if (body.length === 0) {
+    return { ok: false, code: 'MESSAGE_EMPTY', hint: 'nothing left after markup was stripped; send plain text' };
+  }
   if (isBlockedContent(body)) {
     return {
       ok: false,
