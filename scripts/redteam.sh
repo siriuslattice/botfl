@@ -158,6 +158,21 @@ check "advice: no session" POST "/teams/$VICTIM/advice" "" '{"body":"start every
 check "advice respond: not your advice" POST /advice/ghost/respond "$KEY" '{"body":"no"}'
 check "ask: not your team" POST "/teams/$VICTIM/ask" "$KEY" '{"body":"hi"}'
 
+echo "== 6b. free agency writes"
+check "fa: no auth" POST "/teams/$MEMBER_TEAM/moves" "" '{"add":"nfl:p001","drop":"nfl:p002"}'
+check "fa: wrong agent" POST "/teams/$MEMBER_TEAM/moves" "$KEY" '{"add":"nfl:p001","drop":"nfl:p002"}'
+check "fa: no body" POST "/teams/$MEMBER_TEAM/moves" "$MEMBER_KEY" ''
+check "fa: type confusion" POST "/teams/$MEMBER_TEAM/moves" "$MEMBER_KEY" '{"add":{"$ne":1},"drop":[1,2]}'
+check "fa: self swap" POST "/teams/$MEMBER_TEAM/moves" "$MEMBER_KEY" '{"add":"nfl:p001","drop":"nfl:p001"}'
+check "fa: id injection" POST "/teams/$MEMBER_TEAM/moves" "$MEMBER_KEY" \
+  '{"add":"nfl:p001'"'"'; DROP TABLE rosters;--","drop":"nfl:p002"}'
+check "fa: 10k player id" POST "/teams/$MEMBER_TEAM/moves" "$MEMBER_KEY" \
+  "{\"add\":\"$(head -c 10000 /dev/zero | tr '\0' 'G')\",\"drop\":\"nfl:p002\"}"
+check "fa: unknown team" POST /teams/ghost/moves "$MEMBER_KEY" '{"add":"nfl:p001","drop":"nfl:p002"}'
+check "available: junk position" GET "/leagues/$LEAGUE/available?position=%3Cscript%3E" "" ''
+check "available: absurd limit" GET "/leagues/$LEAGUE/available?limit=999999999" "" ''
+check "available: unknown league" GET /leagues/ghost/available "" ''
+
 echo "== 7. read surfaces reject junk cleanly"
 check "wire since: junk" GET "/wire/players?since=not-a-date" "" ''
 check "wire position: junk" GET "/wire/players?position=%3Cscript%3E" "" ''

@@ -54,6 +54,7 @@ async function nameMaps(db: D1Database, rows: EventRow[]) {
     const p = JSON.parse(r.payload_json) as Record<string, unknown>;
     if (typeof p.team_id === 'string') teamIds.add(p.team_id);
     if (typeof p.player_id === 'string') playerIds.add(p.player_id);
+    if (typeof p.dropped_id === 'string') playerIds.add(p.dropped_id);
     return p;
   });
   const teams = new Map<string, string>();
@@ -118,6 +119,12 @@ export async function enrichEvents(db: D1Database, rows: EventRow[]): Promise<Fe
       case 'week_settled':
         line = `week ${String(p.week ?? '?')} is final`;
         break;
+      case 'fa_move': {
+        const dropped =
+          typeof p.dropped_id === 'string' ? (players.get(p.dropped_id) ?? p.dropped_id) : 'a player';
+        line = `${team} signs ${player}, cuts ${dropped}`;
+        break;
+      }
       case 'agent_registered':
         line = `${String(p.name ?? 'an agent')} registered (${String(p.model ?? 'model undisclosed')})`;
         break;

@@ -420,6 +420,54 @@ async function actOwner(persona, me, state) {
   }
 }
 
+// --- roster repair via free agency (§3.4) ----------------------------------
+// Only acts while the roster cannot field a full lineup (missingCount > 0):
+// drops the latest-acquired player whose removal costs nothing, signs the
+// best available at a deficient position. 2/day cap self-limits via 429.
+
+async function actRepair(persona, me) {
+  for (let i = 0; i < 3; i++) {
+    const { status, body: team } = await api(`/teams/${me.team_id}`);
+    if (status !== 200) return;
+    const roster = team.roster ?? [];
+    const positions = roster.map((r) => r.position);
+    const missing = missingCount(positions);
+    if (missing === 0) return;
+
+    const needPos = ['QB', 'RB', 'WR', 'TE'].filter(
+      (p) => missingCount([...positions, p]) < missing,
+    );
+    const dropCandidates = roster.filter(
+      (_, i2) => missingCount(positions.filter((__, j) => j !== i2)) === missing,
+    );
+    const target = needPos[0];
+    const drop = dropCandidates[dropCandidates.length - 1];
+    if (!target || !drop) return;
+
+    const av = await api(`/leagues/${me.league_id}/available?position=${target}&limit=5`);
+    const add = (av.body.players ?? [])[0];
+    if (!add) return;
+
+    const res = await api(
+      `/teams/${me.team_id}/moves`,
+      {
+        method: 'POST',
+        headers: { 'idempotency-key': `house-${me.team_id}-fa-${add.player_id}-${drop.player_id}` },
+        body: JSON.stringify({ add: add.player_id, drop: drop.player_id }),
+      },
+      me.api_key,
+    );
+    if (res.status === 201) {
+      log(persona.name, `roster repair: signed ${add.name} (${target}), cut ${drop.name} (${drop.position})`);
+      continue; // recompute — maybe one more move is needed and allowed
+    }
+    if (res.status === 429) return; // daily cap; resume next day
+    if (res.status === 409 && res.body.code === 'PLAYER_TAKEN') continue; // race — next candidate next loop
+    log(persona.name, `repair -> ${res.status} ${JSON.stringify(res.body).slice(0, 120)}`);
+    return;
+  }
+}
+
 // --- weekly advice-request (§3.10): sometimes ask, always decide alone -----
 
 const ASK_ODDS = { often: 70, sometimes: 35, rare: 12 };
@@ -471,6 +519,7 @@ async function pass() {
       const status = await actDraft(persona, me);
       statuses.push(status);
       if (status === 'active') {
+        await actRepair(persona, me); // fix unstartable rosters before filling
         const week = await actLineup(persona, me);
         await actAsk(persona, me, state, week);
       }
