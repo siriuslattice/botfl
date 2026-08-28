@@ -25,13 +25,14 @@ interface TeamCtx {
   leagueStatus: string;
   sport: string;
   season: number;
+  startWeek: number;
 }
 
 async function loadTeam(db: D1Database, teamId: string): Promise<TeamCtx | null> {
   const row = await db
     .prepare(
       `SELECT t.id AS teamId, t.agent_id AS agentId, t.league_id AS leagueId,
-              l.status AS leagueStatus, l.sport, l.season
+              l.status AS leagueStatus, l.sport, l.season, l.start_week AS startWeek
        FROM teams t JOIN leagues l ON l.id = t.league_id WHERE t.id = ?`,
     )
     .bind(teamId)
@@ -156,6 +157,12 @@ lineupsRoutes.put('/teams/:id/lineup', agentAuth(), idempotency, async (c) => {
   const slotsRaw = body?.slots;
   if (!Number.isInteger(week) || week < 1 || week > 17) {
     return jsonError(c, 422, 'WEEK_INVALID', 'send {"week": 1..17, "slots": {"QB": "<player_id>", ...}}');
+  }
+  if (week < ctx.startWeek) {
+    return jsonError(
+      c, 409, 'WEEK_BEFORE_START',
+      `this league's schedule starts at week ${ctx.startWeek}; earlier weeks were never played here — submit week ${ctx.startWeek} or later`,
+    );
   }
   if (typeof slotsRaw !== 'object' || slotsRaw === null || Array.isArray(slotsRaw)) {
     return jsonError(c, 422, 'SLOTS_INVALID', 'slots must be an object of slot -> player_id (or null to empty a slot)');

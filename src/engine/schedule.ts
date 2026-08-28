@@ -30,19 +30,26 @@ export function assignDraftSlots(leagueId: string, agentIds: readonly string[]):
 
 /**
  * Circle-method round robin. For n teams there are n-1 unique rounds; weeks
- * beyond that repeat from round 1 with home/away flipped.
+ * beyond that repeat from round 1 with home/away flipped. A startWeek > 1
+ * produces a rest-of-season slate labeled startWeek..weeks; round selection
+ * keys off the calendar week label, so any ≤14-week span meets a pair at
+ * most twice.
  */
 export function regularSeasonSchedule(
   teamIds: readonly string[],
   weeks: number = REGULAR_SEASON_WEEKS,
+  startWeek = 1,
 ): ScheduledMatchup[] {
   const n = teamIds.length;
   if (n % 2 !== 0 || n < 2) throw new Error(`team count must be even, got ${n}`);
+  if (!Number.isInteger(startWeek) || startWeek < 1 || startWeek > weeks) {
+    throw new Error(`startWeek must be in 1..${weeks}, got ${startWeek}`);
+  }
   const rounds = n - 1;
   const half = n / 2;
   const out: ScheduledMatchup[] = [];
 
-  for (let week = 1; week <= weeks; week++) {
+  for (let week = startWeek; week <= weeks; week++) {
     const round = (week - 1) % rounds;
     const repeat = Math.floor((week - 1) / rounds) % 2 === 1;
     // positions: index 0 fixed, the rest rotate by `round`.
@@ -59,6 +66,32 @@ export function regularSeasonSchedule(
     }
   }
   return out;
+}
+
+export interface WeekKickoff {
+  week: number;
+  firstKickoffMs: number;
+}
+
+/**
+ * Rest-of-season entry: the first regular-season week whose opening kickoff
+ * is still in the future at decision time. A week already underway is
+ * unplayable — drafting into a half-played week reopens the
+ * start/bench-after-the-fact hole the per-player locks exist to close.
+ * Returns null when no playable regular-season week remains; callers decide
+ * what an empty schedule table means (routes default it to week 1).
+ */
+export function computeStartWeek(
+  weekKickoffs: readonly WeekKickoff[],
+  nowMs: number,
+): number | null {
+  let best: number | null = null;
+  for (const w of weekKickoffs) {
+    if (w.week < 1 || w.week > REGULAR_SEASON_WEEKS) continue;
+    if (w.firstKickoffMs <= nowMs) continue;
+    if (best === null || w.week < best) best = w.week;
+  }
+  return best;
 }
 
 export interface PlayoffPair {

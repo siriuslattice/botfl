@@ -3,7 +3,7 @@
 // assigned by seeded shuffle at fill time so join order confers nothing.
 
 import { Hono } from 'hono';
-import { assignDraftSlots } from '../engine/schedule';
+import { assignDraftSlots, computeStartWeek, REGULAR_SEASON_WEEKS } from '../engine/schedule';
 import {
   agentAuth,
   idempotency,
@@ -25,6 +25,32 @@ export interface LeagueRow {
   draft_opens_at: string | null;
   sport: string;
   season: number;
+  start_week: number;
+}
+
+/**
+ * Playable start week for a league forming or finalizing now: the first
+ * regular-season week whose opening kickoff hasn't passed. An empty games
+ * table (pre-ingest, local dev) means week 1 — exactly the pre-D1 behavior.
+ * Null = the regular season has no schedulable weeks left.
+ */
+export async function leagueStartWeek(
+  db: D1Database,
+  sport: string,
+  season: number,
+  nowMs: number,
+): Promise<number | null> {
+  const rows = await db
+    .prepare(
+      'SELECT week, MIN(kickoff_at) AS first_kickoff FROM games WHERE sport = ? AND season = ? AND week BETWEEN 1 AND ? GROUP BY week',
+    )
+    .bind(sport, season, REGULAR_SEASON_WEEKS)
+    .all<{ week: number; first_kickoff: string }>();
+  if (rows.results.length === 0) return 1;
+  return computeStartWeek(
+    rows.results.map((r) => ({ week: r.week, firstKickoffMs: Date.parse(r.first_kickoff) })),
+    nowMs,
+  );
 }
 
 /**
@@ -94,7 +120,7 @@ leaguesRoutes.post('/leagues/join', agentAuth(), idempotency, async (c) => {
 
   let league = await db
     .prepare(
-      `SELECT l.id, l.name, l.status, l.draft_opens_at, l.sport, l.season FROM leagues l
+      `SELECT l.id, l.name, l.status, l.draft_opens_at, l.sport, l.season, l.start_week FROM leagues l
        WHERE l.status = 'forming'
          AND (SELECT COUNT(*) FROM teams t WHERE t.league_id = l.id) < ?
        ORDER BY l.created_at ASC LIMIT 1`,
@@ -102,12 +128,22 @@ leaguesRoutes.post('/leagues/join', agentAuth(), idempotency, async (c) => {
     .bind(LEAGUE_SIZE)
     .first<LeagueRow>();
 
+  let restOfSeasonWeek: number | null = null;
   if (!league) {
     const id = newId();
     const createdAt = nowIso();
     const delaySec = Number(c.env.DRAFT_OPEN_DELAY_SEC ?? '172800');
     const opensAt = new Date(Date.now() + delaySec * 1000).toISOString();
     const season = Number(c.env.CURRENT_SEASON ?? '2026');
+    // Rest-of-season guard: never open a league the calendar can't schedule.
+    const playable = await leagueStartWeek(db, 'nfl', season, Date.now());
+    if (playable === null) {
+      return jsonError(
+        c, 409, 'SEASON_OVER',
+        'no playable regular-season weeks remain to schedule a new league; registration returns next season',
+      );
+    }
+    if (playable > 1) restOfSeasonWeek = playable;
     const countRow = await db.prepare('SELECT COUNT(*) AS n FROM leagues').first<{ n: number }>();
     let name = `League ${(countRow?.n ?? 0) + 1}`;
     try {
@@ -127,7 +163,7 @@ leaguesRoutes.post('/leagues/join', agentAuth(), idempotency, async (c) => {
         .bind(id, name, opensAt, season, createdAt)
         .run();
     }
-    league = { id, name, status: 'forming', draft_opens_at: opensAt, sport: 'nfl', season };
+    league = { id, name, status: 'forming', draft_opens_at: opensAt, sport: 'nfl', season, start_week: 1 };
     await logEvent(db, id, 'league_created', { name });
   }
 
@@ -189,7 +225,10 @@ leaguesRoutes.post('/leagues/join', agentAuth(), idempotency, async (c) => {
       hint:
         n >= LEAGUE_SIZE
           ? 'league is full; draft slots are assigned — poll GET /leagues/:id/draft for your turn'
-          : `waiting for ${LEAGUE_SIZE - n} more teams; poll GET /leagues/:id every 15 minutes`,
+          : `waiting for ${LEAGUE_SIZE - n} more teams; poll GET /leagues/:id every 15 minutes` +
+            (restOfSeasonWeek !== null
+              ? `; rest-of-season league — the schedule starts at the first playable week (currently week ${restOfSeasonWeek}) once the draft completes`
+              : ''),
     },
     201,
   );
@@ -198,7 +237,7 @@ leaguesRoutes.post('/leagues/join', agentAuth(), idempotency, async (c) => {
 leaguesRoutes.get('/leagues/:id', async (c) => {
   const db = c.env.DB;
   const league = await db
-    .prepare('SELECT id, name, status, draft_opens_at, sport, season FROM leagues WHERE id = ?')
+    .prepare('SELECT id, name, status, draft_opens_at, sport, season, start_week FROM leagues WHERE id = ?')
     .bind(c.req.param('id'))
     .first<LeagueRow>();
   if (!league) return jsonError(c, 404, 'LEAGUE_NOT_FOUND', 'no such league id');
@@ -216,6 +255,9 @@ leaguesRoutes.get('/leagues/:id', async (c) => {
     status,
     sport: league.sport,
     season: league.season,
+    // Authoritative once the league is active; a mid-season league's schedule
+    // covers start_week..14 and earlier weeks never exist for it.
+    start_week: league.start_week,
     draft_opens_at: league.draft_opens_at,
     teams: teams.results,
   });

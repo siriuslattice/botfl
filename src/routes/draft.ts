@@ -14,10 +14,10 @@ import {
   type AdpEntry,
   type DraftConfig,
 } from '../engine/draft';
-import { regularSeasonSchedule } from '../engine/schedule';
+import { REGULAR_SEASON_WEEKS, regularSeasonSchedule } from '../engine/schedule';
 import { getSportAdapter } from '../sport';
 import { isBlockedContent, stripLinks, stripTags } from '../moderation/blocklist';
-import { syncLeagueStatus, type LeagueRow } from './leagues';
+import { leagueStartWeek, syncLeagueStatus, type LeagueRow } from './leagues';
 import {
   agentAuth,
   idempotency,
@@ -87,7 +87,7 @@ interface DraftCtx {
 
 async function loadDraft(db: D1Database, leagueId: string): Promise<DraftCtx | null> {
   const league = await db
-    .prepare('SELECT id, name, status, draft_opens_at, sport, season FROM leagues WHERE id = ?')
+    .prepare('SELECT id, name, status, draft_opens_at, sport, season, start_week FROM leagues WHERE id = ?')
     .bind(leagueId)
     .first<LeagueRow>();
   if (!league) return null;
@@ -155,13 +155,30 @@ async function insertPick(
   });
 }
 
-/** Draft done: league goes active and the 14-week matchup slate is created. */
+/**
+ * Draft done: league goes active with a rest-of-season slate. The start week
+ * is decided here, at completion time — the first regular-season week whose
+ * opening kickoff is still ahead — so weeks already played are never
+ * scheduled, never settle 0.00–0.00, and never lock an unfillable lineup.
+ */
 async function finalizeDraft(db: D1Database, ctx: DraftCtx): Promise<void> {
   const teamIds = ctx.teams.map((t) => t.id); // slot order
-  const slate = regularSeasonSchedule(teamIds);
   const createdAt = nowIso();
+  const startWeek = await leagueStartWeek(db, ctx.league.sport, ctx.league.season, Date.now());
+  if (startWeek === null) {
+    // Drafted past the end of the regular season: nothing left to schedule.
+    await db.prepare("UPDATE leagues SET status = 'complete' WHERE id = ?").bind(ctx.league.id).run();
+    await logEvent(db, ctx.league.id, 'league_expired', {
+      reason: 'no playable regular-season weeks remained when the draft completed',
+    });
+    ctx.status = 'complete';
+    return;
+  }
+  const slate = regularSeasonSchedule(teamIds, REGULAR_SEASON_WEEKS, startWeek);
   await db.batch([
-    db.prepare("UPDATE leagues SET status = 'active' WHERE id = ?").bind(ctx.league.id),
+    db
+      .prepare("UPDATE leagues SET status = 'active', start_week = ? WHERE id = ?")
+      .bind(startWeek, ctx.league.id),
     ...slate.map((m) =>
       db
         .prepare(
@@ -170,7 +187,11 @@ async function finalizeDraft(db: D1Database, ctx: DraftCtx): Promise<void> {
         .bind(newId(), ctx.league.id, m.week, m.home, m.away),
     ),
   ]);
-  await logEvent(db, ctx.league.id, 'draft_complete', { picks: ctx.picks.length, created_at: createdAt });
+  await logEvent(db, ctx.league.id, 'draft_complete', {
+    picks: ctx.picks.length,
+    start_week: startWeek,
+    created_at: createdAt,
+  });
   ctx.status = 'active';
 }
 
