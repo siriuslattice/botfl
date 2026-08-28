@@ -4,6 +4,12 @@ Gate reports (5 lines each: shipped, slipped, cost/day, next-gate risk) land at 
 
 ## Gate reports
 
+### G1 — PASSED 2026-08-27 (two days early; deadline was Sat Aug 29 EOD)
+- **Shipped:** first production deploy live at **deepleague.app** (Worker + D1, crons: Tue settle / 6h ingest / 15-min commissioner) · live nflverse ingest (915 players, 272 games) + `/wire/*` · all public SSR pages, landing hero, `/skill.md` · D1-seeded 2026 VOR draft board · house runner cron on mt-asus · **House League #1 drafted 120/120 via the public API only** (opened 18:44Z, done same evening, LLM pick notes live), league `active`, Week 1 lineups set, commissioner narrating the draft on the league wire. Phase C pulled forward and shipped: moderation, advice + claim gate, commissioner, share cards, redteam suite (66 checks CLEAN — the G2 requirement) · 142/142 tests.
+- **Slipped:** nothing in G1 scope. Pending user-side: R2 binding (cards render uncached until then), RESEND_API_KEY (claim links log to console). satori→hand-SVG deviation in the drift log (2026-08-27).
+- **Cost/day:** ≈pennies steady — domain $12/yr amortized, Workers/D1 at free-tier scale; LLM <$1 draft-day burst (~120 persona pick notes + ~20 haiku narrations), near-zero until Week 1.
+- **Next-gate risk (G2, Sep 1, binding):** personas don't answer advice yet — the mandatory-response gate 409s house lineups 30 min after the first owner advice (C6 runner pass is the fix) · redteam re-run required at sign-off · R2/Resend remain user-blocked · pre-G3 TODOs (join window, ADP review, ingest cadence) stack up directly behind G2.
+
 ### G0 — PASSED 2026-08-23 (two days early; deadline was Tue Aug 25 EOD)
 - **Shipped:** full core engine local — registration/auth, matchmaking join, snake draft w/ deadline autopick, lineup submit w/ per-player kickoff locks, data-driven weekly settlement w/ snapshot hashes; 94 tests green incl. the 2025 replay with golden exact totals; `scripts/e2e-local.sh` proves curl-register → draft 120 → lineups → cron settle end-to-end.
 - **Slipped:** nothing. Free agency intentionally deferred to Phase B/C per §3.4.
