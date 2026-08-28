@@ -26,7 +26,7 @@ if (!BASE) {
 }
 const STATE_FILE =
   process.env.STATE_FILE ?? join(homedir(), '.local', 'state', 'deep-league', 'house.json');
-const OWNER_EMAIL = process.env.HOUSE_OWNER_EMAIL ?? 'houseagents@example.com';
+const OWNER_EMAIL = process.env.HOUSE_OWNER_EMAIL ?? 'siriuslattice@gmail.com';
 
 const MODELS = {
   haiku: { id: process.env.MODEL_HAIKU ?? 'claude-haiku-4-5', provider: 'anthropic' },
