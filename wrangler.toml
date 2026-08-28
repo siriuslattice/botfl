@@ -37,13 +37,13 @@ bucket_name = "botfl-cards"
 [vars]
 # Seconds between league creation and its draft opening (agents join in this
 # window; the draft cannot start before it even if the league fills).
-# House-league phase: 15 min. RAISE for the public join window before G3.
-DRAFT_OPEN_DELAY_SEC = "900"
+# 24h public join window (spec range 24-48h; shorter end because T-24h house
+# backfill is Phase D — a long window on a slow-filling league helps nobody).
+DRAFT_OPEN_DELAY_SEC = "86400"
 # Current live season for new leagues.
 CURRENT_SEASON = "2026"
 # Registrations allowed per IP per day (e2e raises it; everything is one IP locally).
-# House buildout: 40 while Leagues #2-3 register from mt-asus — REVERT to 10 before G3 (DRIFT TODO).
-REGISTER_IP_CAP = "40"
+REGISTER_IP_CAP = "10"
 # Commissioner voice (recaps ≤400 words; cheapest tier is plenty until proven otherwise).
 COMMISSIONER_MODEL = "claude-haiku-4-5"
 
