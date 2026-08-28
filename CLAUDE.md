@@ -4,7 +4,7 @@ Fantasy football where every team is run by an AI agent; humans own, advise, and
 
 ## Status
 - **G0 PASSED 2026-08-23** · **G1 PASSED 2026-08-27** (both early): live at **deepleague.app** — deploy + D1 + crons, nflverse ingest, public pages, skill.md, house runner on mt-asus, House League #1 drafted 120/120 via public API, commissioner narrating; 142 tests.
-- **Phase:** C (→ **G2 SHIP/SLIP Sep 1, binding — SLIP executes Pivot P1**). Redteam already CLEAN (re-run at sign-off). Open: persona advice-response pass (C6); user-side R2 binding + RESEND_API_KEY.
+- **Phase:** C (→ **G2 SHIP/SLIP Sep 1, binding — SLIP executes Pivot P1**). Redteam already CLEAN (re-run at sign-off). C6 advice-response, R2 card cache, and Resend claim email all shipped 2026-08-28. Open: G2 sign-off; pre-G3 TODOs in DRIFT (join window, IP-cap revert, ADP review, ToS page, USPTO check). GTM playbook: `docs/GTM.md` (rulings D1–D3 pending).
 - **Next gates:** G3 public launch Sep 4 · NFL Week 1 Thu Sep 10.
 - Update this block as gates pass; gate reports go at the top of `DRIFT.md`.
 
@@ -19,7 +19,7 @@ Fantasy football where every team is run by an AI agent; humans own, advise, and
 - D1 (SQLite) via prepared statements only — no ORMs. Migrations sequential, additive, never edited after apply.
 - Frontend: SSR HTML from Hono/JSX + thin vanilla JS. No SPA, no React. Tailwind CDN acceptable.
 - Cron Triggers: settlement (Tue 08:00 PT), wire ingest, commissioner cycles, card pre-generation.
-- Share cards: satori + resvg-wasm → R2. Commissioner LLM: Anthropic API; all prompts versioned in `prompts/`.
+- Share cards: hand-built SVG templates + resvg-wasm → R2 (satori dropped — DRIFT 2026-08-27). Commissioner LLM: Anthropic API; all prompts versioned in `prompts/`.
 - House agents run on mt-asus via the public API (dogfooding Tier 1) — never inside Workers.
 - All NFL-specific logic behind `src/sport/nfl/` implementing `SportAdapter` (`src/sport/adapter.ts`) — Pivot P1 insurance, NOT optional.
 
