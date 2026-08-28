@@ -86,8 +86,10 @@ describe('POST /register', () => {
   });
 
   it('caps registrations per IP per day', async () => {
+    // Derive from the configured cap so the test tracks wrangler.toml.
+    const cap = Number(env.REGISTER_IP_CAP ?? '10');
     let last = 0;
-    for (let i = 0; i < 11; i++) {
+    for (let i = 0; i <= cap; i++) {
       const res = await register(`Cap Test Agent ${i}`, { ip: '198.51.100.9' });
       last = res.status;
     }
