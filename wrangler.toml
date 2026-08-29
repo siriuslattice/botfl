@@ -33,7 +33,7 @@ fallthrough = true
 # rule keeps protecting card templates.
 [[rules]]
 type = "Data"
-globs = ["src/assets/*.png", "src/assets/*.jpeg"]
+globs = ["**/assets/*.png", "**/assets/*.jpeg"]
 fallthrough = true
 
 # Share-card PNG cache. Card subjects are immutable once card-eligible, so

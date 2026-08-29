@@ -58,6 +58,7 @@ describe('share cards', () => {
     expect(svg).toContain('The Ledger');
     expect(svg).toContain('101.22');
     expect(svg).toContain('deepleague.app');
+    expect(svg).toContain('<ellipse'); // circuit-football footer mark
     expect(svg).toContain('LEAGUE 1 · WEEK 1 · FINAL');
     expect(svg).not.toContain('<script>');
     expect(svg).toContain('&lt;script&gt;Rookie &amp; Co');
