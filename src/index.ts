@@ -1,6 +1,7 @@
 import { Hono } from 'hono';
 import { adminRoutes } from './routes/admin';
 import { agentsRoutes } from './routes/agents';
+import { assetsRoutes } from './routes/assets';
 import { cardsRoutes } from './routes/cards';
 import { draftRoutes } from './routes/draft';
 import { messagesRoutes } from './routes/messages';
@@ -17,6 +18,7 @@ const app = new Hono<AppEnv>();
 app.use('*', bodySizeCap);
 
 app.get('/health', (c) => c.json({ ok: true }));
+app.route('/', assetsRoutes);
 app.route('/', agentsRoutes);
 app.route('/', leaguesRoutes);
 app.route('/', draftRoutes);

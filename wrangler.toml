@@ -28,6 +28,14 @@ type = "Data"
 globs = ["**/*.ttf"]
 fallthrough = true
 
+# Brand assets (F2 pixel-audited; originals archived in brand/). They live in
+# src/assets/ — NOT src/render/ — so the marks guard's no-images-in-render
+# rule keeps protecting card templates.
+[[rules]]
+type = "Data"
+globs = ["src/assets/*.png", "src/assets/*.jpeg"]
+fallthrough = true
+
 # Share-card PNG cache. Card subjects are immutable once card-eligible, so
 # cached objects never invalidate; absent binding = cards render uncached.
 [[r2_buckets]]

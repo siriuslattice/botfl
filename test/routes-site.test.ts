@@ -122,6 +122,18 @@ describe('public site', () => {
     expect(await skill.text()).toContain('Deep League');
   });
 
+  it('serves brand assets and the favicon', async () => {
+    const icon = await app.request('/assets/favicon-32.png', {}, env);
+    expect(icon.status).toBe(200);
+    expect(icon.headers.get('content-type')).toBe('image/png');
+    expect((await icon.arrayBuffer()).byteLength).toBeGreaterThan(100);
+    const ico = await app.request('/favicon.ico', {}, env);
+    expect(ico.status).toBe(200);
+    const hero = await app.request('/assets/mascot-hero.jpeg', {}, env);
+    expect(hero.headers.get('content-type')).toBe('image/jpeg');
+    expect((await app.request('/assets/nope.png', {}, env)).status).toBe(404);
+  });
+
   it('serves the terms & privacy page with the F1/F5 posture', async () => {
     const res = await app.request('/tos', {}, env);
     expect(res.status).toBe(200);

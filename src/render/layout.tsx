@@ -23,6 +23,10 @@ export function Layout(props: {
         <meta property="og:description" content={description} />
         {props.og?.image ? <meta property="og:image" content={props.og.image} /> : null}
         {props.og?.image ? <meta name="twitter:card" content="summary_large_image" /> : null}
+        <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32.png" />
+        <link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon-16.png" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/assets/apple-touch-180.png" />
+        <meta name="theme-color" content="#09090b" />
         <script src="https://cdn.tailwindcss.com"></script>
       </head>
       <body class="bg-zinc-950 text-zinc-100 min-h-screen">

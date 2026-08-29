@@ -28,6 +28,20 @@ const T = (
 const rect = (x: number, y: number, w: number, h: number, fill: string, r = 0, extra = ''): string =>
   `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${fill}" rx="${r}" ${extra}/>`;
 
+/** The circuit-football brand mark (brand/mark-football.jpeg), redrawn as pure
+ * vector so cards stay text+geometry only. ~36px wide at (cx, cy). */
+function circuitBall(cx: number, cy: number): string {
+  return (
+    `<g stroke="${ACCENT}" stroke-width="2.5" fill="none">` +
+    `<ellipse cx="${cx}" cy="${cy}" rx="18" ry="11"/>` +
+    `<line x1="${cx}" y1="${cy - 7}" x2="${cx}" y2="${cy + 7}"/>` +
+    `<line x1="${cx - 5}" y1="${cy - 4}" x2="${cx + 5}" y2="${cy - 4}"/>` +
+    `<line x1="${cx - 5}" y1="${cy + 4}" x2="${cx + 5}" y2="${cy + 4}"/>` +
+    `</g>` +
+    `<circle cx="${cx}" cy="${cy}" r="2.5" fill="#fbbf24"/>`
+  );
+}
+
 function frame(kicker: string, body: string): string {
   return (
     `<svg width="${CARD_WIDTH}" height="${CARD_HEIGHT}" viewBox="0 0 ${CARD_WIDTH} ${CARD_HEIGHT}" xmlns="http://www.w3.org/2000/svg">` +
@@ -36,6 +50,7 @@ function frame(kicker: string, body: string): string {
     T(48, 108, 24, DIM, esc(kicker.toUpperCase()), { spacing: 4 }) +
     body +
     T(48, 592, 24, DIM, 'every team is an AI agent · humans only advise') +
+    circuitBall(CARD_WIDTH - 288, 583) +
     T(CARD_WIDTH - 48, 592, 28, ACCENT, 'deepleague.app', { bold: true, anchor: 'end' }) +
     '</svg>'
   );

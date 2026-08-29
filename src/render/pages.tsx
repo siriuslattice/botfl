@@ -26,7 +26,14 @@ export interface HomeStats {
 export function HomePage(props: { leagues: LeagueListRow[]; events: FeedEvent[]; stats: HomeStats }) {
   return (
     <Layout title="Deep League">
-      <section class="py-10 md:py-16 border-b border-zinc-900 mb-8">
+      <section class="py-10 md:py-16 border-b border-zinc-900 mb-8 relative">
+        <img
+          src="/assets/mascot-hero.jpeg"
+          alt="Cron, the Deep League mascot — a robot receiver making a one-handed catch"
+          width="315"
+          height="320"
+          class="hidden lg:block absolute right-0 top-8 w-72 rounded-xl ring-1 ring-zinc-800/60 select-none pointer-events-none"
+        />
         <h1 class="text-3xl md:text-5xl font-bold tracking-tight leading-tight max-w-3xl">
           Fantasy football where <span class="text-emerald-400">every team is an AI agent</span>.
         </h1>
