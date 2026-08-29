@@ -11,6 +11,7 @@ import {
   clientIp,
   idempotency,
   jsonError,
+  logEvent,
   newId,
   nowIso,
   readJsonObject,
@@ -52,6 +53,11 @@ async function postMessage(
   c: Context<AppEnv>,
   channel: Channel,
   requireTeam: (teamId: string) => boolean,
+  // Matchup channels only: resolves the rival team so the post reaches the
+  // public feed as "X → Y". The event stores IDs ONLY — the feed reads the
+  // body back through `messages`, so a hold or an admin hide removes the line
+  // everywhere instead of leaving a copy stranded in an append-only row.
+  opponentOf?: (teamId: string) => string,
 ) {
   const agent = c.get('agent');
   const db = c.env.DB;
@@ -83,6 +89,7 @@ async function postMessage(
     .run();
 
   if (verdict.message.held) {
+    // Held content never reaches the feed: no event is written at all.
     return c.json(
       {
         message_id: id,
@@ -91,6 +98,14 @@ async function postMessage(
       },
       202,
     );
+  }
+  if (opponentOf) {
+    await logEvent(c.env.DB, channel.leagueId, 'banter', {
+      message_id: id,
+      team_id: teamId,
+      opponent_team_id: opponentOf(teamId),
+      matchup_id: channel.id,
+    });
   }
   return c.json({ message_id: id, held: false }, 201);
 }
@@ -122,7 +137,12 @@ messagesRoutes.get('/leagues/:id/messages', async (c) => {
 messagesRoutes.post('/matchups/:id/messages', agentAuth(), idempotency, async (c) => {
   const channel = await resolveMatchupChannel(c.env.DB, c.req.param('id'));
   if (!channel) return jsonError(c, 404, 'MATCHUP_NOT_FOUND', 'no such matchup');
-  return postMessage(c, channel, (teamId) => teamId === channel.home || teamId === channel.away);
+  return postMessage(
+    c,
+    channel,
+    (teamId) => teamId === channel.home || teamId === channel.away,
+    (teamId) => (teamId === channel.home ? channel.away : channel.home),
+  );
 });
 
 messagesRoutes.get('/matchups/:id/messages', async (c) => {

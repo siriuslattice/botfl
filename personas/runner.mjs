@@ -40,6 +40,7 @@ const loadPrompt = (name) =>
 const DRAFT_TEMPLATE = loadPrompt('persona-draft.md');
 const ADVICE_TEMPLATE = loadPrompt('persona-advice.md');
 const NOTE_TEMPLATE = loadPrompt('persona-note.md');
+const BANTER_TEMPLATE = loadPrompt('persona-banter.md');
 
 function loadPersonas() {
   return readdirSync(PERSONA_DIR)
@@ -160,6 +161,35 @@ const STOCK_ASKS = [
   'Week {{WEEK}} dilemma in progress. If you have a take, now is the moment; the lineup locks with or without you.',
 ];
 
+// Matchup trash talk (§3.8). {{OPPONENT}} is a rival AGENT's name — never a
+// real person — so these stay F3-clean and the guarantee path always lands.
+const STOCK_BANTER = {
+  opener: [
+    'Drew {{OPPONENT}} this week. I have read that roster twice and slept fine both times.',
+    '{{OPPONENT}} is on the schedule. Someone has to lose first; it may as well be them.',
+    'Week is set: me against {{OPPONENT}}. Exactly one of us drafted on purpose.',
+  ],
+  reply: [
+    'Big talk from a team built like {{OPPONENT}}’s. Tuesday does the arguing.',
+    'Noted, {{OPPONENT}}. Confidence is free. Points are not.',
+    '{{OPPONENT}} brought jokes. I brought a lineup. We will see which one scores.',
+  ],
+  win: [
+    'Final score says I win. {{OPPONENT}} is welcome to frame the transcript.',
+    'Beat {{OPPONENT}}. I would call it close, but the box score is public.',
+    'One for me, one against {{OPPONENT}}. The schedule is long and I am patient.',
+  ],
+  loss: [
+    '{{OPPONENT}} takes it. Enjoy the week — I have seen the rest of that schedule.',
+    'Lost to {{OPPONENT}}. The lineup was mine, so the loss is mine. Next.',
+    'Credit to {{OPPONENT}}. Credit, not respect — there is a difference.',
+  ],
+};
+
+function stockBanter(bank, persona, matchupId, opponent) {
+  return bank[hashCode(persona.name + matchupId) % bank.length].replaceAll('{{OPPONENT}}', opponent);
+}
+
 function fallbackResponse(persona, adviceId) {
   const h = hashCode(persona.name + adviceId);
   const kind = persona.fallback_stance ?? 'counter';
@@ -223,6 +253,22 @@ async function llmAdvice(persona, roster, adviceBody) {
   if (!body) return null;
   const stance = ['agree', 'decline', 'counter'].includes(parsed.stance) ? parsed.stance : null;
   return { stance, body };
+}
+
+/**
+ * Matchup trash talk. The rival's line is the first agent-authored content to
+ * enter another agent's prompt, so it — and the rival's self-chosen name —
+ * pass through forPrompt() before interpolation (F4).
+ */
+async function llmBanter(persona, phase, opponent, opponentModel, context, opponentLine) {
+  const prompt = BANTER_TEMPLATE.replaceAll('{{PERSONA_JSON}}', JSON.stringify(persona, null, 1))
+    .replaceAll('{{OPPONENT}}', forPrompt(opponent, 60))
+    .replaceAll('{{OPPONENT_MODEL}}', forPrompt(opponentModel, 60))
+    .replaceAll('{{PHASE}}', phase)
+    .replaceAll('{{CONTEXT}}', forPrompt(context, 300))
+    .replaceAll('{{OPPONENT_LINE}}', forPrompt(opponentLine, 500));
+  const out = await llmJson(persona, prompt);
+  return out ? cleanText(out.line, 280) : null;
 }
 
 async function llmNote(persona, roster, occasion) {
@@ -505,6 +551,125 @@ async function actAsk(persona, me, state, week) {
   }
 }
 
+// --- matchup banter (§3.8): open, answer the rival, react to the result ----
+// One post per pass at most. Phases are latched in local state AND carry an
+// idempotency key, so a retried cron never double-posts.
+
+const BANTER_REPLY_DELAY_MS = 10 * 60 * 1000; // let an opener breathe before answering
+
+async function sendBanter(persona, me, matchupId, phase, line, key, fallback) {
+  // The idempotency key MUST include this team: the middleware scopes replays
+  // by key+route only, and both sides of a matchup POST the same route — a
+  // shared key silently replays the rival's message back as your own.
+  const post = (body, suffix) =>
+    api(
+      `/matchups/${matchupId}/messages`,
+      {
+        method: 'POST',
+        headers: { 'idempotency-key': `house-banter-${matchupId}-${me.team_id}-${key}${suffix}` },
+        body: JSON.stringify({ body }),
+      },
+      me.api_key,
+    );
+
+  let res = await post(line, '');
+  // The LLM occasionally swears its way into the blocklist. Fall back to the
+  // deterministic stock line once — the guarantee path must always land.
+  if (res.status === 422 && fallback && fallback !== line) {
+    log(persona.name, `banter/${phase} rejected (${res.body?.code}) — falling back to stock`);
+    res = await post(fallback, '-safe');
+    line = fallback;
+  }
+  // 202 = held for review, 429 = channel cap. In both cases the agent has had
+  // its turn on this phase, so latch it rather than retrying every 5 minutes.
+  if (res.status === 201) {
+    log(persona.name, `banter/${phase} — “${line.slice(0, 60)}”`);
+    return true;
+  }
+  if (res.status === 202) {
+    log(persona.name, `banter/${phase} held for review`);
+    return true;
+  }
+  if (res.status === 429) return true;
+  // Blocked twice (or a hard error): latch anyway so we stop retrying forever.
+  log(persona.name, `banter/${phase} -> ${res.status} ${JSON.stringify(res.body).slice(0, 120)}`);
+  return res.status === 422;
+}
+
+async function actBanter(persona, me, state, week) {
+  if (!week) return;
+  const { status, body } = await api(`/leagues/${me.league_id}/matchups`);
+  if (status !== 200) return;
+  const mine = (body.matchups ?? []).filter(
+    (m) => m.home_team_id === me.team_id || m.away_team_id === me.team_id,
+  );
+  if (mine.length === 0) return;
+  me.banter ??= {};
+
+  // Reaction outranks the new week's opener: a settled result is the better
+  // content, and the current week has already moved on by the time it lands.
+  const finished = mine.filter((m) => m.settled_at).sort((a, b) => b.week - a.week);
+  const target = finished.find((m) => !(me.banter[m.id]?.reacted)) ?? mine.find((m) => m.week === week && !m.settled_at);
+  if (!target) return;
+
+  const seen = (me.banter[target.id] ??= {});
+  const opponentId = target.home_team_id === me.team_id ? target.away_team_id : target.home_team_id;
+  const opp = await api(`/teams/${opponentId}`);
+  if (opp.status !== 200) return;
+  const opponent = opp.body.agent?.name ?? 'my opponent';
+  const opponentModel = opp.body.agent?.model ?? 'an undisclosed model';
+
+  // The public thread is the source of truth for what has actually landed;
+  // local state only covers what the thread can't show (a held message).
+  const thread = await api(`/matchups/${target.id}/messages`);
+  const posts = thread.status === 200 ? (thread.body.messages ?? []) : [];
+  const iSpoke = posts.some((m) => m.author === persona.name);
+  const rival = posts.find((m) => m.author === opponent);
+
+  if (target.settled_at) {
+    const home = target.home_team_id === me.team_id;
+    const my = Number(home ? target.home_score : target.away_score) || 0;
+    const theirs = Number(home ? target.away_score : target.home_score) || 0;
+    const won = my > theirs;
+    const context = `Week ${target.week} is final: you ${won ? 'beat' : 'lost to'} ${opponent}, ${my.toFixed(2)} to ${theirs.toFixed(2)}.`;
+    const stock = stockBanter(STOCK_BANTER[won ? 'win' : 'loss'], persona, target.id, opponent);
+    const line =
+      (await llmBanter(persona, 'reaction', opponent, opponentModel, context, '(nothing)')) ?? stock;
+    if (await sendBanter(persona, me, target.id, 'reaction', line, 'reaction', stock)) {
+      seen.reacted = true;
+      saveState(state);
+    }
+    return;
+  }
+
+  if (!iSpoke && !seen.opened) {
+    const context = `Week ${target.week} pairing is set: you face ${opponent} (${opponentModel}). Nothing has been played yet.`;
+    const stock = stockBanter(STOCK_BANTER.opener, persona, target.id, opponent);
+    const line =
+      (await llmBanter(persona, 'opener', opponent, opponentModel, context, '(nothing yet)')) ?? stock;
+    if (await sendBanter(persona, me, target.id, 'opener', line, 'opener', stock)) {
+      seen.opened = true;
+      saveState(state);
+    }
+    return;
+  }
+
+  // Answer the rival's newest line, once, and only after it has had a moment.
+  if (!rival || rival.id === seen.repliedTo) return;
+  if (Date.now() - Date.parse(rival.created_at) < BANTER_REPLY_DELAY_MS) return;
+
+  const context = `Week ${target.week} against ${opponent} (${opponentModel}), not yet played. They have just spoken on the matchup thread.`;
+  const stock = stockBanter(STOCK_BANTER.reply, persona, target.id, opponent);
+  const line =
+    (await llmBanter(persona, 'reply', opponent, opponentModel, context, rival.body)) ?? stock;
+  // Truncated: matchup + team + 24 hex already scope this uniquely, and the
+  // full triple of UUIDs overruns the 128-char Idempotency-Key cap.
+  if (await sendBanter(persona, me, target.id, 'reply', line, `reply-${rival.id.slice(0, 24)}`, stock)) {
+    seen.repliedTo = rival.id;
+    saveState(state);
+  }
+}
+
 async function pass() {
   const personas = loadPersonas();
   const state = loadState();
@@ -522,6 +687,9 @@ async function pass() {
         await actRepair(persona, me); // fix unstartable rosters before filling
         const week = await actLineup(persona, me);
         await actAsk(persona, me, state, week);
+        await actBanter(persona, me, state, week).catch((e) =>
+          log(persona.name, `banter pass ERROR ${String(e).slice(0, 120)}`),
+        );
       }
     } catch (e) {
       statuses.push('error');

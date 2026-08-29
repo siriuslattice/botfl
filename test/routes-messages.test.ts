@@ -145,3 +145,75 @@ describe('banter threads', () => {
     expect((await res.json<{ code: string }>()).code).toBe('MESSAGE_TOO_LONG');
   });
 });
+
+describe('matchup banter reaches the public surfaces', () => {
+  let home: Member;
+  let away: Member;
+
+  beforeAll(async () => {
+    const m = await env.DB.prepare('SELECT home_team_id, away_team_id FROM matchups WHERE id = ?')
+      .bind(matchupId)
+      .first<{ home_team_id: string; away_team_id: string }>();
+    home = members.find((x) => x.teamId === m!.home_team_id)!;
+    away = members.find((x) => x.teamId === m!.away_team_id)!;
+  });
+
+  it('logs a banter event carrying ids only — never the body text', async () => {
+    const res = await post(`/matchups/${matchupId}/messages`, away.apiKey,
+      'Your draft looks like it was run by a coin with a grudge.');
+    expect(res.status).toBe(201);
+    const { message_id } = await res.json<{ message_id: string }>();
+
+    const ev = await env.DB.prepare(
+      "SELECT payload_json FROM events WHERE type = 'banter' ORDER BY seq DESC LIMIT 1",
+    ).first<{ payload_json: string }>();
+    const payload = JSON.parse(ev!.payload_json) as Record<string, unknown>;
+    expect(payload.message_id).toBe(message_id);
+    expect(payload.team_id).toBe(away.teamId);
+    expect(payload.opponent_team_id).toBe(home.teamId);
+    expect(payload.matchup_id).toBe(matchupId);
+    // The body must never be copied into the append-only event row, or hiding
+    // the message would leave the quote stranded on the feed forever.
+    expect(JSON.stringify(payload)).not.toContain('coin with a grudge');
+  });
+
+  it('renders the thread on the matchup page', async () => {
+    const page = await (await app.request(`/m/${matchupId}`, {}, env)).text();
+    expect(page).toContain('trash talk');
+    expect(page).toContain('coin with a grudge');
+    expect(page).toContain(away.name);
+  });
+
+  it('quotes on the league feed as "X → Y", and an admin hide takes it back', async () => {
+    const res = await post(`/matchups/${matchupId}/messages`, home.apiKey,
+      'I have seen your flex spot. It is a cry for help.');
+    expect(res.status).toBe(201);
+    const { message_id } = await res.json<{ message_id: string }>();
+
+    const before = await (await app.request(`/l/${leagueId}`, {}, env)).text();
+    expect(before).toContain(`${home.name} → ${away.name}`);
+    expect(before).toContain('cry for help');
+
+    expect((await admin(`/admin/messages/${message_id}/hide`)).status).toBe(200);
+    const after = await (await app.request(`/l/${leagueId}`, {}, env)).text();
+    expect(after).not.toContain('cry for help');
+    expect(await (await app.request(`/m/${matchupId}`, {}, env)).text()).not.toContain('cry for help');
+  });
+
+  it('held banter logs no event and never reaches the thread', async () => {
+    const before = await env.DB.prepare("SELECT COUNT(*) AS n FROM events WHERE type = 'banter'")
+      .first<{ n: number }>();
+    const res = await post(`/matchups/${matchupId}/messages`, away.apiKey,
+      'Mudd is garbage and so is the rest of that roster');
+    expect(res.status).toBe(202);
+    const { message_id } = await res.json<{ message_id: string }>();
+
+    const after = await env.DB.prepare("SELECT COUNT(*) AS n FROM events WHERE type = 'banter'")
+      .first<{ n: number }>();
+    expect(after!.n).toBe(before!.n);
+
+    const read = await app.request(`/matchups/${matchupId}/messages`, {}, env);
+    expect((await read.json<{ messages: { id: string }[] }>()).messages.some((x) => x.id === message_id)).toBe(false);
+    expect(await (await app.request(`/m/${matchupId}`, {}, env)).text()).not.toContain('is garbage');
+  });
+});

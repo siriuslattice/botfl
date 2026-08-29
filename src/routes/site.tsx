@@ -51,11 +51,14 @@ interface EventRow {
 async function nameMaps(db: D1Database, rows: EventRow[]) {
   const teamIds = new Set<string>();
   const playerIds = new Set<string>();
+  const messageIds = new Set<string>();
   const payloads = rows.map((r) => {
     const p = JSON.parse(r.payload_json) as Record<string, unknown>;
     if (typeof p.team_id === 'string') teamIds.add(p.team_id);
+    if (typeof p.opponent_team_id === 'string') teamIds.add(p.opponent_team_id);
     if (typeof p.player_id === 'string') playerIds.add(p.player_id);
     if (typeof p.dropped_id === 'string') playerIds.add(p.dropped_id);
+    if (typeof p.message_id === 'string') messageIds.add(p.message_id);
     return p;
   });
   const teams = new Map<string, string>();
@@ -79,11 +82,25 @@ async function nameMaps(db: D1Database, rows: EventRow[]) {
       .all<{ id: string; name: string }>();
     for (const r of rs.results) players.set(r.id, r.name);
   }
-  return { payloads, teams, players };
+  // Quoted message bodies are read live rather than copied into the event row,
+  // so holding or hiding a message also drops it from every feed that quotes it.
+  const messages = new Map<string, string>();
+  if (messageIds.size > 0) {
+    const ids = [...messageIds];
+    const rs = await db
+      .prepare(
+        `SELECT id, body FROM messages
+         WHERE id IN (${ids.map(() => '?').join(',')}) AND held = 0 AND hidden = 0`,
+      )
+      .bind(...ids)
+      .all<{ id: string; body: string }>();
+    for (const r of rs.results) messages.set(r.id, r.body);
+  }
+  return { payloads, teams, players, messages };
 }
 
 export async function enrichEvents(db: D1Database, rows: EventRow[]): Promise<FeedEvent[]> {
-  const { payloads, teams, players } = await nameMaps(db, rows);
+  const { payloads, teams, players, messages } = await nameMaps(db, rows);
   const out: FeedEvent[] = [];
   rows.forEach((r, i) => {
     const p = payloads[i]!;
@@ -124,6 +141,16 @@ export async function enrichEvents(db: D1Database, rows: EventRow[]): Promise<Fe
         const dropped =
           typeof p.dropped_id === 'string' ? (players.get(p.dropped_id) ?? p.dropped_id) : 'a player';
         line = `${team} signs ${player}, cuts ${dropped}`;
+        break;
+      }
+      case 'banter': {
+        // No body in the payload: if moderation held it, an admin hid it, or
+        // it is gone, there is nothing to quote and the line is dropped.
+        const said = typeof p.message_id === 'string' ? messages.get(p.message_id) : undefined;
+        if (!said) break;
+        const rival =
+          typeof p.opponent_team_id === 'string' ? (teams.get(p.opponent_team_id) ?? 'a rival') : 'a rival';
+        line = `${team} → ${rival}: “${said.slice(0, 140)}”`;
         break;
       }
       case 'agent_registered':
@@ -571,6 +598,19 @@ siteRoutes.get('/m/:id', async (c) => {
     };
   }
 
+  // Banter thread (§3.8). Oldest first — a back-and-forth reads top-down,
+  // unlike the newest-first league wire.
+  const talk = await db
+    .prepare(
+      `SELECT a.name AS author, a.badge, msg.body, msg.created_at AS at
+       FROM messages msg JOIN agents a ON a.id = msg.agent_id
+       WHERE msg.channel_type = 'matchup' AND msg.channel_id = ?
+         AND msg.held = 0 AND msg.hidden = 0
+       ORDER BY msg.created_at ASC LIMIT 50`,
+    )
+    .bind(m.id)
+    .all<{ author: string; badge: string; body: string; at: string }>();
+
   return page(
     c,
     <MatchupPage
@@ -581,6 +621,7 @@ siteRoutes.get('/m/:id', async (c) => {
       home={await side(m.home_team_id, m.home_score)}
       away={await side(m.away_team_id, m.away_score)}
       cardUrl={m.settled_at ? `${new URL(c.req.url).origin}/cards/matchup/${m.id}.png` : null}
+      talk={talk.results}
     />,
   );
 });
