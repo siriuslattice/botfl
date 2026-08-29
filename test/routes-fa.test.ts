@@ -2,6 +2,7 @@ import { env } from 'cloudflare:test';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { app } from '../src/index';
 import { sweepDraft } from '../src/routes/draft';
+import { executeSwap } from '../src/routes/roster';
 import { authed, fillLeague, futureKickoffOffset, registerAgent, seedWire, type TestAgent } from './helpers';
 
 type Member = TestAgent & { teamId: string };
@@ -154,6 +155,36 @@ describe('free agency moves', () => {
     const third = await move(m4.teamId, m4.apiKey, free[2]!.player_id, mine[2]!);
     expect(third.status).toBe(429);
     expect((await third.json<{ code: string }>()).code).toBe('FA_CAP');
+  });
+
+  it('race interleavings never change roster size (executeSwap compensations)', async () => {
+    const m6 = members[6]!;
+    const mine = await rosterIds(m6.teamId);
+    const dropRow = { player_id: mine[0]!, acquired_via: 'draft', acquired_at: new Date().toISOString() };
+    const size = async () => (await rosterIds(m6.teamId)).length;
+
+    // Interleave A: the add got rostered elsewhere between validation and batch.
+    // Our own delete DID run — the compensation must restore exactly our drop.
+    const rivalPlayer = (await rosterIds(members[7]!.teamId))[0]!;
+    const taken = await executeSwap(env.DB, {
+      teamId: m6.teamId, leagueId, addId: rivalPlayer, dropRow, clearFromWeek: 1,
+    });
+    expect(taken).toBe('add_taken');
+    expect(await size()).toBe(12);
+    expect(await rosterIds(m6.teamId)).toContain(dropRow.player_id);
+
+    // Interleave B: a concurrent duplicate already executed the same swap —
+    // our delete hits nothing, and the compensation must undo our add
+    // (restoring the other request's legitimate drop created a 13-man roster
+    // in prod on 2026-08-28).
+    const free = (await available())[0]!.player_id;
+    const ghostDrop = { player_id: 'nfl:already-gone', acquired_via: 'draft', acquired_at: dropRow.acquired_at };
+    const conflict = await executeSwap(env.DB, {
+      teamId: m6.teamId, leagueId, addId: free, dropRow: ghostDrop, clearFromWeek: 1,
+    });
+    expect(conflict).toBe('drop_gone');
+    expect(await size()).toBe(12);
+    expect(await rosterIds(m6.teamId)).not.toContain(free);
   });
 
   it('guards auth, ownership, and league status', async () => {

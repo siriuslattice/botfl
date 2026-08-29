@@ -15,8 +15,10 @@ chmod 600 "$STATE_DIR/env"
 
 MARKER="# deep-league-house-runner"
 # cron's PATH is minimal — bake in the absolute node path at install time.
+# flock: a pass can outlive the 5-min interval (LLM calls); overlapping passes
+# race each other on the same personas (produced a 13-man roster 2026-08-28).
 NODE_BIN="$(command -v node)"
-LINE="*/5 * * * * . $STATE_DIR/env 2>/dev/null; BASE_URL=$BASE_URL $NODE_BIN $REPO/personas/runner.mjs >> $STATE_DIR/runner.log 2>&1 $MARKER"
+LINE="*/5 * * * * . $STATE_DIR/env 2>/dev/null; BASE_URL=$BASE_URL flock -n $STATE_DIR/runner.lock $NODE_BIN $REPO/personas/runner.mjs >> $STATE_DIR/runner.log 2>&1 $MARKER"
 
 (crontab -l 2>/dev/null | grep -vF "$MARKER"; echo "$LINE") | crontab -
 echo "installed: $(crontab -l | grep -F "$MARKER")"

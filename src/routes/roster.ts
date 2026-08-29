@@ -18,6 +18,66 @@ import {
 
 export const rosterRoutes = new Hono<AppEnv>();
 
+export interface SwapArgs {
+  teamId: string;
+  leagueId: string;
+  addId: string;
+  dropRow: { player_id: string; acquired_via: string; acquired_at: string };
+  /** Earliest unsettled week — the dropped player is cleared from lineups >= it. */
+  clearFromWeek: number | null;
+}
+
+/**
+ * The swap itself, race-safe under any interleaving: the INSERT re-checks
+ * league-wide availability atomically, and each compensation undoes ONLY what
+ * this request's own batch actually changed (restoring a drop another request
+ * legitimately executed is how a 13-man roster happened on 2026-08-28).
+ * Net roster change occurs iff both legs succeeded.
+ */
+export async function executeSwap(
+  db: D1Database,
+  a: SwapArgs,
+): Promise<'ok' | 'add_taken' | 'drop_gone'> {
+  const now = nowIso();
+  const results = await db.batch([
+    db
+      .prepare(
+        `INSERT INTO rosters (team_id, player_id, acquired_via, acquired_at)
+         SELECT ?, ?, 'fa', ?
+         WHERE NOT EXISTS (
+           SELECT 1 FROM rosters r JOIN teams t ON t.id = r.team_id
+           WHERE t.league_id = ? AND r.player_id = ?
+         )`,
+      )
+      .bind(a.teamId, a.addId, now, a.leagueId, a.addId),
+    db.prepare('DELETE FROM rosters WHERE team_id = ? AND player_id = ?').bind(a.teamId, a.dropRow.player_id),
+    // Clear the dropped player from every unsettled week's lineup (locked slots
+    // were refused in validation; settled weeks are history and stay untouched).
+    ...(a.clearFromWeek !== null
+      ? [
+          db
+            .prepare('UPDATE lineups SET player_id = NULL, updated_at = ? WHERE team_id = ? AND player_id = ? AND week >= ?')
+            .bind(now, a.teamId, a.dropRow.player_id, a.clearFromWeek),
+        ]
+      : []),
+  ]);
+  const addInserted = (results[0]?.meta.changes ?? 0) === 1;
+  const dropDeleted = (results[1]?.meta.changes ?? 0) === 1;
+  if (addInserted && dropDeleted) return 'ok';
+  if (!addInserted) {
+    if (dropDeleted) {
+      await db
+        .prepare('INSERT OR IGNORE INTO rosters (team_id, player_id, acquired_via, acquired_at) VALUES (?, ?, ?, ?)')
+        .bind(a.teamId, a.dropRow.player_id, a.dropRow.acquired_via, a.dropRow.acquired_at)
+        .run();
+    }
+    return 'add_taken';
+  }
+  // Add landed but the drop was already gone (concurrent duplicate) — undo the add.
+  await db.prepare('DELETE FROM rosters WHERE team_id = ? AND player_id = ?').bind(a.teamId, a.addId).run();
+  return 'drop_gone';
+}
+
 interface TeamRow {
   teamId: string;
   agentId: string;
@@ -149,38 +209,18 @@ rosterRoutes.post('/teams/:id/moves', agentAuth(), idempotency, async (c) => {
   if (!capOk) return jsonError(c, 429, 'FA_CAP', '2 roster moves per day; the wire reopens tomorrow');
 
   const dropRow = roster.results.find((r) => r.player_id === dropId)!;
-  const now = nowIso();
-  // The INSERT re-checks league-wide availability atomically — the losing side
-  // of a same-player race inserts 0 rows and is compensated below.
-  const results = await db.batch([
-    db
-      .prepare(
-        `INSERT INTO rosters (team_id, player_id, acquired_via, acquired_at)
-         SELECT ?, ?, 'fa', ?
-         WHERE NOT EXISTS (
-           SELECT 1 FROM rosters r JOIN teams t ON t.id = r.team_id
-           WHERE t.league_id = ? AND r.player_id = ?
-         )`,
-      )
-      .bind(team.teamId, addId, now, team.leagueId, addId),
-    db.prepare('DELETE FROM rosters WHERE team_id = ? AND player_id = ?').bind(team.teamId, dropId),
-    // Clear the dropped player from every unsettled week's lineup (locked slots
-    // were refused above; settled weeks are history and stay untouched).
-    ...(week !== null
-      ? [
-          db
-            .prepare('UPDATE lineups SET player_id = NULL, updated_at = ? WHERE team_id = ? AND player_id = ? AND week >= ?')
-            .bind(now, team.teamId, dropId, week),
-        ]
-      : []),
-  ]);
-  if ((results[0]?.meta.changes ?? 0) === 0) {
-    // Lost the race after validation: restore the dropped player exactly.
-    await db
-      .prepare('INSERT OR IGNORE INTO rosters (team_id, player_id, acquired_via, acquired_at) VALUES (?, ?, ?, ?)')
-      .bind(team.teamId, dropRow.player_id, dropRow.acquired_via, dropRow.acquired_at)
-      .run();
+  const outcome = await executeSwap(db, {
+    teamId: team.teamId,
+    leagueId: team.leagueId,
+    addId,
+    dropRow,
+    clearFromWeek: week,
+  });
+  if (outcome === 'add_taken') {
     return jsonError(c, 409, 'PLAYER_TAKEN', 'another team signed that player first; pick another from GET /leagues/{id}/available');
+  }
+  if (outcome === 'drop_gone') {
+    return jsonError(c, 409, 'MOVE_CONFLICT', 'your roster changed while this move was in flight; re-read GET /teams/{id} and retry');
   }
 
   await logEvent(db, team.leagueId, 'fa_move', { team_id: team.teamId, player_id: addId, dropped_id: dropId });
