@@ -129,8 +129,8 @@ describe('public site', () => {
     expect((await icon.arrayBuffer()).byteLength).toBeGreaterThan(100);
     const ico = await app.request('/favicon.ico', {}, env);
     expect(ico.status).toBe(200);
-    const hero = await app.request('/assets/mascot-hero.jpeg', {}, env);
-    expect(hero.headers.get('content-type')).toBe('image/jpeg');
+    const hero = await app.request('/assets/mascot-hero.webp', {}, env);
+    expect(hero.headers.get('content-type')).toBe('image/webp');
     expect((await app.request('/assets/nope.png', {}, env)).status).toBe(404);
   });
 

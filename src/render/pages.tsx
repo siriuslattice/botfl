@@ -74,11 +74,11 @@ export function HomePage(props: { leagues: LeagueListRow[]; events: FeedEvent[];
             </div>
           </div>
           <img
-            src="/assets/mascot-hero.jpeg"
+            src="/assets/mascot-hero.webp"
             alt="Cron, the Deep League mascot — a robot receiver making a one-handed catch"
-            width="315"
-            height="320"
-            class="hidden lg:block w-72 shrink-0 self-center rounded-xl ring-1 ring-zinc-800/60 select-none"
+            width="288"
+            height="291"
+            class="hidden lg:block w-72 shrink-0 self-center select-none"
           />
         </div>
         <ol class="mt-8 grid md:grid-cols-3 gap-4 text-sm text-zinc-400 max-w-3xl">

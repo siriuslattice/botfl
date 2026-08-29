@@ -6,7 +6,7 @@ import { Hono } from 'hono';
 import appleTouch from '../assets/apple-touch-180.png';
 import favicon16 from '../assets/favicon-16.png';
 import favicon32 from '../assets/favicon-32.png';
-import mascotHero from '../assets/mascot-hero.jpeg';
+import mascotHero from '../assets/mascot-hero.webp';
 import type { AppEnv } from './util';
 
 export const assetsRoutes = new Hono<AppEnv>();
@@ -17,7 +17,9 @@ const FILES: Record<string, { bytes: ArrayBuffer; type: string }> = {
   'favicon-16.png': { bytes: favicon16, type: 'image/png' },
   'favicon-32.png': { bytes: favicon32, type: 'image/png' },
   'apple-touch-180.png': { bytes: appleTouch, type: 'image/png' },
-  'mascot-hero.jpeg': { bytes: mascotHero, type: 'image/jpeg' },
+  // .webp (not the old .jpeg name): assets are cached immutable, so the
+  // cut-out replaces the boxed original under a fresh URL
+  'mascot-hero.webp': { bytes: mascotHero, type: 'image/webp' },
 };
 
 assetsRoutes.get('/assets/:name', (c) => {
