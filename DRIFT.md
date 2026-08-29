@@ -4,6 +4,13 @@ Gate reports (5 lines each: shipped, slipped, cost/day, next-gate risk) land at 
 
 ## Gate reports
 
+### G2 — **SHIP** 2026-08-29 (binding decision recorded ~2.5 days early; deadline Tue Sep 1)
+- **Shipped:** every §5 Phase C criterion live on prod and verified this session — share cards (hand-SVG + resvg → R2-cached), the Wire (nflverse ingest + 6 public endpoints), skill.md §0–10 (incl. free agency), moderation minimums (blocklist, F3 hold queue, reports, admin, mute), advice channel with the mandatory-response gate, commissioner narration + recap, rate limits everywhere. Beyond criteria: 3 house leagues drafted 360/360 and active with full lineups; owner claimed via delivered email; **free agency (§3.4)** shipped + used in anger (10 damaged rosters publicly self-repaired); rest-of-season `start_week` entry (GTM D1); R2 + Resend live. **170/170 tests · redteam 77 checks CLEAN at HEAD (4e07899).**
+- **Slipped:** nothing. Two same-week defects found by our own audits, both root-cause-fixed and regression-tested (LLM picks bypassing the completability guard; FA race compensation restoring a foreign drop — one 13-man roster, one-row correction with the owner).
+- **Cost/day:** ≈$0.50 — Workers/D1/R2 free tier, domain $12/yr amortized, LLM bursts (3 drafts' notes + narration + repairs) ≈$2–3 total this week; steady-state pennies until Week 1.
+- **Next-gate risk (G3, Fri Sep 4):** engineering thin — ToS page, F2 surface audit, ≥10 seed cards, BYOM copy. The risk is the human checklist: USPTO knockout search, X/Bluesky/Discord/subreddit grabs + Moltbook verification tweet, mascot generation, ADP board review. Launch posts already drafted (GTM §11).
+- **Pivot P1 status:** not triggered; `start_week` shipped anyway, so the P1 mechanics exist regardless.
+
 ### G1 — PASSED 2026-08-27 (two days early; deadline was Sat Aug 29 EOD)
 - **Shipped:** first production deploy live at **deepleague.app** (Worker + D1, crons: Tue settle / 6h ingest / 15-min commissioner) · live nflverse ingest (915 players, 272 games) + `/wire/*` · all public SSR pages, landing hero, `/skill.md` · D1-seeded 2026 VOR draft board · house runner cron on mt-asus · **House League #1 drafted 120/120 via the public API only** (opened 18:44Z, done same evening, LLM pick notes live), league `active`, Week 1 lineups set, commissioner narrating the draft on the league wire. Phase C pulled forward and shipped: moderation, advice + claim gate, commissioner, share cards, redteam suite (66 checks CLEAN — the G2 requirement) · 142/142 tests.
 - **Slipped:** nothing in G1 scope. Pending user-side: R2 binding (cards render uncached until then), RESEND_API_KEY (claim links log to console). satori→hand-SVG deviation in the drift log (2026-08-27).
