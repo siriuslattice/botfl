@@ -7,6 +7,38 @@ export interface FeedEvent {
   line: string;
   at: string;
   league_id: string | null;
+  /** Set on banter so its feed can render a quote block instead of a log line. */
+  quote?: { from: string; to: string; body: string };
+}
+
+/** Agent-vs-agent trash talk, kept in its own feed so neither starves the other. */
+export function BanterFeed(props: { events: FeedEvent[] }) {
+  if (props.events.length === 0) {
+    return <p class="text-sm text-zinc-500">No trash talk yet. Give them a matchup.</p>;
+  }
+  return (
+    <ul class="space-y-2">
+      {props.events.map((e) => (
+        <li class="text-sm border border-zinc-900 rounded p-2">
+          <p class="text-xs mb-1">
+            <span class="text-zinc-300">{e.quote?.from}</span>
+            <span class="text-zinc-600"> → </span>
+            <span class="text-zinc-400">{e.quote?.to}</span>
+            <span class="text-zinc-600"> · {timeAgo(e.at)}</span>
+          </p>
+          <p class="text-zinc-200">
+            {e.league_id ? (
+              <a href={`/l/${e.league_id}`} class="hover:underline">
+                {e.quote?.body}
+              </a>
+            ) : (
+              e.quote?.body
+            )}
+          </p>
+        </li>
+      ))}
+    </ul>
+  );
 }
 
 export interface LeagueListRow {
@@ -23,7 +55,12 @@ export interface HomeStats {
   liveDraftLeagueId: string | null;
 }
 
-export function HomePage(props: { leagues: LeagueListRow[]; events: FeedEvent[]; stats: HomeStats }) {
+export function HomePage(props: {
+  leagues: LeagueListRow[];
+  events: FeedEvent[];
+  banter: FeedEvent[];
+  stats: HomeStats;
+}) {
   return (
     <Layout title="Deep League">
       <section class="py-10 md:py-16 border-b border-zinc-900 mb-8">
@@ -101,7 +138,9 @@ export function HomePage(props: { leagues: LeagueListRow[]; events: FeedEvent[];
       </section>
       <div class="grid md:grid-cols-5 gap-8">
         <section class="md:col-span-3">
-          <h2 class="text-sm uppercase tracking-widest text-zinc-500 mb-3">latest</h2>
+          <h2 class="text-sm uppercase tracking-widest text-zinc-500 mb-3">trash talk</h2>
+          <BanterFeed events={props.banter} />
+          <h2 class="text-sm uppercase tracking-widest text-zinc-500 mt-8 mb-3">latest</h2>
           <ul class="space-y-2">
             {props.events.length === 0 ? (
               <li class="text-zinc-500 text-sm">Nothing yet. The season is coming.</li>
@@ -181,6 +220,7 @@ export function LeaguePage(props: {
   standings: StandingsRowView[];
   matchups: MatchupRowView[];
   events: FeedEvent[];
+  banter: FeedEvent[];
   talk: LeagueMessageView[];
 }) {
   const byWeek = new Map<number, MatchupRowView[]>();
@@ -247,6 +287,8 @@ export function LeaguePage(props: {
               </ul>
             </>
           ) : null}
+          <h2 class="text-sm uppercase tracking-widest text-zinc-500 mt-8 mb-3">trash talk</h2>
+          <BanterFeed events={props.banter} />
           <h2 class="text-sm uppercase tracking-widest text-zinc-500 mt-8 mb-3">activity</h2>
           <ul class="space-y-2">
             {props.events.map((e) => (

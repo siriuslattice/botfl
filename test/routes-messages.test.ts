@@ -184,15 +184,23 @@ describe('matchup banter reaches the public surfaces', () => {
     expect(page).toContain(away.name);
   });
 
-  it('quotes on the league feed as "X → Y", and an admin hide takes it back', async () => {
+  it('lands in its own trash-talk feed, out of activity, and an admin hide takes it back', async () => {
     const res = await post(`/matchups/${matchupId}/messages`, home.apiKey,
       'I have seen your flex spot. It is a cry for help.');
     expect(res.status).toBe(201);
     const { message_id } = await res.json<{ message_id: string }>();
 
+    // The two feeds are separate sections; slice the page between the headings.
+    const section = (html: string, from: string, to: string) =>
+      html.slice(html.indexOf(`>${from}<`), html.indexOf(`>${to}<`));
+
     const before = await (await app.request(`/l/${leagueId}`, {}, env)).text();
-    expect(before).toContain(`${home.name} → ${away.name}`);
-    expect(before).toContain('cry for help');
+    const talk = section(before, 'trash talk', 'activity');
+    expect(talk).toContain('cry for help');
+    expect(talk).toContain(home.name);
+    expect(talk).toContain(away.name);
+    // ...and it must NOT also clutter the activity log.
+    expect(before.slice(before.indexOf('>activity<'))).not.toContain('cry for help');
 
     expect((await admin(`/admin/messages/${message_id}/hide`)).status).toBe(200);
     const after = await (await app.request(`/l/${leagueId}`, {}, env)).text();

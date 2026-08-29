@@ -107,6 +107,7 @@ export async function enrichEvents(db: D1Database, rows: EventRow[]): Promise<Fe
     const team = typeof p.team_id === 'string' ? (teams.get(p.team_id) ?? 'a team') : 'a team';
     const player = typeof p.player_id === 'string' ? (players.get(p.player_id) ?? p.player_id) : '';
     let line: string | null = null;
+    let quote: FeedEvent['quote'];
     switch (r.type) {
       case 'league_created':
         line = `${String(p.name ?? 'A league')} formed — seats open`;
@@ -150,6 +151,7 @@ export async function enrichEvents(db: D1Database, rows: EventRow[]): Promise<Fe
         if (!said) break;
         const rival =
           typeof p.opponent_team_id === 'string' ? (teams.get(p.opponent_team_id) ?? 'a rival') : 'a rival';
+        quote = { from: team, to: rival, body: said };
         line = `${team} → ${rival}: “${said.slice(0, 140)}”`;
         break;
       }
@@ -162,15 +164,28 @@ export async function enrichEvents(db: D1Database, rows: EventRow[]): Promise<Fe
       default:
         line = null; // wire_synced and internals stay off the feed
     }
-    if (line) out.push({ line, at: r.created_at, league_id: r.league_id });
+    if (line) out.push({ line, at: r.created_at, league_id: r.league_id, ...(quote ? { quote } : {}) });
   });
   return out;
 }
 
-async function recentEvents(db: D1Database, where: string, binds: unknown[], limit = 30): Promise<FeedEvent[]> {
+/**
+ * `only` splits the two feeds at the QUERY, not after: banter and activity
+ * arrive at very different rates, and a single window would let whichever is
+ * noisier starve the other out of the list entirely.
+ */
+async function recentEvents(
+  db: D1Database,
+  where: string,
+  binds: unknown[],
+  limit = 30,
+  only?: 'banter' | 'activity',
+): Promise<FeedEvent[]> {
+  const kind = only === 'banter' ? "type = 'banter'" : only === 'activity' ? "type <> 'banter'" : '';
+  const clause = kind ? (where ? `${where} AND ${kind}` : `WHERE ${kind}`) : where;
   const rows = await db
     .prepare(
-      `SELECT league_id, type, payload_json, created_at FROM events ${where} ORDER BY seq DESC LIMIT ${limit}`,
+      `SELECT league_id, type, payload_json, created_at FROM events ${clause} ORDER BY seq DESC LIMIT ${limit}`,
     )
     .bind(...binds)
     .all<EventRow>();
@@ -184,7 +199,8 @@ siteRoutes.get('/', async (c) => {
     `SELECT l.id, l.name, l.status, (SELECT COUNT(*) FROM teams t WHERE t.league_id = l.id) AS teams
      FROM leagues l ORDER BY l.created_at DESC LIMIT 25`,
   ).all<{ id: string; name: string; status: string; teams: number }>();
-  const events = await recentEvents(c.env.DB, '', []);
+  const events = await recentEvents(c.env.DB, '', [], 25, 'activity');
+  const banter = await recentEvents(c.env.DB, '', [], 12, 'banter');
   const counts = await c.env.DB.prepare(
     `SELECT (SELECT COUNT(*) FROM agents) AS agents,
             (SELECT COUNT(*) FROM leagues) AS leagues,
@@ -196,7 +212,7 @@ siteRoutes.get('/', async (c) => {
     picks: counts?.picks ?? 0,
     liveDraftLeagueId: leagues.results.find((l) => l.status === 'drafting')?.id ?? null,
   };
-  return page(c, <HomePage leagues={leagues.results} events={events} stats={stats} />);
+  return page(c, <HomePage leagues={leagues.results} events={events} banter={banter} stats={stats} />);
 });
 
 // Terms & privacy (SPEC §6 launch checklist): template-grade, honest, short.
@@ -340,7 +356,8 @@ siteRoutes.get('/l/:id', async (c) => {
     score:
       m.settled_at !== null ? `${(m.away_score ?? 0).toFixed(2)}–${(m.home_score ?? 0).toFixed(2)}` : null,
   }));
-  const events = await recentEvents(c.env.DB, 'WHERE league_id = ?', [league.id]);
+  const events = await recentEvents(c.env.DB, 'WHERE league_id = ?', [league.id], 25, 'activity');
+  const banter = await recentEvents(c.env.DB, 'WHERE league_id = ?', [league.id], 12, 'banter');
   const talk = await db
     .prepare(
       `SELECT a.name AS author, a.badge, m.body, m.created_at AS at
@@ -352,7 +369,14 @@ siteRoutes.get('/l/:id', async (c) => {
     .all<{ author: string; badge: string; body: string; at: string }>();
   return page(
     c,
-    <LeaguePage league={league} standings={standingsView} matchups={matchupViews} events={events} talk={talk.results} />,
+    <LeaguePage
+      league={league}
+      standings={standingsView}
+      matchups={matchupViews}
+      events={events}
+      banter={banter}
+      talk={talk.results}
+    />,
   );
 });
 
