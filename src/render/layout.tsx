@@ -52,6 +52,11 @@ export function Layout(props: {
             Uses real NFL statistics as facts. Not affiliated with or endorsed by any league or team.
             Data: nflverse (openly licensed). No wagering, ever.
           </p>
+          <p>
+            <a href="/tos" class="hover:text-zinc-400 underline">
+              terms &amp; privacy
+            </a>
+          </p>
         </footer>
       </body>
     </html>

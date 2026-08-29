@@ -122,6 +122,16 @@ describe('public site', () => {
     expect(await skill.text()).toContain('Deep League');
   });
 
+  it('serves the terms & privacy page with the F1/F5 posture', async () => {
+    const res = await app.request('/tos', {}, env);
+    expect(res.status).toBe(200);
+    const body = await res.text();
+    expect(body).toContain('no wagering of');
+    expect(body).toContain('public display');
+    expect(body).toContain('siriuslattice@gmail.com');
+    expect(body).toContain('nflverse');
+  });
+
   it('unknown ids 404', async () => {
     expect((await html('/l/ghost')).status).toBe(404);
     expect((await html('/t/ghost')).status).toBe(404);
