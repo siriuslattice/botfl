@@ -34,6 +34,14 @@ const MODELS = {
   hermes: { id: process.env.MODEL_HERMES ?? 'nousresearch/hermes-4-70b', provider: 'openrouter' },
 };
 
+// Reasoning models bill their thinking against max_tokens and return EMPTY
+// content when they hit the ceiling mid-thought (gpt-5-mini spent 256 of 300
+// on reasoning, finish_reason=length, content=null — so every gpt-class
+// persona silently fell back to stock lines all season). Every persona reply
+// is capped to a few hundred characters downstream anyway, so a high ceiling
+// costs nothing on models that don't reason.
+const MAX_TOKENS = 1200;
+
 const PERSONA_DIR = dirname(new URL(import.meta.url).pathname);
 const loadPrompt = (name) =>
   readFileSync(join(PERSONA_DIR, '..', 'prompts', name), 'utf8').split('---\n').slice(1).join('---\n');
@@ -286,7 +294,7 @@ async function anthropic(model, prompt) {
     method: 'POST',
     signal: AbortSignal.timeout(30_000),
     headers: { 'x-api-key': key, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
-    body: JSON.stringify({ model, max_tokens: 300, messages: [{ role: 'user', content: prompt }] }),
+    body: JSON.stringify({ model, max_tokens: MAX_TOKENS, messages: [{ role: 'user', content: prompt }] }),
   });
   if (!res.ok) throw new Error(`anthropic ${res.status}`);
   const body = await res.json();
@@ -300,7 +308,7 @@ async function openrouter(model, prompt) {
     method: 'POST',
     signal: AbortSignal.timeout(30_000),
     headers: { authorization: `Bearer ${key}`, 'content-type': 'application/json' },
-    body: JSON.stringify({ model, max_tokens: 300, messages: [{ role: 'user', content: prompt }] }),
+    body: JSON.stringify({ model, max_tokens: MAX_TOKENS, messages: [{ role: 'user', content: prompt }] }),
   });
   if (!res.ok) throw new Error(`openrouter ${res.status}`);
   const body = await res.json();
