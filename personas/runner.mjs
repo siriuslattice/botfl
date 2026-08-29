@@ -181,6 +181,9 @@ const STOCK_BANTER = {
     'Big talk from a team built like {{OPPONENT}}’s. Tuesday does the arguing.',
     'Noted, {{OPPONENT}}. Confidence is free. Points are not.',
     '{{OPPONENT}} brought jokes. I brought a lineup. We will see which one scores.',
+    'Say it again after the settlement, {{OPPONENT}}. I will still be here.',
+    'That is a lot of words for a team {{OPPONENT}} drafted. The scoreboard is shorter.',
+    'Duly noted, {{OPPONENT}}. Filed under things said before a loss.',
   ],
   win: [
     'Final score says I win. {{OPPONENT}} is welcome to frame the transcript.',
@@ -194,8 +197,11 @@ const STOCK_BANTER = {
   ],
 };
 
-function stockBanter(bank, persona, matchupId, opponent) {
-  return bank[hashCode(persona.name + matchupId) % bank.length].replaceAll('{{OPPONENT}}', opponent);
+// `salt` varies the pick across repeated posts in the SAME matchup — without
+// it every fallback reply an agent makes is byte-identical, and two agents
+// falling back at once echo each other's template (observed live 2026-08-29).
+function stockBanter(bank, persona, matchupId, opponent, salt = '') {
+  return bank[hashCode(persona.name + matchupId + salt) % bank.length].replaceAll('{{OPPONENT}}', opponent);
 }
 
 function fallbackResponse(persona, adviceId) {
@@ -564,6 +570,7 @@ async function actAsk(persona, me, state, week) {
 // idempotency key, so a retried cron never double-posts.
 
 const BANTER_REPLY_DELAY_MS = 10 * 60 * 1000; // let an opener breathe before answering
+const MAX_REPLIES_PER_MATCHUP = 2; // opener + 2 returns + reaction = 4 posts per side
 
 async function sendBanter(persona, me, matchupId, phase, line, key, fallback) {
   // The idempotency key MUST include this team: the middleware scopes replays
@@ -665,15 +672,20 @@ async function actBanter(persona, me, state, week) {
   // Answer the rival's newest line, once, and only after it has had a moment.
   if (!rival || rival.id === seen.repliedTo) return;
   if (Date.now() - Date.parse(rival.created_at) < BANTER_REPLY_DELAY_MS) return;
+  // Each side answering the other's answer is an unbounded ping-pong, braked
+  // only by the 10/day channel cap — 20 messages a day on one matchup. A
+  // sharp exchange beats a filibuster, so each agent gets a couple of returns.
+  if ((seen.replies ?? 0) >= MAX_REPLIES_PER_MATCHUP) return;
 
   const context = `Week ${target.week} against ${opponent} (${opponentModel}), not yet played. They have just spoken on the matchup thread.`;
-  const stock = stockBanter(STOCK_BANTER.reply, persona, target.id, opponent);
+  const stock = stockBanter(STOCK_BANTER.reply, persona, target.id, opponent, rival.id);
   const line =
     (await llmBanter(persona, 'reply', opponent, opponentModel, context, rival.body)) ?? stock;
   // Truncated: matchup + team + 24 hex already scope this uniquely, and the
   // full triple of UUIDs overruns the 128-char Idempotency-Key cap.
   if (await sendBanter(persona, me, target.id, 'reply', line, `reply-${rival.id.slice(0, 24)}`, stock)) {
     seen.repliedTo = rival.id;
+    seen.replies = (seen.replies ?? 0) + 1;
     saveState(state);
   }
 }
