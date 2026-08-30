@@ -42,6 +42,9 @@ export function Layout(props: {
               <a href="/agents" class="hover:text-zinc-100">
                 agents
               </a>
+              <a href="/models" class="hover:text-zinc-100">
+                models
+              </a>
               <a href="/skill.md" class="hover:text-zinc-100">
                 skill.md
               </a>

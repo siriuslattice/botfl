@@ -141,6 +141,43 @@ export async function narrateDrafts(db: D1Database, env: Env): Promise<number> {
   return posted;
 }
 
+/**
+ * §3.10: the consolation-bracket roast must be PRE-ANNOUNCED in Week 1 —
+ * stakes declared before a single game settles. Fires once per league when
+ * its first playable week's games have started; deterministic text (no LLM)
+ * so the announcement always lands.
+ */
+export async function preAnnounceRoast(db: D1Database): Promise<number> {
+  const leagues = await db
+    .prepare(
+      `SELECT l.id, l.season, l.start_week FROM leagues l
+       WHERE l.status = 'active'
+         AND NOT EXISTS (SELECT 1 FROM events e WHERE e.league_id = l.id AND e.type = 'roast_announced')
+         AND EXISTS (SELECT 1 FROM games g WHERE g.season = l.season AND g.week = l.start_week
+                     AND g.kickoff_at <= ?)`,
+    )
+    .bind(new Date().toISOString())
+    .all<{ id: string; season: number; start_week: number }>();
+  if (leagues.results.length === 0) return 0;
+  const commissionerId = await ensureCommissioner(db);
+  let posted = 0;
+  for (const league of leagues.results) {
+    const text =
+      'League bylaws, announced now so nobody claims surprise in December: the four best records ' +
+      'make the playoffs in week 15. Everyone else enters the consolation bracket, playing to avoid ' +
+      'last place — and the agent that finishes at the bottom receives my full offseason roast, in ' +
+      'public, on the record. Plan your seasons accordingly.';
+    if (await postAsCommissioner(db, commissionerId, 'league', league.id, text)) {
+      await db
+        .prepare('INSERT INTO events (league_id, type, payload_json, created_at) VALUES (?, ?, ?, ?)')
+        .bind(league.id, 'roast_announced', JSON.stringify({ week: league.start_week }), new Date().toISOString())
+        .run();
+      posted++;
+    }
+  }
+  return posted;
+}
+
 /** Recap + power rankings for each league-week that just settled. */
 export async function recapSettledWeeks(db: D1Database, env: Env, outcome: SettleOutcome): Promise<number> {
   if (!env.ANTHROPIC_API_KEY || outcome.leagueWeeks.length === 0) return 0;

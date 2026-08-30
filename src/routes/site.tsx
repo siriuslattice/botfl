@@ -10,6 +10,8 @@ import { getSportAdapter } from '../sport';
 import type { StatLine } from '../sport/adapter';
 import {
   AgentsPage,
+  ModelsPage,
+  type ModelRowView,
   DraftPage,
   HomePage,
   LeaguePage,
@@ -137,6 +139,9 @@ export async function enrichEvents(db: D1Database, rows: EventRow[]): Promise<Fe
         break;
       case 'week_settled':
         line = `week ${String(p.week ?? '?')} is final`;
+        break;
+      case 'belt_won':
+        line = `${team} takes the Weekly Belt for week ${String(p.week ?? '?')} — ${Number(p.score ?? 0).toFixed(2)}, best in the league`;
         break;
       case 'playoffs_set':
         line = 'week 14 is in the books — playoff semifinals and the consolation bracket are set';
@@ -303,6 +308,66 @@ siteRoutes.get('/tos', (c) => {
   );
 });
 
+// §3.10 global model leaderboard: cross-league rollup by declared model.
+// Regular season only (wks ≤14) — same purity rule as standings.
+siteRoutes.get('/models', async (c) => {
+  const db = c.env.DB;
+  const teams = await db
+    .prepare(
+      `SELECT t.id, a.model FROM teams t JOIN agents a ON a.id = t.agent_id
+       WHERE a.badge != 'commissioner'`,
+    )
+    .all<{ id: string; model: string }>();
+  const modelOf = new Map(teams.results.map((t) => [t.id, t.model]));
+  const settled = await db
+    .prepare(
+      `SELECT home_team_id, away_team_id, home_score, away_score
+       FROM matchups WHERE settled_at IS NOT NULL AND week <= 14`,
+    )
+    .all<{ home_team_id: string; away_team_id: string; home_score: number; away_score: number }>();
+
+  interface Agg { teams: Set<string>; w: number; l: number; t: number; pf: number; belts: number; best: number }
+  const agg = new Map<string, Agg>();
+  const bucket = (model: string): Agg => {
+    if (!agg.has(model)) agg.set(model, { teams: new Set(), w: 0, l: 0, t: 0, pf: 0, belts: 0, best: 0 });
+    return agg.get(model)!;
+  };
+  for (const t of teams.results) bucket(t.model).teams.add(t.id);
+  for (const m of settled.results) {
+    const hm = modelOf.get(m.home_team_id);
+    const am = modelOf.get(m.away_team_id);
+    if (!hm || !am) continue;
+    const h = bucket(hm);
+    const a = bucket(am);
+    h.pf += m.home_score;
+    a.pf += m.away_score;
+    h.best = Math.max(h.best, m.home_score);
+    a.best = Math.max(a.best, m.away_score);
+    if (m.home_score > m.away_score) { h.w++; a.l++; }
+    else if (m.away_score > m.home_score) { a.w++; h.l++; }
+    else { h.t++; a.t++; }
+  }
+  const belts = await db
+    .prepare("SELECT payload_json FROM events WHERE type = 'belt_won'")
+    .all<{ payload_json: string }>();
+  for (const b of belts.results) {
+    const teamId = (JSON.parse(b.payload_json) as { team_id?: string }).team_id;
+    const model = teamId ? modelOf.get(teamId) : undefined;
+    if (model) bucket(model).belts++;
+  }
+  const rows: ModelRowView[] = [...agg.entries()]
+    .map(([model, x]) => ({
+      model,
+      teams: x.teams.size,
+      record: `${x.w}-${x.l}${x.t ? `-${x.t}` : ''}`,
+      pf: x.pf.toFixed(2),
+      belts: x.belts,
+      bestWeek: x.best > 0 ? x.best.toFixed(2) : '—',
+    }))
+    .sort((a, b) => Number(b.pf) - Number(a.pf));
+  return page(c, <ModelsPage rows={rows} />);
+});
+
 siteRoutes.get('/agents', async (c) => {
   const rows = await c.env.DB.prepare(
     `SELECT a.name, a.model, a.badge, t.id AS teamId, l.name AS league
@@ -371,6 +436,15 @@ siteRoutes.get('/l/:id', async (c) => {
   }));
   const events = await recentEvents(c.env.DB, 'WHERE league_id = ?', [league.id], 25, 'activity');
   const banter = await recentEvents(c.env.DB, 'WHERE league_id = ?', [league.id], 12, 'banter');
+  // §3.10 Weekly Belt: the league's most recent belt_won names the holder.
+  const beltRow = await db
+    .prepare("SELECT payload_json FROM events WHERE league_id = ? AND type = 'belt_won' ORDER BY seq DESC LIMIT 1")
+    .bind(league.id)
+    .first<{ payload_json: string }>();
+  const beltPayload = beltRow ? (JSON.parse(beltRow.payload_json) as { team_id?: string; week?: number }) : null;
+  const beltHolder = beltPayload?.team_id
+    ? `${teamName.get(beltPayload.team_id)?.name ?? '?'} (week ${beltPayload.week})`
+    : null;
   const talk = await db
     .prepare(
       `SELECT a.name AS author, a.badge, m.body, m.created_at AS at
@@ -389,6 +463,7 @@ siteRoutes.get('/l/:id', async (c) => {
       events={events}
       banter={banter}
       talk={talk.results}
+      beltHolder={beltHolder}
     />,
   );
 });

@@ -60,7 +60,7 @@ export default {
     }
     const { sweepAllDrafts } = await import('./cron/sweep');
     const { settleDueWeeks } = await import('./cron/settle');
-    const { narrateDrafts, recapSettledWeeks } = await import('./cron/commissioner');
+    const { narrateDrafts, preAnnounceRoast, recapSettledWeeks } = await import('./cron/commissioner');
     const swept = await sweepAllDrafts(env.DB);
     const outcome = await settleDueWeeks(env.DB);
     // Season advancement is a data-driven scan (never outcome-driven): it
@@ -69,6 +69,8 @@ export default {
     const { advanceSeason } = await import('./cron/season');
     const season_ = await advanceSeason(env.DB);
     const narrated = await narrateDrafts(env.DB, env);
+    const announced = await preAnnounceRoast(env.DB);
+    if (announced > 0) console.log(`roast pre-announced in ${announced} league(s)`);
     const recapped = await recapSettledWeeks(env.DB, env, outcome);
     const advanced =
       season_.playoffsSet.length + season_.finalsSet.length + season_.completed.length;

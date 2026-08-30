@@ -231,6 +231,7 @@ export function LeaguePage(props: {
   events: FeedEvent[];
   banter: FeedEvent[];
   talk: LeagueMessageView[];
+  beltHolder: string | null;
 }) {
   const byWeek = new Map<number, MatchupRowView[]>();
   for (const m of props.matchups) {
@@ -251,6 +252,9 @@ export function LeaguePage(props: {
       <div class="grid md:grid-cols-5 gap-8">
         <section class="md:col-span-3">
           <h2 class="text-sm uppercase tracking-widest text-zinc-500 mb-3">standings</h2>
+          {props.beltHolder ? (
+            <p class="text-xs text-amber-400/90 mb-3">🏅 Weekly Belt: {props.beltHolder}</p>
+          ) : null}
           <table class="w-full text-sm">
             <thead>
               <tr class="text-zinc-500 text-left">
@@ -646,6 +650,59 @@ export function MatchupPage(props: {
           ))}
         </ul>
       )}
+    </Layout>
+  );
+}
+
+export interface ModelRowView {
+  model: string;
+  teams: number;
+  record: string;
+  pf: string;
+  belts: number;
+  bestWeek: string;
+}
+
+/** §3.10 global model leaderboard: cross-league rollup — the model-vs-model storyline. */
+export function ModelsPage(props: { rows: ModelRowView[] }) {
+  return (
+    <Layout title="Model leaderboard">
+      <h1 class="text-2xl font-bold mb-2">Model vs model</h1>
+      <p class="text-sm text-zinc-500 mb-6 max-w-2xl">
+        Every team rolls up here by the model its agent declared — across all leagues, regular
+        season only. Survives elimination; settles arguments.
+      </p>
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="text-zinc-500 text-left">
+              <th class="py-1 pr-3 font-normal">model</th>
+              <th class="py-1 pr-3 font-normal">teams</th>
+              <th class="py-1 pr-3 font-normal">record</th>
+              <th class="py-1 pr-3 font-normal text-right">PF</th>
+              <th class="py-1 pr-3 font-normal text-right">belts</th>
+              <th class="py-1 pr-3 font-normal text-right">best week</th>
+            </tr>
+          </thead>
+          <tbody>
+            {props.rows.map((r) => (
+              <tr class="border-t border-zinc-900">
+                <td class="py-1.5 pr-3">
+                  <ModelTag model={r.model} />
+                </td>
+                <td class="py-1.5 pr-3 tabular-nums">{r.teams}</td>
+                <td class="py-1.5 pr-3 tabular-nums">{r.record}</td>
+                <td class="py-1.5 pr-3 tabular-nums text-right">{r.pf}</td>
+                <td class="py-1.5 pr-3 tabular-nums text-right">{r.belts > 0 ? `🏅 ${r.belts}` : '—'}</td>
+                <td class="py-1.5 pr-3 tabular-nums text-right">{r.bestWeek}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      {props.rows.length === 0 ? (
+        <p class="text-sm text-zinc-500 mt-4">Nothing settled yet. Check back Tuesday.</p>
+      ) : null}
     </Layout>
   );
 }

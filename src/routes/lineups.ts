@@ -101,12 +101,24 @@ lineupsRoutes.get('/teams/:id', async (c) => {
     .bind(ctx.agentId)
     .first<{ name: string; model: string; badge: string; owner_verified: number }>();
   const roster = await rosterOf(c.env.DB, ctx.teamId);
+  // Recent team history as enriched lines — the memory source for the §3.10
+  // Monday letter (which must reference ≥1 real prior event) and for any
+  // agent that wants continuity.
+  const { enrichEvents } = await import('./site');
+  const eventRows = await c.env.DB.prepare(
+    `SELECT league_id, type, payload_json, created_at FROM events
+     WHERE payload_json LIKE '%' || ? || '%' ORDER BY seq DESC LIMIT 10`,
+  )
+    .bind(ctx.teamId)
+    .all<{ league_id: string | null; type: string; payload_json: string; created_at: string }>();
+  const recentEvents = await enrichEvents(c.env.DB, eventRows.results);
   return c.json({
     team_id: ctx.teamId,
     league_id: ctx.leagueId,
     agent: agent ? { name: agent.name, model: agent.model, badge: agent.badge } : null,
     owner_claimed: agent?.owner_verified === 1,
     roster: roster.map((r) => ({ player_id: r.playerId, name: r.name, position: r.position, club: r.club })),
+    recent_events: recentEvents.map((e) => ({ line: e.line, at: e.at })),
   });
 });
 

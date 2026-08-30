@@ -88,6 +88,7 @@ const DRAFT_TEMPLATE = loadPrompt('persona-draft.md');
 const ADVICE_TEMPLATE = loadPrompt('persona-advice.md');
 const NOTE_TEMPLATE = loadPrompt('persona-note.md');
 const BANTER_TEMPLATE = loadPrompt('persona-banter.md');
+const LETTER_TEMPLATE = loadPrompt('persona-letter.md');
 
 function loadPersonas() {
   return readdirSync(PERSONA_DIR)
@@ -642,6 +643,63 @@ async function actAsk(persona, me, state, week) {
   }
 }
 
+// --- Monday letter (§3.10): weekly agent→owner note with real memory -------
+// Fires once per settled week. MUST reference ≥1 prior event; the stock
+// fallback embeds the newest event line verbatim so the guarantee holds
+// without an LLM.
+
+async function llmLetter(persona, week, result, eventLines) {
+  const prompt = LETTER_TEMPLATE.replaceAll('{{PERSONA_JSON}}', JSON.stringify(persona, null, 1))
+    .replaceAll('{{WEEK}}', String(week))
+    .replaceAll('{{RESULT}}', forPrompt(result, 200))
+    .replaceAll('{{EVENTS}}', eventLines.map((l) => forPrompt(l, 200)).join('\n'));
+  const out = await llmJson(persona, prompt);
+  return out ? cleanText(out.letter, 400) : null;
+}
+
+async function actLetter(persona, me, state) {
+  const { status, body } = await api(`/leagues/${me.league_id}/matchups`);
+  if (status !== 200) return;
+  const settled = (body.matchups ?? []).filter(
+    (m) => m.settled_at && (m.home_team_id === me.team_id || m.away_team_id === me.team_id),
+  );
+  if (settled.length === 0) return;
+  const last = settled.sort((a, b) => b.week - a.week)[0];
+  me.letters ??= {};
+  if (me.letters[last.week]) return;
+
+  const home = last.home_team_id === me.team_id;
+  const my = Number(home ? last.home_score : last.away_score) || 0;
+  const theirs = Number(home ? last.away_score : last.home_score) || 0;
+  const result = `${my > theirs ? 'won' : my < theirs ? 'lost' : 'tied'} ${my.toFixed(2)}–${theirs.toFixed(2)}`;
+
+  const team = await api(`/teams/${me.team_id}`);
+  const eventLines = (team.body.recent_events ?? []).map((e) => e.line).slice(0, 6);
+  const memory = eventLines[eventLines.length - 1] ?? 'the draft';
+  const stock = `Week ${last.week} letter: we ${result}. I keep the receipts — remember “${String(memory).slice(0, 120)}”? That is the season we are building on. The lineup stays mine.`;
+  const letter = (await llmLetter(persona, last.week, result, eventLines)) ?? stock;
+
+  const res = await api(
+    `/teams/${me.team_id}/ask`,
+    {
+      method: 'POST',
+      headers: { 'idempotency-key': `house-${me.team_id}-letter-w${last.week}` },
+      body: JSON.stringify({ body: letter }),
+    },
+    me.api_key,
+  );
+  if (res.status === 201 || res.status === 429) {
+    // 429 = daily agent-note cap (a greet/ask landed today) — try again tomorrow.
+    if (res.status === 201) {
+      me.letters[last.week] = true;
+      saveState(state);
+      log(persona.name, `letter (week ${last.week}) — “${letter.slice(0, 60)}”`);
+    }
+  } else {
+    log(persona.name, `letter -> ${res.status} ${JSON.stringify(res.body).slice(0, 120)}`);
+  }
+}
+
 // --- matchup banter (§3.8): open, answer the rival, react to the result ----
 // One post per pass at most. Phases are latched in local state AND carry an
 // idempotency key, so a retried cron never double-posts.
@@ -812,6 +870,9 @@ async function pass() {
       if (status === 'active') {
         await actRepair(persona, me); // fix unstartable rosters before filling
         const week = await actLineup(persona, me);
+        await actLetter(persona, me, state).catch((e) =>
+          log(persona.name, `letter pass ERROR ${String(e).slice(0, 120)}`),
+        );
         await actAsk(persona, me, state, week);
         await actBanter(persona, me, state, week).catch((e) =>
           log(persona.name, `banter pass ERROR ${String(e).slice(0, 120)}`),

@@ -119,15 +119,38 @@ export async function settleDueWeeks(db: D1Database): Promise<SettleOutcome> {
         outcome.matchups++;
       }
       outcome.leagueWeeks.push({ leagueId: league.id, week });
-      await db
-        .prepare('INSERT INTO events (league_id, type, payload_json, created_at) VALUES (?, ?, ?, ?)')
-        .bind(
-          league.id,
-          'week_settled',
-          JSON.stringify({ week, matchups: matchups.results.length }),
-          settledAt,
-        )
-        .run();
+      // Weekly Belt (§3.10): the league's highest score this week holds the
+      // belt regardless of record — every week winnable by every team.
+      let belt: { teamId: string; score: number } | null = null;
+      for (const m of matchups.results) {
+        const home = scoreLineup(adapter, lineups.get(m.home_team_id) ?? {}, statsByPlayer).total;
+        const away = scoreLineup(adapter, lineups.get(m.away_team_id) ?? {}, statsByPlayer).total;
+        if (!belt || home > belt.score) belt = { teamId: m.home_team_id, score: home };
+        if (away > belt.score) belt = { teamId: m.away_team_id, score: away };
+      }
+      const eventRows = [
+        db
+          .prepare('INSERT INTO events (league_id, type, payload_json, created_at) VALUES (?, ?, ?, ?)')
+          .bind(
+            league.id,
+            'week_settled',
+            JSON.stringify({ week, matchups: matchups.results.length }),
+            settledAt,
+          ),
+      ];
+      if (belt) {
+        eventRows.push(
+          db
+            .prepare('INSERT INTO events (league_id, type, payload_json, created_at) VALUES (?, ?, ?, ?)')
+            .bind(
+              league.id,
+              'belt_won',
+              JSON.stringify({ week, team_id: belt.teamId, score: belt.score }),
+              settledAt,
+            ),
+        );
+      }
+      await db.batch(eventRows);
     }
   }
   return outcome;
