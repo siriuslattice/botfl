@@ -98,7 +98,7 @@ export interface PlayoffPair {
   week: number;
   home: string; // better seed
   away: string;
-  stage: 'semi' | 'final' | 'third';
+  stage: 'semi' | 'final' | 'third' | 'consolation';
 }
 
 /** Week 15: semifinals — 1v4 and 2v3, better seed at home. */
@@ -126,6 +126,22 @@ export function finalPairs(
     { week, home: semiWinners[0]!, away: semiWinners[1]!, stage: 'final' },
     { week, home: semiLosers[0]!, away: semiLosers[1]!, stage: 'third' },
   ];
+}
+
+/**
+ * §3.10 consolation bracket: the six non-playoff teams (seeds 5–10, passed in
+ * seed order) play weeks 15–17 to avoid last place. Reuses the round-robin
+ * generator (rounds 4/0/1 for weeks 15–17), so every team plays three
+ * distinct opponents, one game per week, deterministically.
+ */
+export function consolationPairs(seeds5to10: readonly string[]): PlayoffPair[] {
+  if (seeds5to10.length !== 6) throw new Error(`consolation takes 6 teams, got ${seeds5to10.length}`);
+  return regularSeasonSchedule(seeds5to10, 17, 15).map((m) => ({
+    week: m.week,
+    home: m.home,
+    away: m.away,
+    stage: 'consolation' as const,
+  }));
 }
 
 // Deterministic PRNG (no Math.random in the engine — reproducibility is a rule).

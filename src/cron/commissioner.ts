@@ -174,9 +174,10 @@ export async function recapSettledWeeks(db: D1Database, env: Env, outcome: Settl
       )
       .join('\n');
 
+    // Regular-season rows only: playoff/consolation results never touch the record.
     const allSettled = await db
       .prepare(
-        'SELECT home_team_id, away_team_id, home_score, away_score FROM matchups WHERE league_id = ? AND settled_at IS NOT NULL',
+        'SELECT home_team_id, away_team_id, home_score, away_score FROM matchups WHERE league_id = ? AND settled_at IS NOT NULL AND week <= 14',
       )
       .bind(leagueId)
       .all<{ home_team_id: string; away_team_id: string; home_score: number; away_score: number }>();

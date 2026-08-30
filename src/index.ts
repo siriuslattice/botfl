@@ -63,10 +63,17 @@ export default {
     const { narrateDrafts, recapSettledWeeks } = await import('./cron/commissioner');
     const swept = await sweepAllDrafts(env.DB);
     const outcome = await settleDueWeeks(env.DB);
+    // Season advancement is a data-driven scan (never outcome-driven): it
+    // materializes playoff/consolation weeks and completes finished seasons,
+    // self-healing from any crash between settle and here.
+    const { advanceSeason } = await import('./cron/season');
+    const season_ = await advanceSeason(env.DB);
     const narrated = await narrateDrafts(env.DB, env);
     const recapped = await recapSettledWeeks(env.DB, env, outcome);
+    const advanced =
+      season_.playoffsSet.length + season_.finalsSet.length + season_.completed.length;
     console.log(
-      `cron ${event.cron}: ingest=[${ingested}] autopicks=${swept} settled=${outcome.matchups} narrated=${narrated} recapped=${recapped}`,
+      `cron ${event.cron}: ingest=[${ingested}] autopicks=${swept} settled=${outcome.matchups} advanced=${advanced} narrated=${narrated} recapped=${recapped}`,
     );
   },
 };

@@ -138,6 +138,16 @@ export async function enrichEvents(db: D1Database, rows: EventRow[]): Promise<Fe
       case 'week_settled':
         line = `week ${String(p.week ?? '?')} is final`;
         break;
+      case 'playoffs_set':
+        line = 'week 14 is in the books — playoff semifinals and the consolation bracket are set';
+        break;
+      case 'champion_crowned':
+        line = `${team} is the champion 🏆`;
+        break;
+      case 'roast_target': {
+        line = `${team} finished last — the commissioner's offseason roast awaits, as pre-announced`;
+        break;
+      }
       case 'fa_move': {
         const dropped =
           typeof p.dropped_id === 'string' ? (players.get(p.dropped_id) ?? p.dropped_id) : 'a player';
@@ -323,16 +333,18 @@ siteRoutes.get('/l/:id', async (c) => {
 
   const matchups = await db
     .prepare(
-      'SELECT id, week, home_team_id, away_team_id, home_score, away_score, settled_at FROM matchups WHERE league_id = ? ORDER BY week ASC',
+      'SELECT id, week, stage, home_team_id, away_team_id, home_score, away_score, settled_at FROM matchups WHERE league_id = ? ORDER BY week ASC',
     )
     .bind(league.id)
     .all<{
-      id: string; week: number; home_team_id: string; away_team_id: string;
+      id: string; week: number; stage: string; home_team_id: string; away_team_id: string;
       home_score: number | null; away_score: number | null; settled_at: string | null;
     }>();
 
+  // Standings are the REGULAR season only — playoff/consolation rows (wks
+  // 15–17) would corrupt records the moment week 15 settles.
   const settled: SettledMatchup[] = matchups.results
-    .filter((m) => m.settled_at !== null)
+    .filter((m) => m.settled_at !== null && m.week <= 14)
     .map((m) => settleMatchup(m.home_team_id, m.away_team_id, m.home_score ?? 0, m.away_score ?? 0));
   const table = standings(teams.results.map((t) => t.id), settled);
   const standingsView: StandingsRowView[] = table.map((r) => {
@@ -351,6 +363,7 @@ siteRoutes.get('/l/:id', async (c) => {
   const matchupViews: MatchupRowView[] = matchups.results.map((m) => ({
     id: m.id,
     week: m.week,
+    stage: m.stage,
     home: teamName.get(m.home_team_id)?.name ?? '?',
     away: teamName.get(m.away_team_id)?.name ?? '?',
     score:
@@ -478,8 +491,13 @@ siteRoutes.get('/t/:id', async (c) => {
     .first<{ id: string; league_id: string; league_name: string; season: number; name: string; model: string; badge: string }>();
   if (!team) return jsonError(c, 404, 'TEAM_NOT_FOUND', 'no such team');
 
+  // Current week = earliest unsettled; a COMPLETED season shows its last week
+  // (without the COALESCE fallback it would snap back to "week 1" forever).
   const weekRow = await db
-    .prepare('SELECT MIN(week) AS week FROM matchups WHERE league_id = ? AND settled_at IS NULL')
+    .prepare(
+      `SELECT COALESCE(MIN(CASE WHEN settled_at IS NULL THEN week END), MAX(week), 1) AS week
+       FROM matchups WHERE league_id = ?`,
+    )
     .bind(team.league_id)
     .first<{ week: number | null }>();
   const week = weekRow?.week ?? 1;

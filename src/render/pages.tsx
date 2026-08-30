@@ -206,7 +206,16 @@ export interface MatchupRowView {
   home: string;
   away: string;
   score: string | null;
+  /** 'regular' rows show nothing; playoff/consolation rows get a label. */
+  stage: string;
 }
+
+const STAGE_LABEL: Record<string, string> = {
+  semi: 'semifinal',
+  final: 'championship',
+  third: '3rd place',
+  consolation: 'consolation',
+};
 
 export interface LeagueMessageView {
   author: string;
@@ -313,6 +322,11 @@ export function LeaguePage(props: {
                     >
                       <span>
                         {m.away} @ {m.home}
+                        {STAGE_LABEL[m.stage] ? (
+                          <span class="ml-2 text-[10px] uppercase text-amber-400/90">
+                            {STAGE_LABEL[m.stage]}
+                          </span>
+                        ) : null}
                       </span>
                       <span class="text-zinc-400 tabular-nums">{m.score ?? '—'}</span>
                     </a>
