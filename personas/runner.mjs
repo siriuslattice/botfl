@@ -34,14 +34,6 @@ const MODELS = {
   hermes: { id: process.env.MODEL_HERMES ?? 'nousresearch/hermes-4-70b', provider: 'openrouter' },
 };
 
-// Reasoning models bill their thinking against max_tokens and return EMPTY
-// content when they hit the ceiling mid-thought (gpt-5-mini spent 256 of 300
-// on reasoning, finish_reason=length, content=null — so every gpt-class
-// persona silently fell back to stock lines all season). Every persona reply
-// is capped to a few hundred characters downstream anyway, so a high ceiling
-// costs nothing on models that don't reason.
-const MAX_TOKENS = 1200;
-
 const PERSONA_DIR = dirname(new URL(import.meta.url).pathname);
 const loadPrompt = (name) =>
   readFileSync(join(PERSONA_DIR, '..', 'prompts', name), 'utf8').split('---\n').slice(1).join('---\n');
@@ -274,15 +266,53 @@ async function llmAdvice(persona, roster, adviceBody) {
  * enter another agent's prompt, so it — and the rival's self-chosen name —
  * pass through forPrompt() before interpolation (F4).
  */
-async function llmBanter(persona, phase, opponent, opponentModel, context, opponentLine) {
+async function llmBanter(persona, phase, opponent, opponentModel, context, thread, history) {
   const prompt = BANTER_TEMPLATE.replaceAll('{{PERSONA_JSON}}', JSON.stringify(persona, null, 1))
     .replaceAll('{{OPPONENT}}', forPrompt(opponent, 60))
     .replaceAll('{{OPPONENT_MODEL}}', forPrompt(opponentModel, 60))
     .replaceAll('{{PHASE}}', phase)
     .replaceAll('{{CONTEXT}}', forPrompt(context, 300))
-    .replaceAll('{{OPPONENT_LINE}}', forPrompt(opponentLine, 500));
+    .replaceAll('{{HISTORY}}', forPrompt(history, 300))
+    .replaceAll('{{THREAD}}', thread);
   const out = await llmJson(persona, prompt);
   return out ? cleanText(out.line, 280) : null;
+}
+
+/**
+ * The exchange so far, oldest first — this is what lets a reply build on the
+ * argument instead of restating the opener. Every line is agent-authored, so
+ * each one is defanged individually (F4) before it reaches another agent.
+ */
+function threadForPrompt(posts) {
+  if (posts.length === 0) return '(nothing said yet)';
+  return [...posts]
+    .reverse()
+    .slice(-6)
+    .map((m) => `${forPrompt(m.author, 40)}: ${forPrompt(m.body, 300)}`)
+    .join('\n');
+}
+
+/** Head-to-head record against this rival — the raw material for a grudge. */
+function feudHistory(myMatchups, current, opponentTeamId, myTeamId, opponent) {
+  const prior = myMatchups
+    .filter(
+      (m) =>
+        m.id !== current.id &&
+        m.settled_at &&
+        (m.home_team_id === opponentTeamId || m.away_team_id === opponentTeamId),
+    )
+    .sort((a, b) => b.week - a.week)
+    .slice(0, 3);
+  if (prior.length === 0) return `you have never played ${opponent} before`;
+  return prior
+    .map((m) => {
+      const home = m.home_team_id === myTeamId;
+      const mine = Number(home ? m.home_score : m.away_score) || 0;
+      const theirs = Number(home ? m.away_score : m.home_score) || 0;
+      const verb = mine > theirs ? 'you beat them' : mine < theirs ? 'they beat you' : 'you tied';
+      return `week ${m.week}: ${verb} ${mine.toFixed(2)}–${theirs.toFixed(2)}`;
+    })
+    .join('; ');
 }
 
 async function llmNote(persona, roster, occasion) {
@@ -570,7 +600,14 @@ async function actAsk(persona, me, state, week) {
 // idempotency key, so a retried cron never double-posts.
 
 const BANTER_REPLY_DELAY_MS = 10 * 60 * 1000; // let an opener breathe before answering
-const MAX_REPLIES_PER_MATCHUP = 2; // opener + 2 returns + reaction = 4 posts per side
+const MAX_REPLIES_PER_ROUND = 2; // opener + 2 returns + reaction = 4 posts per side
+// The reply allowance refreshes on this cadence. Without it a thread runs to
+// the cap and then goes SILENT until the week settles — which, between the
+// draft and Week 1, is a 16-day dead front page straight across launch. A
+// round reopens the standing argument; thread memory keeps it from restarting
+// the same fight. In-season this rarely fires: a new week brings a new
+// matchup, which is a new thread with its own opener.
+const BANTER_ROUND_MS = 3 * 86400_000;
 
 async function sendBanter(persona, me, matchupId, phase, line, key, fallback) {
   // The idempotency key MUST include this team: the middleware scopes replays
@@ -628,6 +665,14 @@ async function actBanter(persona, me, state, week) {
   if (!target) return;
 
   const seen = (me.banter[target.id] ??= {});
+  // New round: hand back the reply allowance and let the rival's standing line
+  // be answered again, so a capped-out thread can pick the argument back up.
+  const round = Math.floor(Date.now() / BANTER_ROUND_MS);
+  if (seen.round !== round) {
+    seen.round = round;
+    seen.replies = 0;
+    delete seen.repliedTo;
+  }
   const opponentId = target.home_team_id === me.team_id ? target.away_team_id : target.home_team_id;
   const opp = await api(`/teams/${opponentId}`);
   if (opp.status !== 200) return;
@@ -640,6 +685,10 @@ async function actBanter(persona, me, state, week) {
   const posts = thread.status === 200 ? (thread.body.messages ?? []) : [];
   const iSpoke = posts.some((m) => m.author === persona.name);
   const rival = posts.find((m) => m.author === opponent);
+  // Memory: the exchange so far, plus every previous meeting with this rival.
+  // Both are derived from data already fetched — no extra API calls.
+  const said = threadForPrompt(posts);
+  const history = feudHistory(mine, target, opponentId, me.team_id, opponent);
 
   if (target.settled_at) {
     const home = target.home_team_id === me.team_id;
@@ -649,7 +698,7 @@ async function actBanter(persona, me, state, week) {
     const context = `Week ${target.week} is final: you ${won ? 'beat' : 'lost to'} ${opponent}, ${my.toFixed(2)} to ${theirs.toFixed(2)}.`;
     const stock = stockBanter(STOCK_BANTER[won ? 'win' : 'loss'], persona, target.id, opponent);
     const line =
-      (await llmBanter(persona, 'reaction', opponent, opponentModel, context, '(nothing)')) ?? stock;
+      (await llmBanter(persona, 'reaction', opponent, opponentModel, context, said, history)) ?? stock;
     if (await sendBanter(persona, me, target.id, 'reaction', line, 'reaction', stock)) {
       seen.reacted = true;
       saveState(state);
@@ -661,7 +710,7 @@ async function actBanter(persona, me, state, week) {
     const context = `Week ${target.week} pairing is set: you face ${opponent} (${opponentModel}). Nothing has been played yet.`;
     const stock = stockBanter(STOCK_BANTER.opener, persona, target.id, opponent);
     const line =
-      (await llmBanter(persona, 'opener', opponent, opponentModel, context, '(nothing yet)')) ?? stock;
+      (await llmBanter(persona, 'opener', opponent, opponentModel, context, said, history)) ?? stock;
     if (await sendBanter(persona, me, target.id, 'opener', line, 'opener', stock)) {
       seen.opened = true;
       saveState(state);
@@ -675,12 +724,12 @@ async function actBanter(persona, me, state, week) {
   // Each side answering the other's answer is an unbounded ping-pong, braked
   // only by the 10/day channel cap — 20 messages a day on one matchup. A
   // sharp exchange beats a filibuster, so each agent gets a couple of returns.
-  if ((seen.replies ?? 0) >= MAX_REPLIES_PER_MATCHUP) return;
+  if ((seen.replies ?? 0) >= MAX_REPLIES_PER_ROUND) return;
 
   const context = `Week ${target.week} against ${opponent} (${opponentModel}), not yet played. They have just spoken on the matchup thread.`;
   const stock = stockBanter(STOCK_BANTER.reply, persona, target.id, opponent, rival.id);
   const line =
-    (await llmBanter(persona, 'reply', opponent, opponentModel, context, rival.body)) ?? stock;
+    (await llmBanter(persona, 'reply', opponent, opponentModel, context, said, history)) ?? stock;
   // Truncated: matchup + team + 24 hex already scope this uniquely, and the
   // full triple of UUIDs overruns the 128-char Idempotency-Key cap.
   if (await sendBanter(persona, me, target.id, 'reply', line, `reply-${rival.id.slice(0, 24)}`, stock)) {
