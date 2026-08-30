@@ -12,8 +12,10 @@
 //            (semi losers), decided by summed score; both legs inserted
 //            TOGETHER once the semis settle, so the settle walker never meets
 //            a half-populated week.
-// Tie rules (caller-pinned): semi tie → better seed advances; cumulative tie →
-// better seed; roast target = worst consolation record, tiebreak lowest
+// Tie rules (caller-pinned, DRIFT 2026-08-30): semi tie → better seed
+// advances; cumulative tie → better seed; consolation game tie → higher
+// regular-season PF wins (home/away is round-robin-arbitrary there), then
+// teamId; roast target = worst consolation record, tiebreak lowest
 // regular-season PF (weeks ≤ 14), then teamId.
 
 import {
@@ -70,7 +72,10 @@ function insertPairs(db: D1Database, leagueId: string, pairs: PlayoffPair[]): D1
   );
 }
 
-/** Winner of a settled head-to-head row; tie → home (= better seed by construction). */
+/**
+ * Winner of a settled head-to-head row; tie → home. Valid ONLY where home is
+ * the better seed by construction (semis) — consolation rows use winnerOf.
+ */
 function rowWinner(m: MatchupRow): string {
   return m.away_score > m.home_score ? m.away_team_id : m.home_team_id;
 }
@@ -98,6 +103,31 @@ export async function advanceSeason(db: D1Database): Promise<SeasonAdvance> {
     .all<{ id: string }>();
 
   for (const { id: leagueId } of leagues.results) {
+    try {
+      await advanceLeague(db, leagueId, out);
+    } catch (e) {
+      // One malformed league must never stall season advancement for the rest.
+      console.error(`season: league ${leagueId} failed:`, e);
+      try {
+        await db
+          .prepare('INSERT INTO events (league_id, type, payload_json, created_at) VALUES (?, ?, ?, ?)')
+          .bind(
+            leagueId,
+            'cron_error',
+            JSON.stringify({ phase: 'season', error: String(e).slice(0, 200) }),
+            new Date().toISOString(),
+          )
+          .run();
+      } catch {
+        /* the error log must never take down the loop */
+      }
+    }
+  }
+  return out;
+}
+
+async function advanceLeague(db: D1Database, leagueId: string, out: SeasonAdvance): Promise<void> {
+  {
     const state = await db
       .prepare(
         `SELECT COUNT(*) AS total, SUM(CASE WHEN settled_at IS NULL THEN 1 ELSE 0 END) AS unsettled,
@@ -106,7 +136,7 @@ export async function advanceSeason(db: D1Database): Promise<SeasonAdvance> {
       )
       .bind(leagueId)
       .first<{ total: number; unsettled: number; maxWeek: number | null }>();
-    if (!state || state.total === 0 || (state.unsettled ?? 0) > 0) continue;
+    if (!state || state.total === 0 || (state.unsettled ?? 0) > 0) return;
 
     if (state.maxWeek === 14) {
       // Regular season done → seed the bracket + consolation round 1..3? No:
@@ -121,18 +151,20 @@ export async function advanceSeason(db: D1Database): Promise<SeasonAdvance> {
         ...semifinalPairs(seeds),
         ...consolationPairs(bottom).filter((p) => p.week === 15),
       ];
-      await db.batch(insertPairs(db, leagueId, wk15));
-      await db
-        .prepare('INSERT INTO events (league_id, type, payload_json, created_at) VALUES (?, ?, ?, ?)')
-        .bind(
-          leagueId,
-          'playoffs_set',
-          JSON.stringify({ seeds, consolation: bottom }),
-          new Date().toISOString(),
-        )
-        .run();
-      out.playoffsSet.push(leagueId);
-      continue;
+      // Pair inserts are idempotent; the event is NOT-EXISTS-guarded in the
+      // same transaction, so colliding :00 triggers converge on one event.
+      const results = await db.batch([
+        ...insertPairs(db, leagueId, wk15),
+        db
+          .prepare(
+            `INSERT INTO events (league_id, type, payload_json, created_at)
+             SELECT ?, 'playoffs_set', ?, ?
+             WHERE NOT EXISTS (SELECT 1 FROM events WHERE league_id = ? AND type = 'playoffs_set')`,
+          )
+          .bind(leagueId, JSON.stringify({ seeds, consolation: bottom }), new Date().toISOString(), leagueId),
+      ]);
+      if ((results.at(-1)?.meta.changes ?? 0) === 1) out.playoffsSet.push(leagueId);
+      return;
     }
 
     if (state.maxWeek === 15) {
@@ -141,7 +173,7 @@ export async function advanceSeason(db: D1Database): Promise<SeasonAdvance> {
       const table = await regularSeasonTable(db, leagueId);
       const seedOrder = new Map(table.map((r, i) => [r.teamId, i]));
       const semis = (await settledRows(db, leagueId, "AND week = 15 AND stage = 'semi'"));
-      if (semis.length !== 2) continue; // foreign shape; leave for inspection
+      if (semis.length !== 2) throw new Error(`week 15 settled with ${semis.length} semis`); // foreign shape → cron_error, league left for inspection
       const winners = semis.map(rowWinner).sort((a, b) => (seedOrder.get(a) ?? 9) - (seedOrder.get(b) ?? 9));
       const losers = semis
         .map((m) => (rowWinner(m) === m.home_team_id ? m.away_team_id : m.home_team_id))
@@ -154,19 +186,18 @@ export async function advanceSeason(db: D1Database): Promise<SeasonAdvance> {
       ];
       await db.batch(insertPairs(db, leagueId, rows));
       out.finalsSet.push(leagueId);
-      continue;
+      return;
     }
 
     if (state.maxWeek === 17) {
       // Season over: cumulative champion + third place; roast target from the
-      // consolation record. Completion latch = the status UPDATE's changes.
-      const done = await db
-        .prepare("UPDATE leagues SET status = 'complete' WHERE id = ? AND status = 'active'")
-        .bind(leagueId)
-        .run();
-      if (done.meta.changes !== 1) continue; // someone else completed it
-
+      // consolation record. Everything is COMPUTED FIRST — then the status
+      // flip and both events commit in one transaction, so a crash can never
+      // strand a `complete` league with no champion event (the old latch-first
+      // ordering could). Duplicate protection: the UPDATE's status guard plus
+      // NOT-EXISTS-guarded event inserts, all under SQLite's single writer.
       const finals = await settledRows(db, leagueId, "AND stage = 'final'");
+      if (finals.length === 0) throw new Error('week 17 settled with no final rows'); // foreign shape → cron_error
       const thirds = await settledRows(db, leagueId, "AND stage = 'third'");
       const table = await regularSeasonTable(db, leagueId);
       const seedOrder = new Map(table.map((r, i) => [r.teamId, i]));
@@ -181,11 +212,22 @@ export async function advanceSeason(db: D1Database): Promise<SeasonAdvance> {
       const third = thirds.length > 0 ? pick(thirds) : null;
 
       // Roast: worst consolation record → lowest regular-season PF → teamId.
+      // Consolation home/away comes from round-robin alternation, so a tied
+      // game must NOT default to home — winner-by-PF (DRIFT 2026-08-30 rule),
+      // then teamId, keeps the roast deterministic and seed-meaningful.
+      const pfAll = new Map(table.map((r) => [r.teamId, r.pointsFor]));
+      const winnerOf = (m: MatchupRow): string => {
+        if (m.away_score !== m.home_score) return m.away_score > m.home_score ? m.away_team_id : m.home_team_id;
+        const ph = pfAll.get(m.home_team_id) ?? 0;
+        const pa = pfAll.get(m.away_team_id) ?? 0;
+        if (ph !== pa) return ph > pa ? m.home_team_id : m.away_team_id;
+        return m.home_team_id < m.away_team_id ? m.home_team_id : m.away_team_id;
+      };
       const consolation = await settledRows(db, leagueId, "AND stage = 'consolation'");
       const bottom = table.slice(4);
       const record = new Map(bottom.map((r) => [r.teamId, 0]));
       for (const m of consolation) {
-        const w = rowWinner(m);
+        const w = winnerOf(m);
         record.set(w, (record.get(w) ?? 0) + 1);
       }
       const pf = new Map(bottom.map((r) => [r.teamId, r.pointsFor]));
@@ -197,21 +239,31 @@ export async function advanceSeason(db: D1Database): Promise<SeasonAdvance> {
       )[0];
 
       const now = new Date().toISOString();
-      const events = [
+      const stmts = [
         db
-          .prepare('INSERT INTO events (league_id, type, payload_json, created_at) VALUES (?, ?, ?, ?)')
-          .bind(leagueId, 'champion_crowned', JSON.stringify({ team_id: champion, third_place: third }), now),
+          .prepare("UPDATE leagues SET status = 'complete' WHERE id = ? AND status = 'active'")
+          .bind(leagueId),
+        db
+          .prepare(
+            `INSERT INTO events (league_id, type, payload_json, created_at)
+             SELECT ?, 'champion_crowned', ?, ?
+             WHERE NOT EXISTS (SELECT 1 FROM events WHERE league_id = ? AND type = 'champion_crowned')`,
+          )
+          .bind(leagueId, JSON.stringify({ team_id: champion, third_place: third }), now, leagueId),
       ];
       if (roast) {
-        events.push(
+        stmts.push(
           db
-            .prepare('INSERT INTO events (league_id, type, payload_json, created_at) VALUES (?, ?, ?, ?)')
-            .bind(leagueId, 'roast_target', JSON.stringify({ team_id: roast }), now),
+            .prepare(
+              `INSERT INTO events (league_id, type, payload_json, created_at)
+               SELECT ?, 'roast_target', ?, ?
+               WHERE NOT EXISTS (SELECT 1 FROM events WHERE league_id = ? AND type = 'roast_target')`,
+            )
+            .bind(leagueId, JSON.stringify({ team_id: roast }), now, leagueId),
         );
       }
-      await db.batch(events);
-      out.completed.push(leagueId);
+      const results = await db.batch(stmts);
+      if ((results[0]?.meta.changes ?? 0) === 1) out.completed.push(leagueId);
     }
   }
-  return out;
 }

@@ -52,7 +52,9 @@ export interface WireIngest {
   syncPlayers(db: D1Database, season: number): Promise<IngestResult>;
   syncSchedule(db: D1Database, season: number): Promise<IngestResult>;
   syncInjuries(db: D1Database, season: number): Promise<IngestResult>;
-  syncWeekStats(db: D1Database, season: number, week: number): Promise<IngestResult>;
+  /** One source fetch, upserts for every requested week — callers pass the set
+   *  of unsettled weeks so one wedged league can't starve the others' stats. */
+  syncWeekStats(db: D1Database, season: number, weeks: readonly number[]): Promise<IngestResult>;
   /** Real-world trades into the transactions Wire table (roster diffs land via syncPlayers). */
   syncTrades(db: D1Database, season: number): Promise<IngestResult>;
   /** True inside a §3.6 pre-lock fast-lane window (sport defines its own windows). */

@@ -5,7 +5,7 @@ import { settleDueWeeks } from '../src/cron/settle';
 import { app } from '../src/index';
 import { resetPlayerNameCache } from '../src/moderation/moderate';
 import { sweepDraft } from '../src/routes/draft';
-import { authed, fillLeague, futureKickoffOffset, seedWire, type TestAgent } from './helpers';
+import { authed, fillLeague, futureKickoffOffset, seedWeekStatsCoverage, seedWire, type TestAgent } from './helpers';
 
 type Member = TestAgent & { teamId: string };
 let leagueId = '';
@@ -92,6 +92,7 @@ describe('the commissioner', () => {
     await env.DB.prepare(
       'INSERT INTO stats_weekly (player_id, season, week, stat_json, updated_at) VALUES (?, ?, 1, ?, ?)',
     ).bind(qb!.id, season, JSON.stringify({ passing_yards: 300, passing_tds: 3 }), new Date().toISOString()).run();
+    await seedWeekStatsCoverage(season, 1);
 
     const outcome = await settleDueWeeks(env.DB);
     expect(outcome.leagueWeeks).toContainEqual({ leagueId, week: 1 });
@@ -99,8 +100,11 @@ describe('the commissioner', () => {
     stubLlm(
       'Week 1 belongs to one team and one team only. POWER RANKINGS:\n1. Somebody won.\n2. Everyone else did not.',
     );
-    const posted = await recapSettledWeeks(env.DB, testEnv, outcome);
+    const posted = await recapSettledWeeks(env.DB, testEnv);
     expect(posted).toBe(1);
+
+    // DB-driven latch: the week is marked recapped — a second pass posts nothing.
+    expect(await recapSettledWeeks(env.DB, testEnv)).toBe(0);
 
     const read = await app.request(`/leagues/${leagueId}/messages`, {}, env);
     const { messages } = await read.json<{ messages: { author: string; body: string }[] }>();
@@ -109,5 +113,19 @@ describe('the commissioner', () => {
     const news = await app.request('/wire/news', {}, env);
     const { data } = await news.json<{ data: { headline: string }[] }>();
     expect(data.some((n) => n.headline.includes('Week 1 is final'))).toBe(true);
+  });
+
+  it('a crashed recap self-heals: a fresh foreign claim defers, a stale one retries', async () => {
+    // Simulate a recap owner that died mid-flight: not posted, claim still fresh.
+    await env.DB.prepare(
+      'UPDATE settlements SET recap_posted_at = NULL, recap_claimed_at = ? WHERE league_id = ? AND week = 1',
+    ).bind(new Date().toISOString(), leagueId).run();
+    stubLlm('Recovered recap. POWER RANKINGS:\n1. Persistence beats brilliance.');
+    expect(await recapSettledWeeks(env.DB, testEnv)).toBe(0); // live peer — hands off
+
+    await env.DB.prepare(
+      'UPDATE settlements SET recap_claimed_at = ? WHERE league_id = ? AND week = 1',
+    ).bind(new Date(Date.now() - 11 * 60_000).toISOString(), leagueId).run();
+    expect(await recapSettledWeeks(env.DB, testEnv)).toBe(1); // stale — adopted and posted
   });
 });

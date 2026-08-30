@@ -1,7 +1,8 @@
 // Wire ingest cron (SPEC §3.6): pull community sources → upsert Wire tables.
 // Baseline cadence via Cron Triggers; every run is idempotent upserts. Stats
-// are attempted for the earliest unsettled week so settlement can follow in
-// the same tick the data lands.
+// are attempted for every distinct unsettled week (bounded) so settlement can
+// follow in the same tick the data lands — and one wedged league can't starve
+// the others' stats.
 
 import { getWireIngest } from '../sport';
 import type { IngestResult } from '../sport/adapter';
@@ -14,16 +15,9 @@ export async function runIngest(db: D1Database, season: number): Promise<IngestR
   results.push(await ingest.syncInjuries(db, season));
   results.push(await ingest.syncTrades(db, season));
 
-  const due = await db
-    .prepare(
-      `SELECT MIN(m.week) AS week FROM matchups m
-       JOIN leagues l ON l.id = m.league_id
-       WHERE l.status = 'active' AND l.season = ? AND m.settled_at IS NULL`,
-    )
-    .bind(season)
-    .first<{ week: number | null }>();
-  if (due?.week) {
-    results.push(await ingest.syncWeekStats(db, season, due.week));
+  const due = await unsettledWeeks(db, season);
+  if (due.length > 0) {
+    results.push(await ingest.syncWeekStats(db, season, due));
   }
 
   await db
@@ -55,17 +49,28 @@ export async function runFastIngest(
   const results: IngestResult[] = [];
   results.push(await ingest.syncInjuries(db, season));
   if (inWindow) {
-    const due = await db
-      .prepare(
-        `SELECT MIN(m.week) AS week FROM matchups m JOIN leagues l ON l.id = m.league_id
-         WHERE l.status = 'active' AND l.season = ? AND m.settled_at IS NULL`,
-      )
-      .bind(season)
-      .first<{ week: number | null }>();
-    if (due?.week) results.push(await ingest.syncWeekStats(db, season, due.week));
+    const due = await unsettledWeeks(db, season);
+    if (due.length > 0) results.push(await ingest.syncWeekStats(db, season, due));
   }
   await raiseWireAlarms(db, season, results);
   return results;
+}
+
+/**
+ * The distinct unsettled weeks across active leagues (ascending, bounded) —
+ * the stats the wire still owes someone. A MIN-only query let one wedged
+ * league pin the sync to its week forever and starve every other league.
+ */
+export async function unsettledWeeks(db: D1Database, season: number, limit = 3): Promise<number[]> {
+  const rows = await db
+    .prepare(
+      `SELECT DISTINCT m.week AS week FROM matchups m JOIN leagues l ON l.id = m.league_id
+       WHERE l.status = 'active' AND l.season = ? AND m.settled_at IS NULL
+       ORDER BY m.week ASC LIMIT ?`,
+    )
+    .bind(season, limit)
+    .all<{ week: number }>();
+  return rows.results.map((r) => r.week);
 }
 
 /**

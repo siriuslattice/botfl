@@ -104,3 +104,33 @@ export function futureKickoffOffset(): number {
   const fixtureWeek1 = Date.UTC(2025, 8, 4);
   return Date.now() + 3 * 86400_000 - fixtureWeek1;
 }
+
+/**
+ * Make (season, week) COVERED for the settlement gate: one inert '{}' stat row
+ * per fixture club playing that week (settle only consumes starters' lines, so
+ * scores and snapshot hashes are untouched). Call AFTER inserting a test's own
+ * real stat lines — this uses INSERT OR IGNORE and never overwrites them.
+ */
+export async function seedWeekStatsCoverage(season: number, week: number): Promise<void> {
+  const games = scheduleJson as { week: number; home: string; away: string }[];
+  const clubs = new Set<string>();
+  for (const g of games) {
+    if (g.week === week) {
+      clubs.add(g.home);
+      clubs.add(g.away);
+    }
+  }
+  const players = playersJson as { id: string; team: string }[];
+  const byClub = new Map<string, string>();
+  for (const p of players) {
+    // Keep the LAST-listed player per club — least likely to be a drafted starter.
+    if (clubs.has(p.team)) byClub.set(p.team, p.id);
+  }
+  const now = new Date().toISOString();
+  const stmts = [...byClub.values()].map((pid) =>
+    env.DB.prepare(
+      "INSERT OR IGNORE INTO stats_weekly (player_id, season, week, stat_json, updated_at) VALUES (?, ?, ?, '{}', ?)",
+    ).bind(pid, season, week, now),
+  );
+  for (let i = 0; i < stmts.length; i += 50) await env.DB.batch(stmts.slice(i, i + 50));
+}

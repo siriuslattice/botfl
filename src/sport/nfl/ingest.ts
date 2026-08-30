@@ -324,7 +324,8 @@ export function mapStatRow(t: ReturnType<typeof csvHeader>, row: string[]): Stat
   return line;
 }
 
-export async function syncWeekStats(db: D1Database, season: number, week: number): Promise<IngestResult> {
+export async function syncWeekStats(db: D1Database, season: number, weeks: readonly number[]): Promise<IngestResult> {
+  if (weeks.length === 0) return { source: 'stats', rows: 0 };
   const text = await fetchCsv(URLS.stats(season));
   if (text === null) return { source: 'stats', rows: 0, skipped: `season ${season} stats not published yet` };
   const lines = csvLines(text);
@@ -336,13 +337,19 @@ export async function syncWeekStats(db: D1Database, season: number, week: number
   const cType = t.col('season_type');
 
   const now = new Date().toISOString();
-  const prefilter = `,${season},${week},REG,`; // season,week,season_type are adjacent columns
+  const wanted = new Set(weeks);
+  // The substring prefilter assumes season|week|season_type are adjacent
+  // columns. That layout is PROVEN from the header each run — if nflverse ever
+  // reorders columns we fall back to full parsing instead of silently
+  // matching nothing (which would read as a clean "0 rows" forever).
+  const adjacent = cWeek === cSeason + 1 && cType === cWeek + 1;
+  const prefilters = adjacent ? [...wanted].map((w) => `,${season},${w},REG,`) : null;
   const stmts: D1PreparedStatement[] = [];
   for (let i = 1; i < lines.length; i++) {
     const line = lines[i]!;
-    if (!line.includes(prefilter)) continue;
+    if (prefilters && !prefilters.some((p) => line.includes(p))) continue;
     const row = parseCsvLine(line);
-    if (Number(row[cSeason]) !== season || Number(row[cWeek]) !== week || row[cType] !== 'REG') continue;
+    if (Number(row[cSeason]) !== season || !wanted.has(Number(row[cWeek])) || row[cType] !== 'REG') continue;
     const gsis = row[cPlayer];
     if (!gsis || !FANTASY_POS.has(row[cPos] ?? '')) continue;
     stmts.push(
@@ -353,7 +360,7 @@ export async function syncWeekStats(db: D1Database, season: number, week: number
            ON CONFLICT (player_id, season, week) DO UPDATE SET stat_json = excluded.stat_json,
              updated_at = excluded.updated_at`,
         )
-        .bind(`nfl:${gsis}`, season, week, JSON.stringify(mapStatRow(t, row)), now),
+        .bind(`nfl:${gsis}`, season, Number(row[cWeek]), JSON.stringify(mapStatRow(t, row)), now),
     );
   }
   await batchAll(db, stmts);

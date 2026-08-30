@@ -84,7 +84,7 @@ export default {
     const narrated = await narrateDrafts(env.DB, env);
     const announced = await preAnnounceRoast(env.DB);
     if (announced > 0) console.log(`roast pre-announced in ${announced} league(s)`);
-    const recapped = await recapSettledWeeks(env.DB, env, outcome);
+    const recapped = await recapSettledWeeks(env.DB, env);
     const advanced =
       season_.playoffsSet.length + season_.finalsSet.length + season_.completed.length;
     console.log(

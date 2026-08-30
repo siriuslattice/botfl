@@ -135,9 +135,9 @@ describe('nflverse ingest', () => {
     expect(wr).toEqual({ status: 'Did Not Participate' });
   });
 
-  it('syncWeekStats maps + filters one week; 404 season reports skipped', async () => {
+  it('syncWeekStats maps + filters requested weeks; 404 season reports skipped', async () => {
     stubFetch(STATS_CSV);
-    const res = await syncWeekStats(env.DB, 2026, 1);
+    const res = await syncWeekStats(env.DB, 2026, [1]);
     expect(res.rows).toBe(2);
     const qb = await env.DB.prepare(
       "SELECT stat_json FROM stats_weekly WHERE player_id = 'nfl:00-0000001' AND season = 2026 AND week = 1",
@@ -148,8 +148,11 @@ describe('nflverse ingest', () => {
     });
 
     stubFetch(null);
-    const skipped = await syncWeekStats(env.DB, 2026, 1);
+    const skipped = await syncWeekStats(env.DB, 2026, [1]);
     expect(skipped.skipped).toContain('not published');
+
+    // An empty week set never fetches at all.
+    expect((await syncWeekStats(env.DB, 2026, [])).rows).toBe(0);
   });
 
   it('roster diffs between syncs land as transactions (team + status changes)', async () => {

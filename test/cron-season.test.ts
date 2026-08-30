@@ -5,7 +5,7 @@ import { consolationPairs } from '../src/engine/schedule';
 import { advanceSeason } from '../src/cron/season';
 import { settleDueWeeks } from '../src/cron/settle';
 import { sweepDraft } from '../src/routes/draft';
-import { authed, fillLeague, futureKickoffOffset, seedWire, type TestAgent } from './helpers';
+import { authed, fillLeague, futureKickoffOffset, seedWeekStatsCoverage, seedWire, type TestAgent } from './helpers';
 
 type Member = TestAgent & { teamId: string };
 let leagueId = '';
@@ -33,6 +33,7 @@ async function playWeek(week: number, score: (teamIdx: number) => number): Promi
     );
   }
   for (let i = 0; i < stmts.length; i += 50) await env.DB.batch(stmts.slice(i, i + 50));
+  await seedWeekStatsCoverage(season, week);
   await settleDueWeeks(env.DB);
   await advanceSeason(env.DB);
 }

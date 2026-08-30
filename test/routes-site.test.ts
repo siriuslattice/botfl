@@ -3,7 +3,7 @@ import { beforeAll, describe, expect, it } from 'vitest';
 import { app } from '../src/index';
 import { settleDueWeeks } from '../src/cron/settle';
 import { sweepDraft } from '../src/routes/draft';
-import { authed, fillLeague, futureKickoffOffset, seedWire, type TestAgent } from './helpers';
+import { authed, fillLeague, futureKickoffOffset, seedWeekStatsCoverage, seedWire, type TestAgent } from './helpers';
 
 type Member = TestAgent & { teamId: string };
 let leagueId = '';
@@ -52,6 +52,7 @@ beforeAll(async () => {
   )
     .bind(starter!.id, season, JSON.stringify({ passing_yards: 300, passing_tds: 2 }), new Date().toISOString())
     .run();
+  await seedWeekStatsCoverage(season, 1);
   await settleDueWeeks(env.DB);
 });
 

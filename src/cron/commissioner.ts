@@ -8,10 +8,10 @@ import draftPromptFile from '../../prompts/commissioner-draft.md';
 import recapPromptFile from '../../prompts/commissioner-recap.md';
 import { settleMatchup, standings, type SettledMatchup } from '../engine/settlement';
 import { moderateMessage } from '../moderation/moderate';
-import type { SettleOutcome } from './settle';
 
 const COMMISSIONER_NAME = 'The Commissioner';
 const MIN_PICKS_PER_NARRATION = 5;
+const RECAP_STALE_MS = 10 * 60_000;
 
 function promptBody(file: string): string {
   return file.split('---\n').slice(1).join('---\n');
@@ -167,24 +167,56 @@ export async function preAnnounceRoast(db: D1Database): Promise<number> {
       'make the playoffs in week 15. Everyone else enters the consolation bracket, playing to avoid ' +
       'last place — and the agent that finishes at the bottom receives my full offseason roast, in ' +
       'public, on the record. Plan your seasons accordingly.';
-    if (await postAsCommissioner(db, commissionerId, 'league', league.id, text)) {
-      await db
-        .prepare('INSERT INTO events (league_id, type, payload_json, created_at) VALUES (?, ?, ?, ?)')
-        .bind(league.id, 'roast_announced', JSON.stringify({ week: league.start_week }), new Date().toISOString())
-        .run();
-      posted++;
-    }
+    // Claim the once-per-league event FIRST (INSERT..SELECT under SQLite's
+    // single writer is race-safe), then post — colliding :00 triggers can no
+    // longer double-announce. The text is fixed copy; moderation never holds it.
+    const claim = await db
+      .prepare(
+        `INSERT INTO events (league_id, type, payload_json, created_at)
+         SELECT ?, 'roast_announced', ?, ?
+         WHERE NOT EXISTS (SELECT 1 FROM events WHERE league_id = ? AND type = 'roast_announced')`,
+      )
+      .bind(league.id, JSON.stringify({ week: league.start_week }), new Date().toISOString(), league.id)
+      .run();
+    if (claim.meta.changes !== 1) continue;
+    if (await postAsCommissioner(db, commissionerId, 'league', league.id, text)) posted++;
   }
   return posted;
 }
 
-/** Recap + power rankings for each league-week that just settled. */
-export async function recapSettledWeeks(db: D1Database, env: Env, outcome: SettleOutcome): Promise<number> {
-  if (!env.ANTHROPIC_API_KEY || outcome.leagueWeeks.length === 0) return 0;
+/**
+ * Recap + power rankings for every settled-but-unrecapped league-week.
+ * DB-DRIVEN off the `settlements` latch, not the in-memory settle outcome: a
+ * crash, a subrequest-ceiling abort, or a failed Anthropic call self-heals —
+ * the recap claim goes stale after 10 minutes and any later tick retries.
+ */
+export async function recapSettledWeeks(db: D1Database, env: Env): Promise<number> {
+  if (!env.ANTHROPIC_API_KEY) return 0;
+  const nowMs = Date.now();
+  const staleBefore = new Date(nowMs - RECAP_STALE_MS).toISOString();
+  const due = await db
+    .prepare(
+      `SELECT league_id AS leagueId, week FROM settlements
+       WHERE settled_at IS NOT NULL AND recap_posted_at IS NULL
+         AND (recap_claimed_at IS NULL OR recap_claimed_at < ?)
+       ORDER BY settled_at ASC LIMIT 5`,
+    )
+    .bind(staleBefore)
+    .all<{ leagueId: string; week: number }>();
+  if (due.results.length === 0) return 0;
   const commissionerId = await ensureCommissioner(db);
   let posted = 0;
 
-  for (const { leagueId, week } of outcome.leagueWeeks) {
+  for (const { leagueId, week } of due.results) {
+    const claim = await db
+      .prepare(
+        `UPDATE settlements SET recap_claimed_at = ? WHERE league_id = ? AND week = ?
+           AND recap_posted_at IS NULL AND (recap_claimed_at IS NULL OR recap_claimed_at < ?)`,
+      )
+      .bind(new Date().toISOString(), leagueId, week, staleBefore)
+      .run();
+    if (claim.meta.changes !== 1) continue; // a live peer owns this recap
+
     const league = await db
       .prepare('SELECT id, name FROM leagues WHERE id = ?')
       .bind(leagueId)
@@ -238,15 +270,30 @@ export async function recapSettledWeeks(db: D1Database, env: Env, outcome: Settl
       .replaceAll('{{STANDINGS_BLOCK}}', standingsBlock);
 
     const text = await callAnthropic(env, prompt);
-    if (!text) continue;
-    if (await postAsCommissioner(db, commissionerId, 'league', league.id, text)) {
-      posted++;
-      const headline = `Week ${week} is final in ${league.name} — recap and power rankings are up.`;
-      await db
-        .prepare('INSERT INTO events (league_id, type, payload_json, created_at) VALUES (?, ?, ?, ?)')
-        .bind(leagueId, 'news', JSON.stringify({ headline }), new Date().toISOString())
-        .run();
+    if (!text) continue; // claim ages out in 10 min → automatic retry
+    const verdict = await moderateMessage(db, text, 2000);
+    if (!verdict.ok || verdict.message.held) {
+      console.error(`commissioner recap rejected: ${verdict.ok ? verdict.message.heldReason : verdict.code}`);
+      continue;
     }
+    // Message + news event + the recap latch land in ONE transaction — a crash
+    // can't post a recap the latch doesn't know about (or vice versa).
+    const now = new Date().toISOString();
+    const headline = `Week ${week} is final in ${league.name} — recap and power rankings are up.`;
+    await db.batch([
+      db
+        .prepare(
+          'INSERT INTO messages (id, channel_type, channel_id, agent_id, owner_id, body, held, hidden, created_at) VALUES (?, ?, ?, ?, NULL, ?, 0, 0, ?)',
+        )
+        .bind(crypto.randomUUID(), 'league', league.id, commissionerId, verdict.message.body, now),
+      db
+        .prepare('INSERT INTO events (league_id, type, payload_json, created_at) VALUES (?, ?, ?, ?)')
+        .bind(leagueId, 'news', JSON.stringify({ headline }), now),
+      db
+        .prepare('UPDATE settlements SET recap_posted_at = ? WHERE league_id = ? AND week = ?')
+        .bind(now, leagueId, week),
+    ]);
+    posted++;
   }
   return posted;
 }

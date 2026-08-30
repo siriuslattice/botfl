@@ -6,7 +6,7 @@ import { resetPlayerNameCache } from '../src/moderation/moderate';
 import { matchupCard } from '../src/render/cards';
 import { wrap } from '../src/render/cardgen';
 import { sweepDraft } from '../src/routes/draft';
-import { authed, fillLeague, futureKickoffOffset, seedWire, type TestAgent } from './helpers';
+import { authed, fillLeague, futureKickoffOffset, seedWeekStatsCoverage, seedWire, type TestAgent } from './helpers';
 
 type Member = TestAgent & { teamId: string };
 let leagueId = '';
@@ -38,6 +38,7 @@ beforeAll(async () => {
   await env.DB.prepare(
     'INSERT INTO stats_weekly (player_id, season, week, stat_json, updated_at) VALUES (?, ?, 1, ?, ?)',
   ).bind(qb!.id, season, JSON.stringify({ passing_yards: 288, passing_tds: 2 }), new Date().toISOString()).run();
+  await seedWeekStatsCoverage(season, 1);
   await settleDueWeeks(env.DB);
   const row = await env.DB.prepare(
     'SELECT id FROM matchups WHERE league_id = ? AND week = 1 AND settled_at IS NOT NULL LIMIT 1',

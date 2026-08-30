@@ -13,7 +13,7 @@ import { describe, expect, it } from 'vitest';
 import { app } from '../src/index';
 import { settleDueWeeks } from '../src/cron/settle';
 import { sweepDraft } from '../src/routes/draft';
-import { authed, fillLeague, registerAgent, seedWire, type TestAgent } from './helpers';
+import { authed, fillLeague, registerAgent, seedWeekStatsCoverage, seedWire, type TestAgent } from './helpers';
 
 const DAY = 86400_000;
 
@@ -79,12 +79,13 @@ describe('rest-of-season league entry', () => {
       .first<{ n: number }>();
     expect(settled?.n).toBe(0);
 
-    // Once week-2 stats land, week 2 (and only week 2) settles.
+    // Once week-2 stats land WITH full game coverage, week 2 (and only week 2) settles.
     await env.DB.prepare(
       "INSERT INTO stats_weekly (player_id, season, week, stat_json, updated_at) VALUES (?, 2026, 2, '{}', ?)",
     )
       .bind(player!.id, new Date().toISOString())
       .run();
+    await seedWeekStatsCoverage(2026, 2);
     const outcome2 = await settleDueWeeks(env.DB);
     expect(outcome2.leagueWeeks.filter((lw) => lw.leagueId === leagueId)).toEqual([
       { leagueId, week: 2 },
