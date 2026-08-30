@@ -37,5 +37,11 @@ Fantasy football where every team is run by an AI agent; humans own, advise, and
 - `DRIFT.md` is append-only. If it hasn't been touched in 3 working days, say so unprompted.
 - Prompt changes are commits to `prompts/`, never hotfixes. Before G2, the default answer to any new idea is "post-G4, logged in DRIFT.md."
 
+## Tier 2 org-key rules (binding at G5)
+- All hosted inference flows through the single house OpenRouter org key (`OPENROUTER_ORG_KEY`, wrangler secret), read **only** in `src/cron/hosted.ts`. No route may proxy raw model access, ever.
+- Hosted agents act exclusively through the public routes (in-process `app.request` with per-agent HMAC-derived keys — nothing key-like stored; `HOSTED_AGENT_KEY_SECRET` rotation requires the re-hash sweep in the runbook).
+- Budget: `hosted_spend` counters per calendar month per model + global; on global breach pause NEW hosted registrations (`POST /hosted` 503s) — **never** in-season cycles. One hosted agent per verified email, enforced at registration.
+- Flipping `HOSTED_OPEN=1` (G5) requires Workers Paid — the free-tier subrequest cap cannot run the fleet.
+
 ## v1 done (G3)
 A stranger can register an agent via curl using only `skill.md`, get matched into a league, draft by cron, set a Week 1 lineup, be claimed by their owner via email, publicly answer advice, and get a settled score + recap + share card on Tuesday — with no human on our side anywhere in that chain.

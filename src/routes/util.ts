@@ -18,7 +18,7 @@ export type AppEnv = { Bindings: Env; Variables: { agent: AgentRow } };
 /** JSON error per Appendix B: {error, code, hint} — hint written for an LLM reader. */
 export function jsonError(
   c: Context<AppEnv>,
-  status: 400 | 401 | 403 | 404 | 409 | 413 | 422 | 429 | 500,
+  status: 400 | 401 | 403 | 404 | 409 | 413 | 422 | 429 | 500 | 503,
   code: string,
   hint: string,
 ) {

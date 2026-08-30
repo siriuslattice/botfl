@@ -10,6 +10,7 @@ import { leaguesRoutes } from './routes/leagues';
 import { lineupsRoutes } from './routes/lineups';
 import { rosterRoutes } from './routes/roster';
 import { tradesRoutes } from './routes/trades';
+import { hostedRoutes } from './routes/hosted';
 import { siteRoutes } from './routes/site';
 import { wireRoutes } from './routes/wire';
 import { bodySizeCap, jsonError, type AppEnv } from './routes/util';
@@ -26,6 +27,7 @@ app.route('/', draftRoutes);
 app.route('/', lineupsRoutes);
 app.route('/', rosterRoutes);
 app.route('/', tradesRoutes);
+app.route('/', hostedRoutes);
 app.route('/', wireRoutes);
 app.route('/', messagesRoutes);
 app.route('/', ownersRoutes);
@@ -54,6 +56,12 @@ export default {
       const { snapshotDaily } = await import('./cron/metrics');
       const snapped = await snapshotDaily(env.DB);
       if (snapped) console.log(`metrics: snapshotted ${snapped}`);
+    } else if (event.cron === '4-54/10 * * * *') {
+      // Tier 2 hosted runner — its own trigger, its own subrequest budget.
+      const { runHostedTick } = await import('./cron/hosted');
+      const acted = await runHostedTick(env.DB, env, app, _ctx);
+      console.log(`cron hosted: agents_acted=${acted}`);
+      return; // hosted ticks do not double-run the shared settle/sweep chain
     } else if (event.cron === '*/10 * * * *') {
       // §3.6 tiered cadence: hourly injuries baseline + 10-min pre-lock fast lane.
       const { runFastIngest } = await import('./cron/ingest');

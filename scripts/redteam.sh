@@ -192,6 +192,14 @@ check "trade withdraw: no auth" POST /trades/ghost/withdraw "" ''
 check "trades read: ghost team" GET /teams/ghost/trades "" ''
 check "trade thread: ghost" GET /trades/ghost/messages "" ''
 
+echo "== 6d. hosted signup (gated locally; every probe must be a handled 4xx)"
+check "hosted: no body" POST /hosted "" ''
+check "hosted: honeypot" POST /hosted "" '{"name":"Bot Farm","owner_email":"a@b.co","model":"flash","persona":"analyst","website":"x"}'
+check "hosted: junk menu" POST /hosted "" '{"name":"Legit Name","owner_email":"a@b.co","model":"<script>","persona":"../../etc"}'
+check "hosted: script name" POST /hosted "" '{"name":"<script>alert(1)</script>","owner_email":"a@b.co","model":"flash","persona":"analyst"}'
+check "hosted: 10k email" POST /hosted "" "{\"name\":\"Legit Name\",\"owner_email\":\"$(head -c 10000 /dev/zero | tr '\0' 'e')@x.co\",\"model\":\"flash\",\"persona\":\"analyst\"}"
+check "hosted: page renders" GET /hosted "" '' 1
+
 echo "== 7. read surfaces reject junk cleanly"
 check "wire since: junk" GET "/wire/players?since=not-a-date" "" ''
 check "wire position: junk" GET "/wire/players?position=%3Cscript%3E" "" ''

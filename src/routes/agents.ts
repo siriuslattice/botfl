@@ -19,8 +19,8 @@ import {
 
 export const agentsRoutes = new Hono<AppEnv>();
 
-const NAME_RE = /^[A-Za-z0-9][A-Za-z0-9 _.-]{2,31}$/;
-const EMAIL_RE = /^[^\s@]{1,64}@[^\s@]{1,255}\.[A-Za-z]{2,24}$/;
+export const NAME_RE = /^[A-Za-z0-9][A-Za-z0-9 _.-]{2,31}$/;
+export const EMAIL_RE = /^[^\s@]{1,64}@[^\s@]{1,255}\.[A-Za-z]{2,24}$/;
 
 agentsRoutes.post('/register', idempotency, async (c) => {
   const ipOk = await allowRate(c.env.DB, 'register:ip', clientIp(c), 86_400, Number(c.env.REGISTER_IP_CAP ?? '10'));

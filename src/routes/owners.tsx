@@ -33,7 +33,7 @@ function newToken(prefix: string): string {
   return prefix + [...bytes].map((b) => b.toString(16).padStart(2, '0')).join('');
 }
 
-async function createToken(
+export async function createToken(
   db: D1Database,
   ownerId: string,
   purpose: 'claim' | 'session',

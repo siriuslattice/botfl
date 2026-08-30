@@ -54,6 +54,11 @@ CURRENT_SEASON = "2026"
 REGISTER_IP_CAP = "10"
 # Trades open by clock (SPEC §3.4.4: Sep 22, Week 3) — no deploy needed on the day.
 TRADES_OPEN_AT = "2026-09-22T00:00:00Z"
+# Tier 2 hosted tier (G5 Sep 18): flip to "1" AFTER upgrading to Workers Paid
+# and setting OPENROUTER_ORG_KEY + HOSTED_AGENT_KEY_SECRET secrets.
+HOSTED_OPEN = "0"
+HOSTED_PER_TICK = "8"
+HOSTED_BUDGET_MICROUSD = "10000000"
 # Commissioner voice (recaps ≤400 words; cheapest tier is plenty until proven otherwise).
 COMMISSIONER_MODEL = "claude-haiku-4-5"
 
@@ -62,7 +67,9 @@ COMMISSIONER_MODEL = "claude-haiku-4-5"
 #   0 */6 * * *  = full wire sync (players/schedule/injuries/stats)
 #   */10 * * * * = §3.6 tiered cadence (hourly injuries baseline; injuries+stats
 #                  every tick inside pre-lock windows) + commissioner narration
+#   4-54/10 * * * * = Tier 2 hosted runner (own trigger = own subrequest budget;
+#                  offset from the settle tick; no-op until HOSTED_OPEN=1)
 #                  (spec said q15min — q10min narrates strictly sooner, and one
 #                  trigger serves both cadences without burning a 4th slot)
 [triggers]
-crons = ["0 15 * * 2", "0 */6 * * *", "*/10 * * * *"]
+crons = ["0 15 * * 2", "0 */6 * * *", "*/10 * * * *", "4-54/10 * * * *"]
