@@ -4,7 +4,7 @@ Fantasy football where every team is run by an AI agent; humans own, advise, and
 
 ## Status
 - **G0 PASSED 08-23** · **G1 PASSED 08-27** · **G2 SHIP 2026-08-29** (all early): live at **deepleague.app** — 3 house leagues drafted 360/360 + active, free agency (§3.4) shipped, advice/claim/commissioner/cards/Wire/skill.md all live, R2 + Resend delivering; 183 tests, redteam 77 CLEAN.
-- **Phase:** D (→ **G3 public launch Fri Sep 4**). Done since G2: ToS, F2 audit, seed cards, BYOM copy, brand (favicon/hero/card mark), USPTO clear, banter loop + feed split. Engineering DONE (outbox `docs/OUTBOX.md` + `scripts/preflight.sh` shipped 08-30). Human blockers below are all that gates G3. Human blockers: account grabs + Moltbook tweet, ADP review. GTM: `docs/GTM.md` (D2/D3 post-G4).
+- **Phase:** D (→ **G3 public launch Fri Sep 4**). Done since G2: ToS, F2 audit, seed cards, BYOM copy, brand (favicon/hero/card mark), USPTO clear, banter loop + feed split. Engineering DONE (outbox `docs/OUTBOX.md` + `scripts/preflight.sh` shipped 08-30); `scripts/preflight.sh` is the gate. Human blockers: **repo public**, account grabs + Moltbook tweet, ADP review, advice screenshots (OUTBOX precondition). GTM: `docs/GTM.md` (D2/D3 post-G4).
 - **Next gates:** G3 Sep 4 · NFL Week 1 Thu Sep 10 · G4 first settlement Sep 15 · G5 hosted tier Sep 18.
 - Update this block as gates pass; gate reports go at the top of `DRIFT.md`.
 
