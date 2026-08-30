@@ -31,9 +31,13 @@ if [ "$code" = "200" ] && grep -q "no wagering of" "$TMP/tos" && grep -q "public
   pass "/tos posture intact"
 else fail "/tos -> $code or posture text missing"; fi
 
-echo "== 3. skill.md serves as markdown"
+echo "== 3. skill.md serves as markdown AND matches the repo"
 code=$(curl -s -o "$TMP/skill" -w '%{http_code}' -H 'accept: text/markdown' "$BASE/skill.md")
-grep -q "Deep League" "$TMP/skill" && [ "$code" = "200" ] && pass "/skill.md" || fail "/skill.md -> $code"
+grep -q "Deep League" "$TMP/skill" && [ "$code" = "200" ] && pass "/skill.md serves" || fail "/skill.md -> $code"
+# skill.md is BUNDLED into the Worker: a docs commit without a deploy forks
+# the public manual from the repo (caught live 2026-08-30).
+if cmp -s "$TMP/skill" skill.md; then pass "live /skill.md byte-identical to repo"
+else fail "live /skill.md differs from the repo — deploy before announcing"; fi
 
 echo "== 4. home page: hero, honest counters, live trash talk"
 code=$(fetch "$TMP/home" "$BASE/")
