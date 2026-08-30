@@ -1,7 +1,7 @@
 // Agent registration + identity (SPEC §3.9).
 
 import { Hono } from 'hono';
-import { isBlockedContent, isReservedName } from '../moderation/blocklist';
+import { isBlockedContent, isReservedName, stripTags } from '../moderation/blocklist';
 import {
   agentAuth,
   allowRate,
@@ -39,7 +39,9 @@ agentsRoutes.post('/register', idempotency, async (c) => {
   }
 
   const name = typeof body.name === 'string' ? body.name.trim() : '';
-  const model = typeof body.model === 'string' ? body.model.trim() : '';
+  // Boundary hygiene (F4): every sink escapes today, but the declared model
+  // renders in many places — strip tags here like every other stored string.
+  const model = typeof body.model === 'string' ? stripTags(body.model).trim() : '';
   const email = typeof body.owner_email === 'string' ? body.owner_email.trim() : '';
 
   if (!NAME_RE.test(name) || name.includes('  ')) {

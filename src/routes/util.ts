@@ -123,7 +123,15 @@ export function agentAuth(opts?: { writeLimitPerHour?: number }): MiddlewareHand
 /**
  * Idempotency replay for agent-facing writes: send "Idempotency-Key: <token>"
  * to make retries safe. Successful (2xx) responses are stored and replayed
- * verbatim for the same key+route.
+ * verbatim for the same CALLER + key + route.
+ *
+ * Caller scoping is the security boundary: the authed agent id, or — on the
+ * anonymous routes (/register, /hosted) — a hash of client IP + declared
+ * owner_email, so a genuine cron retry replays but a stranger can neither
+ * read nor pre-poison another caller's stored response. This matters most on
+ * /register, whose stored 201 carries the one-time api_key; that row is
+ * additionally bounded by the 48h sweep (see cron/ingest, DRIFT 2026-08-30).
+ * Registered AFTER agentAuth on every authed route (the order is load-bearing).
  */
 export const idempotency: MiddlewareHandler<AppEnv> = async (c, next) => {
   const key = c.req.header('idempotency-key');
@@ -135,10 +143,21 @@ export const idempotency: MiddlewareHandler<AppEnv> = async (c, next) => {
     return jsonError(c, 400, 'IDEMPOTENCY_KEY_TOO_LONG', 'Idempotency-Key is capped at 128 chars');
   }
   const route = `${c.req.method} ${new URL(c.req.url).pathname}`;
+  const agent = c.get('agent') as AgentRow | undefined;
+  let actor: string;
+  if (agent) {
+    actor = `agent:${agent.id}`;
+  } else {
+    // Hono caches the parsed body, so the handler's own readJsonObject re-read
+    // sees the same object.
+    const body = await readJsonObject(c);
+    const email = typeof body?.owner_email === 'string' ? body.owner_email.trim().toLowerCase() : '';
+    actor = 'anon:' + (await sha256hex(`${clientIp(c)}|${email}`));
+  }
   const hit = await c.env.DB.prepare(
-    'SELECT response_status, response_json FROM idempotency WHERE key = ? AND route = ?',
+    'SELECT response_status, response_json FROM idempotency_keys WHERE actor = ? AND route = ? AND key = ?',
   )
-    .bind(key, route)
+    .bind(actor, route, key)
     .first<{ response_status: number; response_json: string }>();
   if (hit) {
     return new Response(hit.response_json, {
@@ -150,9 +169,9 @@ export const idempotency: MiddlewareHandler<AppEnv> = async (c, next) => {
   if (c.res.status >= 200 && c.res.status < 300) {
     const body = await c.res.clone().text();
     await c.env.DB.prepare(
-      'INSERT OR IGNORE INTO idempotency (key, route, response_status, response_json, created_at) VALUES (?, ?, ?, ?, ?)',
+      'INSERT OR IGNORE INTO idempotency_keys (actor, route, key, response_status, response_json, created_at) VALUES (?, ?, ?, ?, ?, ?)',
     )
-      .bind(key, route, c.res.status, body, nowIso())
+      .bind(actor, route, key, c.res.status, body, nowIso())
       .run();
   }
 };

@@ -250,6 +250,33 @@ else
   pass "no unhandled server errors in log"
 fi
 
+echo "== 9. idempotency scoping (cross-tenant replay must be impossible)"
+CHECKS=$((CHECKS + 1))
+V1=$(curl -s -X POST "$BASE/register" -H 'content-type: application/json' \
+  -H 'CF-Connecting-IP: 10.66.0.1' -H 'Idempotency-Key: redteam-shared' \
+  -d '{"name":"Idem Victim","model":"m1","owner_email":"victim@rt.test"}')
+K1=$(echo "$V1" | grep -o '"api_key":"[^"]*"')
+A1=$(curl -s -i -X POST "$BASE/register" -H 'content-type: application/json' \
+  -H 'CF-Connecting-IP: 10.66.0.2' -H 'Idempotency-Key: redteam-shared' \
+  -d '{"name":"Idem Attacker","model":"m1","owner_email":"attacker@rt.test"}')
+K2=$(echo "$A1" | grep -o '"api_key":"[^"]*"')
+if echo "$A1" | grep -qi 'idempotency-replayed'; then
+  fail "register replayed ACROSS callers under a shared Idempotency-Key"
+elif [ -n "$K1" ] && [ "$K1" = "$K2" ]; then
+  fail "register handed the victim's api_key to a second caller"
+else
+  pass "register: shared key never crosses callers"
+fi
+CHECKS=$((CHECKS + 1))
+R1=$(curl -s -i -X POST "$BASE/register" -H 'content-type: application/json' \
+  -H 'CF-Connecting-IP: 10.66.0.1' -H 'Idempotency-Key: redteam-shared' \
+  -d '{"name":"Idem Victim","model":"m1","owner_email":"victim@rt.test"}')
+if echo "$R1" | grep -qi 'idempotency-replayed' && echo "$R1" | grep -qF "${K1#\"api_key\":\"}"; then
+  pass "register: the true caller's retry still replays its own key"
+else
+  fail "register: same-caller retry did not replay"
+fi
+
 echo
 echo "checks: $CHECKS · failures: $FAILURES"
 if [ "$FAILURES" -gt 0 ]; then

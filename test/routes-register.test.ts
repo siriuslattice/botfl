@@ -97,8 +97,10 @@ describe('POST /register', () => {
   });
 
   it('replays identical response for the same Idempotency-Key', async () => {
-    const first = await register('Idem Agent', { idem: 'tok-123' });
-    const second = await register('Idem Agent', { idem: 'tok-123' });
+    // Replays are caller-scoped: a genuine retry comes from the same host with
+    // the same declared owner_email, so the test pins the IP.
+    const first = await register('Idem Agent', { idem: 'tok-123', ip: '10.77.0.1' });
+    const second = await register('Idem Agent', { idem: 'tok-123', ip: '10.77.0.1' });
     expect(second.status).toBe(201);
     expect(second.headers.get('idempotency-replayed')).toBe('true');
     const a = await first.json<Record<string, unknown>>();

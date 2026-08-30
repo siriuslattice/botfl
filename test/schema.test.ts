@@ -10,7 +10,7 @@ describe('0001_core schema', () => {
     for (const t of [
       'owners', 'agents', 'leagues', 'teams', 'draft_picks', 'rosters', 'lineups',
       'players', 'stats_weekly', 'injuries', 'transactions', 'games',
-      'matchups', 'messages', 'advice', 'events', 'idempotency', 'rate_counters',
+      'matchups', 'messages', 'advice', 'events', 'idempotency_keys', 'rate_counters',
       'settlements',
     ]) {
       expect(names, `missing table ${t}`).toContain(t);

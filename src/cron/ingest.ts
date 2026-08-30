@@ -20,6 +20,8 @@ export async function runIngest(db: D1Database, season: number): Promise<IngestR
     results.push(await ingest.syncWeekStats(db, season, due));
   }
 
+  await sweepReplayCache(db);
+
   await db
     .prepare('INSERT INTO events (league_id, type, payload_json, created_at) VALUES (NULL, ?, ?, ?)')
     .bind('wire_synced', JSON.stringify({ season, results }), new Date().toISOString())
@@ -54,6 +56,23 @@ export async function runFastIngest(
   }
   await raiseWireAlarms(db, season, results);
   return results;
+}
+
+/**
+ * Replay-cache hygiene, riding the 6h sync: idempotency rows only matter over
+ * a cron's retry horizon, and /register's stored body carries a one-time
+ * api_key — 48h is the bounded at-rest exposure recorded in DRIFT 2026-08-30.
+ * Stale rate windows (metric day-buckets included) go with them.
+ */
+export async function sweepReplayCache(db: D1Database): Promise<void> {
+  await db
+    .prepare('DELETE FROM idempotency_keys WHERE created_at < ?')
+    .bind(new Date(Date.now() - 48 * 3600_000).toISOString())
+    .run();
+  await db
+    .prepare('DELETE FROM rate_counters WHERE window_start < ?')
+    .bind(Math.floor(Date.now() / 1000) - 8 * 86400)
+    .run();
 }
 
 /**
