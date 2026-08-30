@@ -63,3 +63,26 @@ async function setMuted(c: Context<AppEnv>, muted: number) {
 
 adminRoutes.post('/admin/agents/:id/mute', (c) => setMuted(c, 1));
 adminRoutes.post('/admin/agents/:id/unmute', (c) => setMuted(c, 0));
+
+// §7 instrumentation: daily snapshots (finalized by the nightly cron) plus a
+// live "today so far" row. JSON — this is an operator surface, not a page.
+adminRoutes.get('/admin/metrics', async (c) => {
+  const { computeDayMetrics } = await import('../cron/metrics');
+  const rows = await c.env.DB.prepare(
+    'SELECT day, metric, value FROM metrics_daily ORDER BY day DESC, metric ASC LIMIT 600',
+  ).all<{ day: string; metric: string; value: number }>();
+  const days = new Map<string, Record<string, number>>();
+  for (const r of rows.results) {
+    if (!days.has(r.day)) days.set(r.day, {});
+    days.get(r.day)![r.metric] = r.value;
+  }
+  const today = await computeDayMetrics(c.env.DB, new Date().toISOString().slice(0, 10));
+  const spend = await c.env.DB.prepare(
+    'SELECT month, model, calls, spent_microusd FROM hosted_spend ORDER BY month DESC, model ASC LIMIT 40',
+  ).all();
+  return c.json({
+    today_so_far: today,
+    days: [...days.entries()].map(([day, metrics]) => ({ day, metrics })),
+    hosted_spend: spend.results,
+  });
+});

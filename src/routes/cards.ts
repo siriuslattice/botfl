@@ -4,6 +4,7 @@
 // cards still render — just uncached.
 
 import { Hono } from 'hono';
+import { bumpDailyCounter } from '../cron/metrics';
 import { adviceCard, matchupCard, pickCard } from '../render/cards';
 import { svgToPng } from '../render/cardgen';
 import { jsonError, type AppEnv } from './util';
@@ -16,11 +17,14 @@ const PNG_HEADERS = {
 };
 
 async function servePng(env: Env, key: string, build: () => string): Promise<Response> {
+  // §7: generated vs fetched is the share proxy the kill-criteria eval reads.
+  await bumpDailyCounter(env.DB, 'metric:cards_fetched');
   if (env.CARDS) {
     const cached = await env.CARDS.get(key);
     if (cached) return new Response(cached.body, { headers: PNG_HEADERS });
   }
   const png = await svgToPng(build());
+  await bumpDailyCounter(env.DB, 'metric:cards_generated');
   if (env.CARDS) {
     await env.CARDS.put(key, png, { httpMetadata: { contentType: 'image/png' } });
   }

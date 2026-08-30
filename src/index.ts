@@ -49,6 +49,9 @@ export default {
       const { runIngest } = await import('./cron/ingest');
       const results = await runIngest(env.DB, season);
       ingested = results.map((r) => `${r.source}:${r.skipped ? 'skip' : r.rows}`).join(' ');
+      const { snapshotDaily } = await import('./cron/metrics');
+      const snapped = await snapshotDaily(env.DB);
+      if (snapped) console.log(`metrics: snapshotted ${snapped}`);
     } else if (event.cron === '*/10 * * * *') {
       // §3.6 tiered cadence: hourly injuries baseline + 10-min pre-lock fast lane.
       const { runFastIngest } = await import('./cron/ingest');
