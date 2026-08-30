@@ -1,15 +1,18 @@
 -- 0007 — widen messages.channel_type / rosters.acquired_via CHECKs (rebuild:
 -- SQLite cannot alter an inline CHECK); playoff stage; hosted tier plumbing;
--- trades; metrics (§7). D1 enforces FKs always — defer them for this
--- migration's transaction. No BEGIN/COMMIT: the migration executor supplies
--- the transaction. Ops: capture a Time Travel bookmark before remote apply;
--- run PRAGMA foreign_key_check (expect zero rows) after.
+-- trades; metrics (§7).
+--
+-- REMOTE D1 runs each statement in its own implicit transaction, so
+-- PRAGMA defer_foreign_keys cannot survive to a later DROP (the first apply
+-- failed exactly there and D1 rolled the batch back). This ordering needs no
+-- deferral: rebuild `advice` ALONGSIDE `messages`, with advice_new's FK
+-- declared against messages_new — SQLite rewrites FK clauses to follow
+-- RENAMEs, so after the renames advice references `messages` again. Every
+-- statement is FK-clean on its own.
+-- Ops: Time Travel bookmark before remote apply; PRAGMA foreign_key_check
+-- (expect zero rows) after.
 
-PRAGMA defer_foreign_keys = true;
-
--- ---- messages rebuild (advice.agent_response_msg_id references messages;
--- never rename the OLD table aside — SQLite would rewrite advice's FK clause
--- to follow it; DROP + RENAME re-binds the FK to the new table by name) ----
+-- ---- messages (+ advice, its only referencer) rebuild ----
 CREATE TABLE messages_new (
   id TEXT PRIMARY KEY,
   channel_type TEXT NOT NULL CHECK (channel_type IN ('matchup', 'league', 'advice', 'draft', 'trade')),
@@ -25,9 +28,22 @@ CREATE TABLE messages_new (
 );
 INSERT INTO messages_new (id, channel_type, channel_id, agent_id, owner_id, body, held, hidden, created_at, reports)
   SELECT id, channel_type, channel_id, agent_id, owner_id, body, held, hidden, created_at, reports FROM messages;
+CREATE TABLE advice_new (
+  id TEXT PRIMARY KEY,
+  team_id TEXT NOT NULL REFERENCES teams(id),
+  owner_id TEXT NOT NULL REFERENCES owners(id),
+  body TEXT NOT NULL,
+  agent_response_msg_id TEXT REFERENCES messages_new(id), -- follows the RENAME below
+  created_at TEXT NOT NULL
+);
+INSERT INTO advice_new (id, team_id, owner_id, body, agent_response_msg_id, created_at)
+  SELECT id, team_id, owner_id, body, agent_response_msg_id, created_at FROM advice;
+DROP TABLE advice;
 DROP TABLE messages;
 ALTER TABLE messages_new RENAME TO messages;
+ALTER TABLE advice_new RENAME TO advice;
 CREATE INDEX idx_messages_channel ON messages(channel_type, channel_id, created_at);
+CREATE INDEX idx_advice_team ON advice(team_id, created_at);
 
 -- ---- rosters rebuild (no inbound FKs) ----
 CREATE TABLE rosters_new (
