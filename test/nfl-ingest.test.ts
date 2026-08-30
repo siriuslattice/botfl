@@ -1,7 +1,7 @@
 import { env } from 'cloudflare:test';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { csvHeader, csvLines, parseCsvLine } from '../src/sport/nfl/csv';
-import { inPreLockWindow, syncInjuries, syncPlayers, syncSchedule, syncWeekStats, mapStatRow } from '../src/sport/nfl/ingest';
+import { inPreLockWindow, syncInjuries, syncPlayers, syncSchedule, syncTrades, syncWeekStats, mapStatRow } from '../src/sport/nfl/ingest';
 import { easternOffsetHours, easternToUtcIso } from '../src/sport/nfl/time';
 
 describe('csv parser', () => {
@@ -150,6 +150,51 @@ describe('nflverse ingest', () => {
     stubFetch(null);
     const skipped = await syncWeekStats(env.DB, 2026, 1);
     expect(skipped.skipped).toContain('not published');
+  });
+
+  it('roster diffs between syncs land as transactions (team + status changes)', async () => {
+    stubFetch(ROSTER_CSV);
+    await syncPlayers(env.DB, 2026); // baseline
+    const moved = ROSTER_CSV
+      .replace('2026,PIT,QB,ACT,Aaron Testman,00-0000001,2,REG', '2026,BAL,QB,ACT,Aaron Testman,00-0000001,2,REG')
+      .replace('2026,DAL,RB,RES,Runner Reserve,00-0000002,1,REG', '2026,DAL,RB,ACT,Runner Reserve,00-0000002,1,REG');
+    stubFetch(moved);
+    await syncPlayers(env.DB, 2026);
+    const rows = await env.DB.prepare(
+      "SELECT type, player_id, detail FROM transactions WHERE type IN ('team_change','status_change') ORDER BY type",
+    ).all<{ type: string; player_id: string; detail: string }>();
+    expect(rows.results).toEqual([
+      { type: 'status_change', player_id: 'nfl:00-0000002', detail: 'Runner Reserve: res → active' },
+      { type: 'team_change', player_id: 'nfl:00-0000001', detail: 'Aaron Testman: PIT → BAL' },
+    ]);
+    // Same day, same diff → deterministic id makes the re-sync a no-op.
+    await syncPlayers(env.DB, 2026);
+    const again = await env.DB.prepare(
+      "SELECT COUNT(*) n FROM transactions WHERE type IN ('team_change','status_change')",
+    ).first<{ n: number }>();
+    expect(again!.n).toBe(2);
+  });
+
+  it('syncTrades ingests player legs, links by unique name, skips pick legs', async () => {
+    const TRADES_CSV = [
+      'trade_id,season,trade_date,gave,received,pick_season,pick_round,pick_number,conditional,pfr_id,pfr_name',
+      '900,2026,2026-03-01,PIT,BAL,,,,,TestAa01,Aaron Testman',
+      '900,2026,2026-03-01,BAL,PIT,2026,3,,0,"",""', // pick leg — skipped
+      '901,2026,2026-04-01,SF,SEA,,,,,NobodX01,Total Stranger', // no roster match → player_id null
+      '800,2025,2025-06-01,AA,BB,,,,,OldGuy01,Old Guy', // other season — skipped
+    ].join('\n');
+    stubFetch(TRADES_CSV);
+    const res = await syncTrades(env.DB, 2026);
+    expect(res.rows).toBe(2);
+    const rows = await env.DB.prepare(
+      "SELECT player_id, detail FROM transactions WHERE type = 'trade' ORDER BY occurred_at",
+    ).all<{ player_id: string | null; detail: string }>();
+    expect(rows.results).toEqual([
+      { player_id: 'nfl:00-0000001', detail: 'Aaron Testman: traded PIT → BAL' },
+      { player_id: null, detail: 'Total Stranger: traded SF → SEA' },
+    ]);
+    stubFetch(null);
+    expect((await syncTrades(env.DB, 2026)).skipped).toContain('missing');
   });
 
   it('mapStatRow sums fumble/2pt variants and renames interceptions', () => {

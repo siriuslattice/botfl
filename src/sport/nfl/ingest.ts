@@ -17,6 +17,7 @@ const URLS = {
   games: () => `${BASE}/nfldata/raw/master/data/games.csv`,
   injuries: (season: number) => `${BASE}/nflverse-data/releases/download/injuries/injuries_${season}.csv`,
   stats: (season: number) => `${BASE}/nflverse-data/releases/download/stats_player/stats_player_week_${season}.csv`,
+  trades: () => `${BASE}/nflverse-data/releases/download/trades/trades.csv`,
 };
 
 const FANTASY_POS = new Set<string>(NFL_POSITIONS);
@@ -38,6 +39,14 @@ async function batchAll(db: D1Database, stmts: D1PreparedStatement[]): Promise<v
 export async function syncPlayers(db: D1Database, season: number): Promise<IngestResult> {
   const text = await fetchCsv(URLS.roster(season));
   if (text === null) return { source: 'players', rows: 0, skipped: 'roster file not published' };
+  // Snapshot the current rows first: team/status DIFFS between syncs are the
+  // transactions feed (§3.6) — nflverse has no live transactions file, so the
+  // sanctioned roster data itself is the source (F6-clean, derived not scraped).
+  const prior = new Map<string, { team: string; status: string }>();
+  const priorRows = await db
+    .prepare("SELECT id, team, status FROM players WHERE sport = 'nfl'")
+    .all<{ id: string; team: string; status: string }>();
+  for (const r of priorRows.results) prior.set(r.id, { team: r.team, status: r.status });
   const lines = csvLines(text);
   const t = csvHeader(lines[0] ?? '');
   const cGsis = t.col('gsis_id');
@@ -66,9 +75,28 @@ export async function syncPlayers(db: D1Database, season: number): Promise<Inges
     });
   }
   const now = new Date().toISOString();
-  await batchAll(
-    db,
-    [...latest.entries()].map(([gsis, p]) =>
+  const day = now.slice(0, 10);
+  const stmts: D1PreparedStatement[] = [];
+  for (const [gsis, p] of latest) {
+    const id = `nfl:${gsis}`;
+    const was = prior.get(id);
+    // One transaction per player+field+day: deterministic ids make re-syncs
+    // no-ops, and the daily grain matches the source's update cadence.
+    if (was && was.team !== p.team && p.team) {
+      stmts.push(
+        db
+          .prepare("INSERT OR IGNORE INTO transactions (id, sport, type, player_id, detail, occurred_at) VALUES (?, 'nfl', 'team_change', ?, ?, ?)")
+          .bind(`nfl:move:${gsis}:${day}:team`, id, `${p.name}: ${was.team || '(none)'} → ${p.team}`, now),
+      );
+    }
+    if (was && was.status !== p.status) {
+      stmts.push(
+        db
+          .prepare("INSERT OR IGNORE INTO transactions (id, sport, type, player_id, detail, occurred_at) VALUES (?, 'nfl', 'status_change', ?, ?, ?)")
+          .bind(`nfl:move:${gsis}:${day}:status`, id, `${p.name}: ${was.status} → ${p.status}`, now),
+      );
+    }
+    stmts.push(
       db
         .prepare(
           `INSERT INTO players (id, sport, name, position, team, status, updated_at)
@@ -76,10 +104,60 @@ export async function syncPlayers(db: D1Database, season: number): Promise<Inges
            ON CONFLICT (id) DO UPDATE SET name = excluded.name, position = excluded.position,
              team = excluded.team, status = excluded.status, updated_at = excluded.updated_at`,
         )
-        .bind(`nfl:${gsis}`, p.name, p.position, p.team, p.status, now),
-    ),
-  );
+        .bind(id, p.name, p.position, p.team, p.status, now),
+    );
+  }
+  await batchAll(db, stmts);
   return { source: 'players', rows: latest.size };
+}
+
+/**
+ * Real NFL trades from nflverse trades.csv (maintained through the current
+ * season; one row per leg, player legs carry pfr_name). Our player ids are
+ * gsis-keyed and the file is pfr-keyed, so linkage is by exact unique name
+ * match — unmatched legs still land with the name in `detail` (facts, F6).
+ */
+export async function syncTrades(db: D1Database, season: number): Promise<IngestResult> {
+  const text = await fetchCsv(URLS.trades());
+  if (text === null) return { source: 'transactions', rows: 0, skipped: 'trades file missing' };
+  const lines = csvLines(text);
+  const t = csvHeader(lines[0] ?? '');
+  const cTrade = t.col('trade_id');
+  const cSeason = t.col('season');
+  const cDate = t.col('trade_date');
+  const cGave = t.col('gave');
+  const cRecv = t.col('received');
+  const cPfr = t.col('pfr_id');
+  const cName = t.col('pfr_name');
+
+  const names = await db
+    .prepare("SELECT id, name FROM players WHERE sport = 'nfl'")
+    .all<{ id: string; name: string }>();
+  const byName = new Map<string, string | null>();
+  for (const r of names.results) {
+    byName.set(r.name, byName.has(r.name) ? null : r.id); // ambiguous names never link
+  }
+
+  const stmts: D1PreparedStatement[] = [];
+  for (let i = 1; i < lines.length; i++) {
+    const row = parseCsvLine(lines[i]!);
+    if (Number(row[cSeason]) !== season) continue;
+    const name = (row[cName] ?? '').trim();
+    if (!name) continue; // pick-only leg
+    const occurred = `${row[cDate]}T00:00:00.000Z`;
+    stmts.push(
+      db
+        .prepare("INSERT OR IGNORE INTO transactions (id, sport, type, player_id, detail, occurred_at) VALUES (?, 'nfl', 'trade', ?, ?, ?)")
+        .bind(
+          `nfl:trade:${row[cTrade]}:${row[cPfr] || name}`,
+          byName.get(name) ?? null,
+          `${name}: traded ${row[cGave]} → ${row[cRecv]}`,
+          occurred,
+        ),
+    );
+  }
+  await batchAll(db, stmts);
+  return { source: 'transactions', rows: stmts.length };
 }
 
 export async function syncSchedule(db: D1Database, season: number): Promise<IngestResult> {
@@ -287,5 +365,6 @@ export const nflIngest: WireIngest = {
   syncSchedule,
   syncInjuries,
   syncWeekStats,
+  syncTrades,
   inPreLockWindow,
 };

@@ -12,6 +12,7 @@ export async function runIngest(db: D1Database, season: number): Promise<IngestR
   results.push(await ingest.syncPlayers(db, season));
   results.push(await ingest.syncSchedule(db, season));
   results.push(await ingest.syncInjuries(db, season));
+  results.push(await ingest.syncTrades(db, season));
 
   const due = await db
     .prepare(
