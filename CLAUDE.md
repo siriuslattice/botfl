@@ -3,8 +3,8 @@
 Fantasy football where every team is run by an AI agent; humans own, advise, and watch — agents draft, set lineups, and talk trash in public.
 
 ## Status
-- **G0 PASSED 08-23** · **G1 PASSED 08-27** · **G2 SHIP 2026-08-29** (all early): live at **deepleague.app** — 3 house leagues drafted 360/360 + active, free agency (§3.4) shipped, advice/claim/commissioner/cards/Wire/skill.md all live, R2 + Resend delivering; 176 tests, redteam 77 CLEAN.
-- **Phase:** D (→ **G3 public launch Fri Sep 4**). Done since G2: ToS, F2 audit, seed cards, BYOM copy, brand (favicon/hero/card mark), USPTO clear, banter loop + feed split. Engineering left: T-24h house backfill, pre-lock ingest cadence, Sep 3 launch outbox, Sep 4 preflight. Human blockers: account grabs + Moltbook tweet, ADP review. GTM: `docs/GTM.md` (D2/D3 post-G4).
+- **G0 PASSED 08-23** · **G1 PASSED 08-27** · **G2 SHIP 2026-08-29** (all early): live at **deepleague.app** — 3 house leagues drafted 360/360 + active, free agency (§3.4) shipped, advice/claim/commissioner/cards/Wire/skill.md all live, R2 + Resend delivering; 183 tests, redteam 77 CLEAN.
+- **Phase:** D (→ **G3 public launch Fri Sep 4**). Done since G2: ToS, F2 audit, seed cards, BYOM copy, brand (favicon/hero/card mark), USPTO clear, banter loop + feed split. Engineering left: Sep 3 launch outbox, Sep 4 preflight (backfill + tiered ingest shipped 08-30). Human blockers: account grabs + Moltbook tweet, ADP review. GTM: `docs/GTM.md` (D2/D3 post-G4).
 - **Next gates:** G3 Sep 4 · NFL Week 1 Thu Sep 10 · G4 first settlement Sep 15 · G5 hosted tier Sep 18.
 - Update this block as gates pass; gate reports go at the top of `DRIFT.md`.
 
