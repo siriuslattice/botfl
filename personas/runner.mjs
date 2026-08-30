@@ -28,11 +28,33 @@ const STATE_FILE =
   process.env.STATE_FILE ?? join(homedir(), '.local', 'state', 'deep-league', 'house.json');
 const OWNER_EMAIL = process.env.HOUSE_OWNER_EMAIL ?? 'siriuslattice@gmail.com';
 
+// Nine labs. Model identity renders publicly on every team, so the spread is
+// content, not plumbing — it is what a model-vs-model leaderboard reads from.
 const MODELS = {
   haiku: { id: process.env.MODEL_HAIKU ?? 'claude-haiku-4-5', provider: 'anthropic' },
   gpt: { id: process.env.MODEL_GPT ?? 'openai/gpt-5-mini', provider: 'openrouter' },
   hermes: { id: process.env.MODEL_HERMES ?? 'nousresearch/hermes-4-70b', provider: 'openrouter' },
+  mistral: { id: process.env.MODEL_MISTRAL ?? 'mistralai/mistral-small-24b-instruct-2501', provider: 'openrouter' },
+  qwen: { id: process.env.MODEL_QWEN ?? 'qwen/qwen3.7-flash', provider: 'openrouter' },
+  deepseek: { id: process.env.MODEL_DEEPSEEK ?? 'deepseek/deepseek-v4-flash', provider: 'openrouter' },
+  gemma: { id: process.env.MODEL_GEMMA ?? 'google/gemma-3-12b-it', provider: 'openrouter' },
+  llama: { id: process.env.MODEL_LLAMA ?? 'meta-llama/llama-3.1-8b-instruct', provider: 'openrouter' },
+  glm: { id: process.env.MODEL_GLM ?? 'z-ai/glm-5.3-flash', provider: 'openrouter' },
 };
+
+// §5 Phase D: backfill personas exist to seat into PUBLIC leagues at T-24h so
+// a half-full stranger league can still draft — NOT to inflate the house
+// leagues. They stay dormant until BACKFILL=1, which keeps the live house
+// population at 30 (spec §3.1 allows 20–36; activating all six lands on 36).
+const BACKFILL = process.env.BACKFILL === '1';
+
+// Reasoning models bill their thinking against max_tokens and return EMPTY
+// content when they hit the ceiling mid-thought (gpt-5-mini spent 256 of 300
+// on reasoning, finish_reason=length, content=null — so every gpt-class
+// persona silently fell back to stock lines all season). Every persona reply
+// is capped to a few hundred characters downstream anyway, so a high ceiling
+// costs nothing on models that don't reason.
+const MAX_TOKENS = 1200;
 
 const PERSONA_DIR = dirname(new URL(import.meta.url).pathname);
 const loadPrompt = (name) =>
@@ -45,7 +67,8 @@ const BANTER_TEMPLATE = loadPrompt('persona-banter.md');
 function loadPersonas() {
   return readdirSync(PERSONA_DIR)
     .filter((f) => f.endsWith('.json'))
-    .map((f) => JSON.parse(readFileSync(join(PERSONA_DIR, f), 'utf8')));
+    .map((f) => JSON.parse(readFileSync(join(PERSONA_DIR, f), 'utf8')))
+    .filter((p) => BACKFILL || !p.backfill);
 }
 
 function loadState() {
