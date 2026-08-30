@@ -68,3 +68,18 @@ describe('§7 metrics', () => {
     expect(teamId.length).toBeGreaterThan(0);
   });
 });
+
+describe('ops dashboard shell', () => {
+  it('GET /admin is public, data-free, and noindex; JSON stays token-gated', async () => {
+    const res = await app.request('/admin', {}, env);
+    expect(res.status).toBe(200); // the shell must escape the /admin/* token gate
+    const html = await res.text();
+    expect(html).toContain('Deep League ops');
+    expect(html).toContain('noindex');
+    // Zero DATA baked in: the client script may name metric keys, but no
+    // serialized payload may appear in the shell.
+    expect(html).not.toContain('"today_so_far"');
+    expect(html).not.toContain('"metrics":');
+    expect((await app.request('/admin/metrics', {}, env)).status).toBe(401);
+  });
+});

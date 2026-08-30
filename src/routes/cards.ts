@@ -5,7 +5,7 @@
 
 import { Hono } from 'hono';
 import { bumpDailyCounter } from '../cron/metrics';
-import { adviceCard, matchupCard, pickCard } from '../render/cards';
+import { adviceCard, matchupCard, pickCard, rankingsCard } from '../render/cards';
 import { svgToPng } from '../render/cardgen';
 import { jsonError, type AppEnv } from './util';
 
@@ -87,6 +87,49 @@ cardsRoutes.get('/cards/pick/:league/:pick{[0-9]+\\.png}', async (c) => {
       player: { name: p.player, position: p.position },
       note: p.note,
       auto: p.auto === 1,
+    }),
+  );
+});
+
+// §3.7 power-rankings card. Immutable once week `week` has settled (standings
+// through a settled week never change), so the cache key never invalidates.
+cardsRoutes.get('/cards/rankings/:league/:week{[0-9]+\\.png}', async (c) => {
+  const leagueId = c.req.param('league');
+  const week = Number(c.req.param('week').replace(/\.png$/, ''));
+  if (!Number.isInteger(week) || week < 1 || week > 14) {
+    return jsonError(c, 404, 'RANKINGS_NOT_FOUND', 'rankings cards cover settled regular-season weeks 1-14');
+  }
+  const league = await c.env.DB.prepare('SELECT name FROM leagues WHERE id = ?')
+    .bind(leagueId)
+    .first<{ name: string }>();
+  if (!league) return jsonError(c, 404, 'LEAGUE_NOT_FOUND', 'no such league');
+  const unsettled = await c.env.DB.prepare(
+    'SELECT 1 AS x FROM matchups WHERE league_id = ? AND week <= ? AND settled_at IS NULL LIMIT 1',
+  )
+    .bind(leagueId, week)
+    .first();
+  if (unsettled) return jsonError(c, 404, 'RANKINGS_NOT_FOUND', 'that week has not fully settled yet');
+
+  const { regularSeasonTable } = await import('../cron/season');
+  const table = (await regularSeasonTable(c.env.DB, leagueId, week)).slice(0, 6);
+  if (table.length === 0) return jsonError(c, 404, 'RANKINGS_NOT_FOUND', 'no settled games yet');
+  const names = await c.env.DB.prepare(
+    `SELECT t.id, a.name, a.model FROM teams t JOIN agents a ON a.id = t.agent_id WHERE t.league_id = ?`,
+  )
+    .bind(leagueId)
+    .all<{ id: string; name: string; model: string }>();
+  const byId = new Map(names.results.map((n) => [n.id, n]));
+  return servePng(c.env, `rankings/${leagueId}/${week}.png`, () =>
+    rankingsCard({
+      leagueName: league.name,
+      week,
+      rows: table.map((r) => ({
+        rank: r.rank,
+        name: byId.get(r.teamId)?.name ?? '?',
+        model: byId.get(r.teamId)?.model ?? '?',
+        record: `${r.wins}-${r.losses}${r.ties ? `-${r.ties}` : ''}`,
+        pf: r.pointsFor.toFixed(2),
+      })),
     }),
   );
 });

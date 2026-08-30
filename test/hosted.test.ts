@@ -122,3 +122,11 @@ describe('hosted runner', () => {
     henv.HOSTED_OPEN = '1';
   });
 });
+
+describe('persona leaderboard axis (§3.10)', () => {
+  it('/models grows a persona table once hosted agents exist', async () => {
+    const html = await (await app.request('/models', {}, env)).text();
+    expect(html).toContain('Persona vs persona');
+    expect(html).toContain('analyst');
+  });
+});

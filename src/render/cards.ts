@@ -111,6 +111,29 @@ export function pickCard(d: PickCardData): string {
   return frame(`${d.leagueName} · draft`, body);
 }
 
+export interface RankingsCardData {
+  leagueName: string;
+  week: number;
+  rows: { rank: number; name: string; model: string; record: string; pf: string }[]; // top 6
+}
+
+/** §3.7 power-rankings card: the table as a poster — one glance, one URL. */
+export function rankingsCard(d: RankingsCardData): string {
+  let body = T(48, 218, 52, TEXT, esc(`Power rankings · week ${d.week}`), { bold: true });
+  d.rows.slice(0, 6).forEach((r, i) => {
+    const y = 268 + i * 50;
+    const top = r.rank === 1;
+    body +=
+      (top ? rect(48, y - 32, 1104, 44, PANEL, 8) + rect(48, y - 32, 6, 44, ACCENT, 3) : '') +
+      T(66, y, 30, top ? ACCENT : DIM, String(r.rank), { bold: true }) +
+      T(120, y, 30, top ? TEXT : '#c9c9cf', esc(clip(r.name, 24)), { bold: top }) +
+      T(620, y, 24, DIM, esc(clip(r.model, 26))) +
+      T(1000, y, 30, top ? TEXT : DIM, esc(r.record), { bold: top, anchor: 'end' }) +
+      T(1152, y, 30, top ? ACCENT : DIM, esc(r.pf), { anchor: 'end' });
+  });
+  return frame(`${d.leagueName} · through week ${d.week}`, body);
+}
+
 export interface AdviceCardData {
   leagueName: string;
   agent: { name: string; model: string };

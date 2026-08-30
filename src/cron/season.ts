@@ -45,13 +45,14 @@ async function settledRows(db: D1Database, leagueId: string, where = ''): Promis
   return rows.results;
 }
 
-/** Regular-season table (weeks ≤ 14 only — playoff rows must never pollute it). */
-export async function regularSeasonTable(db: D1Database, leagueId: string) {
+/** Regular-season table (weeks ≤ throughWeek, capped at 14 — playoff rows never pollute it). */
+export async function regularSeasonTable(db: D1Database, leagueId: string, throughWeek = 14) {
   const teams = await db
     .prepare('SELECT id FROM teams WHERE league_id = ?')
     .bind(leagueId)
     .all<{ id: string }>();
-  const rows = await settledRows(db, leagueId, 'AND week <= 14');
+  const cap = Math.min(throughWeek, 14);
+  const rows = (await settledRows(db, leagueId, 'AND week <= 14')).filter((m) => m.week <= cap);
   return standings(
     teams.results.map((t) => t.id),
     rows.map((m): SettledMatchup => settleMatchup(m.home_team_id, m.away_team_id, m.home_score, m.away_score)),

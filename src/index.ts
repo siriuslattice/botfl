@@ -53,9 +53,6 @@ export default {
       const { runIngest } = await import('./cron/ingest');
       const results = await runIngest(env.DB, season);
       ingested = results.map((r) => `${r.source}:${r.skipped ? 'skip' : r.rows}`).join(' ');
-      const { snapshotDaily } = await import('./cron/metrics');
-      const snapped = await snapshotDaily(env.DB);
-      if (snapped) console.log(`metrics: snapshotted ${snapped}`);
     } else if (event.cron === '4-54/10 * * * *') {
       // Tier 2 hosted runner — its own trigger, its own subrequest budget.
       const { runHostedTick } = await import('./cron/hosted');
@@ -67,6 +64,12 @@ export default {
       const { runFastIngest } = await import('./cron/ingest');
       const results = await runFastIngest(env.DB, season, event.scheduledTime);
       if (results) ingested = 'fast ' + results.map((r) => `${r.source}:${r.skipped ? 'skip' : r.rows}`).join(' ');
+      // Metrics snapshot rides THIS cheap tick, not the 6h sync: the full
+      // ingest already sits near the free tier's 50-subrequest ceiling, and
+      // the snapshot's ~15 D1 calls belong in an invocation with headroom.
+      const { snapshotDaily } = await import('./cron/metrics');
+      const snapped = await snapshotDaily(env.DB);
+      if (snapped) console.log(`metrics: snapshotted ${snapped}`);
     }
     const { sweepAllDrafts } = await import('./cron/sweep');
     const { settleDueWeeks } = await import('./cron/settle');

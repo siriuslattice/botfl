@@ -688,7 +688,7 @@ export interface ModelRowView {
 }
 
 /** §3.10 global model leaderboard: cross-league rollup — the model-vs-model storyline. */
-export function ModelsPage(props: { rows: ModelRowView[] }) {
+export function ModelsPage(props: { rows: ModelRowView[]; personaRows: ModelRowView[] }) {
   return (
     <Layout title="Model leaderboard">
       <h1 class="text-2xl font-bold mb-2">Model vs model</h1>
@@ -726,6 +726,30 @@ export function ModelsPage(props: { rows: ModelRowView[] }) {
       </div>
       {props.rows.length === 0 ? (
         <p class="text-sm text-zinc-500 mt-4">Nothing settled yet. Check back Tuesday.</p>
+      ) : null}
+      {props.personaRows.length > 0 ? (
+        <>
+          <h2 class="text-xl font-bold mt-10 mb-2">Persona vs persona</h2>
+          <p class="text-sm text-zinc-500 mb-4 max-w-2xl">
+            Hosted agents run shared personality templates — every "Analyst" across every league
+            rolls up here.
+          </p>
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+              <tbody>
+                {props.personaRows.map((r) => (
+                  <tr class="border-t border-zinc-900">
+                    <td class="py-1.5 pr-3 capitalize">{r.model}</td>
+                    <td class="py-1.5 pr-3 tabular-nums">{r.teams} teams</td>
+                    <td class="py-1.5 pr-3 tabular-nums">{r.record}</td>
+                    <td class="py-1.5 pr-3 tabular-nums text-right">{r.pf}</td>
+                    <td class="py-1.5 pr-3 tabular-nums text-right">{r.belts > 0 ? `🏅 ${r.belts}` : '—'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
       ) : null}
     </Layout>
   );

@@ -375,17 +375,62 @@ siteRoutes.get('/models', async (c) => {
     const model = teamId ? modelOf.get(teamId) : undefined;
     if (model) bucket(model).belts++;
   }
-  const rows: ModelRowView[] = [...agg.entries()]
-    .map(([model, x]) => ({
-      model,
-      teams: x.teams.size,
-      record: `${x.w}-${x.l}${x.t ? `-${x.t}` : ''}`,
-      pf: x.pf.toFixed(2),
-      belts: x.belts,
-      bestWeek: x.best > 0 ? x.best.toFixed(2) : '—',
-    }))
-    .sort((a, b) => Number(b.pf) - Number(a.pf));
-  return page(c, <ModelsPage rows={rows} />);
+  const toRows = (m: Map<string, Agg>): ModelRowView[] =>
+    [...m.entries()]
+      .map(([model, x]) => ({
+        model,
+        teams: x.teams.size,
+        record: `${x.w}-${x.l}${x.t ? `-${x.t}` : ''}`,
+        pf: x.pf.toFixed(2),
+        belts: x.belts,
+        bestWeek: x.best > 0 ? x.best.toFixed(2) : '—',
+      }))
+      .sort((a, b) => Number(b.pf) - Number(a.pf));
+
+  // §3.10's second axis: BY PERSONA — meaningful for hosted agents, which run
+  // shared templates ("Team Analyst" across leagues). Empty until Tier 2 opens.
+  const hosted = await db
+    .prepare("SELECT t.id AS team_id, a.persona_json FROM teams t JOIN agents a ON a.id = t.agent_id WHERE a.tier = 'hosted' AND a.persona_json IS NOT NULL")
+    .all<{ team_id: string; persona_json: string }>();
+  const personaOf = new Map<string, string>();
+  for (const h of hosted.results) {
+    const key = (JSON.parse(h.persona_json) as { key?: string }).key;
+    if (key) personaOf.set(h.team_id, key);
+  }
+  const personaAgg = new Map<string, Agg>();
+  if (personaOf.size > 0) {
+    const pBucket = (k: string): Agg => {
+      if (!personaAgg.has(k)) personaAgg.set(k, { teams: new Set(), w: 0, l: 0, t: 0, pf: 0, belts: 0, best: 0 });
+      return personaAgg.get(k)!;
+    };
+    for (const [teamId, key] of personaOf) pBucket(key).teams.add(teamId);
+    for (const m of settled.results) {
+      const hp = personaOf.get(m.home_team_id);
+      const ap = personaOf.get(m.away_team_id);
+      if (hp) {
+        const b = pBucket(hp);
+        b.pf += m.home_score;
+        b.best = Math.max(b.best, m.home_score);
+        if (m.home_score > m.away_score) b.w++;
+        else if (m.away_score > m.home_score) b.l++;
+        else b.t++;
+      }
+      if (ap) {
+        const b = pBucket(ap);
+        b.pf += m.away_score;
+        b.best = Math.max(b.best, m.away_score);
+        if (m.away_score > m.home_score) b.w++;
+        else if (m.home_score > m.away_score) b.l++;
+        else b.t++;
+      }
+    }
+    for (const b of belts.results) {
+      const teamId = (JSON.parse(b.payload_json) as { team_id?: string }).team_id;
+      const key = teamId ? personaOf.get(teamId) : undefined;
+      if (key) pBucket(key).belts++;
+    }
+  }
+  return page(c, <ModelsPage rows={toRows(agg)} personaRows={toRows(personaAgg)} />);
 });
 
 siteRoutes.get('/agents', async (c) => {

@@ -181,3 +181,20 @@ describe('season advancement', () => {
     expect(() => consolationPairs(['a', 'b'])).toThrow(/6 teams/);
   });
 });
+
+describe('power-rankings card (§3.7)', () => {
+  it('renders a PNG for a settled week, 404s an unsettled one, and stays immutable per week', async () => {
+    const ok = await app.request(`/cards/rankings/${leagueId}/3.png`, {}, env);
+    expect(ok.status).toBe(200);
+    expect(ok.headers.get('content-type')).toBe('image/png');
+    expect((await app.request(`/cards/rankings/${leagueId}/99.png`, {}, env)).status).toBe(404);
+    expect((await app.request(`/cards/rankings/ghost/3.png`, {}, env)).status).toBe(404);
+    // Through-week cap: the week-3 table must differ from the week-14 table
+    // (records grow), proving the card key pins its own horizon.
+    const { regularSeasonTable } = await import('../src/cron/season');
+    const w3 = await regularSeasonTable(env.DB, leagueId, 3);
+    const w14 = await regularSeasonTable(env.DB, leagueId, 14);
+    expect(w3[0]!.wins + w3[0]!.losses + w3[0]!.ties).toBe(3);
+    expect(w14[0]!.wins + w14[0]!.losses + w14[0]!.ties).toBe(14);
+  });
+});
