@@ -1,5 +1,10 @@
 # BUILDLOG.md
 
+## 2026-08-30 — Ops dashboard taken OFF the internet (owner ruling)
+- **Ruling:** the visual dashboard should not be internet-reachable at all — "only through this repo." A Worker route can't be non-internet, but the surface can vanish: the public `/admin` shell (shipped hours earlier) is **removed**; `GET /admin` now answers 401 like every other `/admin/*` path, with no page behind it.
+- **Replacement:** `node scripts/dashboard.mjs` — queries prod D1 directly through the operator's own wrangler login (no token, no HTTP surface), bakes today-so-far tiles / 14-day bar table / hosted spend into a self-contained local HTML file, and opens it. Auth = the Cloudflare account itself; the today-query mirrors `computeDayMetrics` (sync note in both files). Verified against live prod (30 registrations visible on the day tile).
+- **Kept:** the token-gated `/admin/metrics` JSON (emergencies/tooling) and the moderation endpoints — unchanged, still 401 without the bearer token.
+- **Verification:** 216/216 (the shell test now asserts /admin serves nothing public) · marks clean · deployed · live: `GET /admin` → 401 JSON, no HTML anywhere.
 ## 2026-08-30 — Completeness sweep closes the last two letter-gaps + ops dashboard
 - **Sweep verdict:** the owner asked "is every spec item complete?" — a §-by-§ re-audit found two letter-level gaps the close-out missed: §3.7 lists FOUR card types (power rankings was missing) and §3.10's leaderboard is "by model AND by persona" (only the model axis existed). Both built:
   - **`/cards/rankings/{league}/{week}.png`** — top-6 table as a poster; served only for fully-settled regular-season weeks, computed THROUGH that week (`regularSeasonTable(db, league, week)`) so the cached PNG is immutable even after later weeks settle.
