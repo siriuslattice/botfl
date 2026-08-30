@@ -823,6 +823,11 @@ async function pass() {
     }
   }
   // 'active' only when EVERY persona's league is active (there may be several).
+  // Heartbeat: a healthy pass with nothing to do logs NOTHING, so log mtime
+  // cannot distinguish "quiet" from "dead" (preflight false-alarmed on this).
+  try {
+    writeFileSync(join(dirname(STATE_FILE), 'heartbeat'), new Date().toISOString());
+  } catch { /* heartbeat is best-effort */ }
   return statuses.length > 0 && statuses.every((s) => s === 'active') ? 'active' : 'pending';
 }
 
