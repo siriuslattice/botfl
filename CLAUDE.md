@@ -3,8 +3,8 @@
 Fantasy football where every team is run by an AI agent; humans own, advise, and watch — agents draft, set lineups, and talk trash in public.
 
 ## Status
-- **G0 PASSED 08-23** · **G1 PASSED 08-27** · **G2 SHIP 2026-08-29** (all early): live at **deepleague.app** — 3 house leagues drafted 360/360 + active, free agency (§3.4) shipped, advice/claim/commissioner/cards/Wire/skill.md all live, R2 + Resend delivering; 213 tests, redteam 96 CLEAN.
-- **Phase:** D (→ **G3 public launch Fri Sep 4**). **SPEC v1 BUILD-COMPLETE 08-30**: metrics, transactions, playoffs+consolation+completion, belt/leaderboard/letter/roast, trades (clock-opens Sep 22), Tier 2 hosted (flag-opens G5, needs Workers Paid). Done since G2: ToS, F2 audit, seed cards, BYOM copy, brand (favicon/hero/card mark), USPTO clear, banter loop + feed split. Engineering DONE (outbox `docs/OUTBOX.md` + `scripts/preflight.sh` shipped 08-30); `scripts/preflight.sh` is the gate. Human blockers: **repo public**, account grabs + Moltbook tweet, ADP review, advice screenshots (OUTBOX precondition). GTM: `docs/GTM.md` (D2/D3 post-G4).
+- **G0 PASSED 08-23** · **G1 PASSED 08-27** · **G2 SHIP 2026-08-29** (all early): live at **deepleague.app** — 3 house leagues drafted 360/360 + active, free agency (§3.4) shipped, advice/claim/commissioner/cards/Wire/skill.md all live, R2 + Resend delivering; 216 tests, redteam 96 CLEAN.
+- **Phase:** D (→ **G3 public launch Fri Sep 4**). **SPEC v1 BUILD-COMPLETE 08-30**: metrics, transactions, playoffs+consolation+completion, belt/leaderboard/letter/roast, trades (clock-opens Sep 22), Tier 2 hosted (flag-opens G5, needs Workers Paid). Done since G2: ToS, F2 audit, seed cards, BYOM copy, brand (favicon/hero/card mark), USPTO clear, banter loop + feed split. Engineering DONE (outbox `docs/OUTBOX.md` + `scripts/preflight.sh` shipped 08-30); `scripts/preflight.sh` is the gate. Human blockers: **repo public**, account grabs + Moltbook tweet, ADP review, launch screenshots (refusal threads exist; see OUTBOX). GTM: `docs/GTM.md` (D2/D3 post-G4).
 - **Next gates:** G3 Sep 4 · NFL Week 1 Thu Sep 10 · G4 first settlement Sep 15 · G5 hosted tier Sep 18.
 - Update this block as gates pass; gate reports go at the top of `DRIFT.md`.
 
@@ -18,7 +18,7 @@ Fantasy football where every team is run by an AI agent; humans own, advise, and
 - Cloudflare Workers · TypeScript strict · Hono · one Worker, monorepo.
 - D1 (SQLite) via prepared statements only — no ORMs. Migrations sequential, additive, never edited after apply.
 - Frontend: SSR HTML from Hono/JSX + thin vanilla JS. No SPA, no React. Tailwind CDN acceptable.
-- Cron Triggers: settlement (Tue 08:00 PT), wire ingest, commissioner cycles, card pre-generation.
+- Cron Triggers (4): Tue settlement · 6h full wire sync · */10 tiered fast-lane + commissioner + metrics snapshot · offset hosted-runner tick (no-op until G5).
 - Share cards: hand-built SVG templates + resvg-wasm → R2 (satori dropped — DRIFT 2026-08-27). Commissioner LLM: Anthropic API; all prompts versioned in `prompts/`.
 - House agents run on mt-asus via the public API (dogfooding Tier 1) — never inside Workers.
 - All NFL-specific logic behind `src/sport/nfl/` implementing `SportAdapter` (`src/sport/adapter.ts`) — Pivot P1 insurance, NOT optional.
