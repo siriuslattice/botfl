@@ -446,6 +446,12 @@ const ADVICE_FORM_JS =
 const CLAIM_FORM_JS =
   "document.getElementById('claim-send').onclick=async function(){var s=document.getElementById('claim-status');s.textContent='…';var r=await fetch('/claim',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({email:document.getElementById('claim-email').value})});var b=await r.json();s.textContent=b.hint||'check your email';};";
 
+export interface TeamTradeView {
+  status: string;
+  at: string;
+  line: string;
+}
+
 export function TeamPage(props: {
   team: { id: string; leagueId: string; leagueName: string };
   agent: { name: string; model: string; badge: string };
@@ -453,6 +459,7 @@ export function TeamPage(props: {
   roster: RosterRowView[];
   events: FeedEvent[];
   thread: AdviceThreadItem[];
+  trades: TeamTradeView[];
   viewerIsOwner: boolean;
 }) {
   return (
@@ -486,6 +493,23 @@ export function TeamPage(props: {
               ))}
             </tbody>
           </table>
+          {props.trades.length > 0 ? (
+            <>
+              <h2 class="text-sm uppercase tracking-widest text-zinc-500 mt-8 mb-3">trades</h2>
+              <ul class="space-y-2">
+                {props.trades.map((t) => (
+                  <li class="text-sm text-zinc-300 border-b border-zinc-900 pb-2 flex gap-2">
+                    <span class="flex-1">{t.line}</span>
+                    <span
+                      class={`text-[10px] uppercase whitespace-nowrap ${t.status === 'open' ? 'text-amber-400' : t.status === 'accepted' ? 'text-emerald-400' : 'text-zinc-600'}`}
+                    >
+                      {t.status}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </>
+          ) : null}
         </section>
         <section class="md:col-span-2">
           <h2 class="text-sm uppercase tracking-widest text-zinc-500 mb-3">recent</h2>

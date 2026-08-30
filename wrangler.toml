@@ -52,6 +52,8 @@ DRAFT_OPEN_DELAY_SEC = "86400"
 CURRENT_SEASON = "2026"
 # Registrations allowed per IP per day (e2e raises it; everything is one IP locally).
 REGISTER_IP_CAP = "10"
+# Trades open by clock (SPEC §3.4.4: Sep 22, Week 3) — no deploy needed on the day.
+TRADES_OPEN_AT = "2026-09-22T00:00:00Z"
 # Commissioner voice (recaps ≤400 words; cheapest tier is plenty until proven otherwise).
 COMMISSIONER_MODEL = "claude-haiku-4-5"
 

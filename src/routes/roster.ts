@@ -34,6 +34,43 @@ export interface SwapArgs {
  * legitimately executed is how a 13-man roster happened on 2026-08-28).
  * Net roster change occurs iff both legs succeeded.
  */
+/** Earliest unsettled week for a league, or null when the season is done. */
+export async function earliestUnsettledWeek(db: D1Database, leagueId: string): Promise<number | null> {
+  const row = await db
+    .prepare('SELECT MIN(week) AS w FROM matchups WHERE league_id = ? AND settled_at IS NULL')
+    .bind(leagueId)
+    .first<{ w: number | null }>();
+  return row?.w ?? null;
+}
+
+/**
+ * Players on this team who occupy a lineup slot of `week` whose real game has
+ * kicked off — undroppable and untradeable until settlement (lock ruling:
+ * per-player kickoff locks are PRIMARY). Shared by FA and trades.
+ */
+export async function kickoffLockedSet(
+  db: D1Database,
+  sport: string,
+  season: number,
+  week: number | null,
+  teamId: string,
+): Promise<Set<string>> {
+  const locked = new Set<string>();
+  if (week === null) return locked;
+  const rows = await db
+    .prepare(
+      `SELECT lu.player_id FROM lineups lu
+       JOIN rosters r ON r.team_id = lu.team_id AND r.player_id = lu.player_id
+       JOIN players p ON p.id = lu.player_id
+       JOIN games g ON g.sport = ? AND g.season = ? AND g.week = ? AND (g.home = p.team OR g.away = p.team)
+       WHERE lu.team_id = ? AND lu.week = ? AND lu.player_id IS NOT NULL AND g.kickoff_at <= ?`,
+    )
+    .bind(sport, season, week, teamId, week, nowIso())
+    .all<{ player_id: string }>();
+  for (const r of rows.results) locked.add(r.player_id);
+  return locked;
+}
+
 export async function executeSwap(
   db: D1Database,
   a: SwapArgs,
@@ -170,25 +207,8 @@ rosterRoutes.post('/teams/:id/moves', agentAuth(), idempotency, async (c) => {
     .first<{ x: number }>();
 
   // Locks: players occupying a kicked-off slot of the earliest unsettled week.
-  const currentWeek = await db
-    .prepare('SELECT MIN(week) AS w FROM matchups WHERE league_id = ? AND settled_at IS NULL')
-    .bind(team.leagueId)
-    .first<{ w: number | null }>();
-  const week = currentWeek?.w ?? null;
-  const locked = new Set<string>();
-  if (week !== null) {
-    const rows = await db
-      .prepare(
-        `SELECT lu.player_id FROM lineups lu
-         JOIN rosters r ON r.team_id = lu.team_id AND r.player_id = lu.player_id
-         JOIN players p ON p.id = lu.player_id
-         JOIN games g ON g.sport = ? AND g.season = ? AND g.week = ? AND (g.home = p.team OR g.away = p.team)
-         WHERE lu.team_id = ? AND lu.week = ? AND lu.player_id IS NOT NULL AND g.kickoff_at <= ?`,
-      )
-      .bind(team.sport, team.season, week, team.teamId, week, nowIso())
-      .all<{ player_id: string }>();
-    for (const r of rows.results) locked.add(r.player_id);
-  }
+  const week = await earliestUnsettledWeek(db, team.leagueId);
+  const locked = await kickoffLockedSet(db, team.sport, team.season, week, team.teamId);
 
   const adapter = getSportAdapter(team.sport);
   const verdict = validateMove({

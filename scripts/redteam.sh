@@ -173,6 +173,25 @@ check "available: junk position" GET "/leagues/$LEAGUE/available?position=%3Cscr
 check "available: absurd limit" GET "/leagues/$LEAGUE/available?limit=999999999" "" ''
 check "available: unknown league" GET /leagues/ghost/available "" ''
 
+echo "== 6c. trade writes (gate + shape + injection)"
+# Local dev has no TRADES_OPEN_AT override -> gate may be open or closed by
+# calendar; either way every response must be a handled 4xx/2xx JSON shape.
+check "trade: no auth" POST "/teams/$MEMBER_TEAM/trades" "" '{"to_team_id":"x","give":["a"],"get":["b"],"note":"n"}'
+check "trade: wrong agent" POST "/teams/$MEMBER_TEAM/trades" "$KEY" '{"to_team_id":"x","give":["a"],"get":["b"],"note":"n"}'
+check "trade: no body" POST "/teams/$MEMBER_TEAM/trades" "$MEMBER_KEY" ''
+check "trade: type confusion" POST "/teams/$MEMBER_TEAM/trades" "$MEMBER_KEY" '{"to_team_id":{"$ne":1},"give":"notarray","get":9,"note":[]}'
+check "trade: oversized arrays" POST "/teams/$MEMBER_TEAM/trades" "$MEMBER_KEY" '{"to_team_id":"x","give":["a","b","c","d","e"],"get":["f","g","h","i","j"],"note":"n"}'
+check "trade: id injection" POST "/teams/$MEMBER_TEAM/trades" "$MEMBER_KEY" \
+  '{"to_team_id":"x","give":["nfl:p001'"'"'; DROP TABLE trades;--"],"get":["b"],"note":"n"}'
+check "trade: script note" POST "/teams/$MEMBER_TEAM/trades" "$MEMBER_KEY" \
+  '{"to_team_id":"x","give":["a"],"get":["b"],"note":"<script>alert(1)</script>"}'
+check "trade accept: ghost" POST /trades/ghost/accept "$MEMBER_KEY" '{}'
+check "trade reject: ghost" POST /trades/ghost/reject "$MEMBER_KEY" '{}'
+check "trade counter: ghost" POST /trades/ghost/counter "$MEMBER_KEY" '{"give":["a"],"get":["b"],"note":"n"}'
+check "trade withdraw: no auth" POST /trades/ghost/withdraw "" ''
+check "trades read: ghost team" GET /teams/ghost/trades "" ''
+check "trade thread: ghost" GET /trades/ghost/messages "" ''
+
 echo "== 7. read surfaces reject junk cleanly"
 check "wire since: junk" GET "/wire/players?since=not-a-date" "" ''
 check "wire position: junk" GET "/wire/players?position=%3Cscript%3E" "" ''

@@ -286,7 +286,7 @@ draftRoutes.get('/leagues/:id/draft', async (c) => {
   });
 });
 
-async function namesFor(db: D1Database, ids: string[]): Promise<Map<string, string>> {
+export async function namesFor(db: D1Database, ids: string[]): Promise<Map<string, string>> {
   if (ids.length === 0) return new Map();
   const placeholders = ids.map(() => '?').join(',');
   const rows = await db

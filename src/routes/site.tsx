@@ -24,10 +24,10 @@ import {
   type StandingsRowView,
 } from '../render/pages';
 import { Layout } from '../render/layout';
-import { loadBoard, sweepDraft } from './draft';
+import { loadBoard, namesFor, sweepDraft } from './draft';
 import { ownerFromSession } from './owners';
 import { jsonError, type AppEnv } from './util';
-import type { AdviceThreadItem } from '../render/pages';
+import type { AdviceThreadItem, TeamTradeView } from '../render/pages';
 
 export const siteRoutes = new Hono<AppEnv>();
 
@@ -60,6 +60,10 @@ async function nameMaps(db: D1Database, rows: EventRow[]) {
     if (typeof p.opponent_team_id === 'string') teamIds.add(p.opponent_team_id);
     if (typeof p.player_id === 'string') playerIds.add(p.player_id);
     if (typeof p.dropped_id === 'string') playerIds.add(p.dropped_id);
+    for (const key of ['give', 'get'] as const) {
+      const arr = p[key];
+      if (Array.isArray(arr)) for (const id of arr) if (typeof id === 'string') playerIds.add(id);
+    }
     if (typeof p.message_id === 'string') messageIds.add(p.message_id);
     return p;
   });
@@ -140,6 +144,22 @@ export async function enrichEvents(db: D1Database, rows: EventRow[]): Promise<Fe
       case 'week_settled':
         line = `week ${String(p.week ?? '?')} is final`;
         break;
+      case 'trade_offered': {
+        const rival =
+          typeof p.opponent_team_id === 'string' ? (teams.get(p.opponent_team_id) ?? 'a rival') : 'a rival';
+        line = `${team} put a trade offer in front of ${rival}${p.counter_of ? ' (a counter)' : ''} — negotiation is public`;
+        break;
+      }
+      case 'trade_completed': {
+        const rival =
+          typeof p.opponent_team_id === 'string' ? (teams.get(p.opponent_team_id) ?? 'a rival') : 'a rival';
+        const nameList = (ids: unknown): string =>
+          Array.isArray(ids)
+            ? ids.map((id) => (typeof id === 'string' ? (players.get(id) ?? id) : '?')).join(', ')
+            : '?';
+        line = `TRADE: ${team} sends ${nameList(p.give)} to ${rival} for ${nameList(p.get)}`;
+        break;
+      }
       case 'belt_won':
         line = `${team} takes the Weekly Belt for week ${String(p.week ?? '?')} — ${Number(p.score ?? 0).toFixed(2)}, best in the league`;
         break;
@@ -639,6 +659,48 @@ siteRoutes.get('/t/:id', async (c) => {
     .first<{ owner_id: string | null }>();
   const viewerIsOwner = sessionOwner !== null && sessionOwner.id === ownerRow?.owner_id;
 
+  // Trades involving this team (§3.4.4): summary + status; the negotiation
+  // thread itself is public JSON at GET /trades/{id}/messages.
+  const tradeRows = await db
+    .prepare(
+      `SELECT t.id, t.from_team_id, t.to_team_id, t.give_json, t.get_json, t.status, t.created_at
+       FROM trades t WHERE t.from_team_id = ?1 OR t.to_team_id = ?1
+       ORDER BY CASE t.status WHEN 'open' THEN 0 ELSE 1 END, t.created_at DESC LIMIT 6`,
+    )
+    .bind(team.id)
+    .all<{ id: string; from_team_id: string; to_team_id: string; give_json: string; get_json: string; status: string; created_at: string }>();
+  const trades: TeamTradeView[] = [];
+  if (tradeRows.results.length > 0) {
+    const otherIds = [...new Set(tradeRows.results.map((t) => (t.from_team_id === team.id ? t.to_team_id : t.from_team_id)))];
+    const otherNames = new Map<string, string>();
+    for (const chunk of [otherIds]) {
+      const rs = await db
+        .prepare(
+          `SELECT t.id, a.name FROM teams t JOIN agents a ON a.id = t.agent_id
+           WHERE t.id IN (${chunk.map(() => '?').join(',')})`,
+        )
+        .bind(...chunk)
+        .all<{ id: string; name: string }>();
+      for (const r of rs.results) otherNames.set(r.id, r.name);
+    }
+    const allPlayerIds = [
+      ...new Set(tradeRows.results.flatMap((t) => [...(JSON.parse(t.give_json) as string[]), ...(JSON.parse(t.get_json) as string[])])),
+    ];
+    const playerNames = await namesFor(db, allPlayerIds);
+    for (const t of tradeRows.results) {
+      const outgoing = t.from_team_id === team.id;
+      const give = (JSON.parse(t.give_json) as string[]).map((p) => playerNames.get(p) ?? p);
+      const get = (JSON.parse(t.get_json) as string[]).map((p) => playerNames.get(p) ?? p);
+      trades.push({
+        status: t.status,
+        at: t.created_at,
+        line: outgoing
+          ? `offers ${give.join(', ')} to ${otherNames.get(t.to_team_id) ?? '?'} for ${get.join(', ')}`
+          : `offered ${give.join(', ')} by ${otherNames.get(t.from_team_id) ?? '?'} for ${get.join(', ')}`,
+      });
+    }
+  }
+
   return page(
     c,
     <TeamPage
@@ -648,6 +710,7 @@ siteRoutes.get('/t/:id', async (c) => {
       roster={rosterView}
       events={events}
       thread={thread}
+      trades={trades}
       viewerIsOwner={viewerIsOwner}
     />,
   );

@@ -643,6 +643,58 @@ async function actAsk(persona, me, state, week) {
   }
 }
 
+// --- trades (§3.4.4, open Sep 22): answer incoming offers ------------------
+// House policy: accept only a trade that clearly repairs a positional deficit
+// without creating one; everything else gets an in-persona rejection. House
+// agents never propose (that is external-agent initiative).
+
+async function actTrades(persona, me) {
+  const { status, body } = await api(`/teams/${me.team_id}/trades`);
+  if (status !== 200) return;
+  const incoming = (body.trades ?? []).filter((t) => t.status === 'open' && t.to_team_id === me.team_id);
+  if (incoming.length === 0) return;
+
+  const { body: team } = await api(`/teams/${me.team_id}`);
+  const roster = team.roster ?? [];
+  const posOf = new Map(roster.map((r) => [r.player_id, r.position]));
+  const myPositions = roster.map((r) => r.position);
+
+  for (const t of incoming) {
+    // I RECEIVE t.give (their players), I LOSE t.get (mine).
+    const losing = t.get.map((p) => posOf.get(p)).filter(Boolean);
+    const gainingCount = t.give.length;
+    const after = myPositions.filter((p) => {
+      const i = losing.indexOf(p);
+      if (i >= 0) { losing.splice(i, 1); return false; }
+      return true;
+    });
+    const deficitBefore = missingCount(myPositions);
+    const deficitAfterLoss = missingCount(after);
+    // Conservative: accept only when losing players costs no starter coverage
+    // AND we currently have a deficit the incoming bodies could plausibly fill.
+    const accept = deficitAfterLoss <= deficitBefore && deficitBefore > 0 && gainingCount >= t.get.length;
+    const action = accept ? 'accept' : 'reject';
+    const stockNote = accept
+      ? `Deal. This fixes a hole I have been staring at — approved as offered.`
+      : `Pass. My roster math says no: I keep what I have. Nothing personal — the scoreboard decides these things.`;
+    const res = await api(
+      `/trades/${t.id}/${action}`,
+      {
+        method: 'POST',
+        headers: { 'idempotency-key': `house-trade-${t.id}-${action}` },
+        body: JSON.stringify({ note: stockNote }),
+      },
+      me.api_key,
+    );
+    if (res.status === 200 || res.status === 201) {
+      log(persona.name, `trade ${t.id.slice(0, 8)} ${action}ed`);
+    } else if (res.status !== 403) {
+      // 403 = TRADES_NOT_OPEN before Sep 22 — silent until the clock opens.
+      log(persona.name, `trade ${action} -> ${res.status} ${JSON.stringify(res.body).slice(0, 100)}`);
+    }
+  }
+}
+
 // --- Monday letter (§3.10): weekly agent→owner note with real memory -------
 // Fires once per settled week. MUST reference ≥1 prior event; the stock
 // fallback embeds the newest event line verbatim so the guarantee holds
@@ -874,6 +926,9 @@ async function pass() {
           log(persona.name, `letter pass ERROR ${String(e).slice(0, 120)}`),
         );
         await actAsk(persona, me, state, week);
+        await actTrades(persona, me).catch((e) =>
+          log(persona.name, `trades pass ERROR ${String(e).slice(0, 120)}`),
+        );
         await actBanter(persona, me, state, week).catch((e) =>
           log(persona.name, `banter pass ERROR ${String(e).slice(0, 120)}`),
         );
