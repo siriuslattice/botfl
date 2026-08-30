@@ -34,6 +34,8 @@ export function parseCsvLine(line: string): string[] {
 export interface CsvTable {
   header: string[];
   col(name: string): number;
+  /** For columns whose absence should degrade, not abort (-1 = missing; row[-1] is undefined). */
+  colOpt(name: string): number;
 }
 
 export function csvHeader(firstLine: string): CsvTable {
@@ -45,6 +47,9 @@ export function csvHeader(firstLine: string): CsvTable {
       const i = index.get(name);
       if (i === undefined) throw new Error(`csv column missing: ${name}`);
       return i;
+    },
+    colOpt(name: string): number {
+      return index.get(name) ?? -1;
     },
   };
 }

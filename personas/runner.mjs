@@ -42,11 +42,36 @@ const MODELS = {
   glm: { id: process.env.MODEL_GLM ?? 'z-ai/glm-5.3-flash', provider: 'openrouter' },
 };
 
-// §5 Phase D: backfill personas exist to seat into PUBLIC leagues at T-24h so
-// a half-full stranger league can still draft — NOT to inflate the house
-// leagues. They stay dormant until BACKFILL=1, which keeps the live house
-// population at 30 (spec §3.1 allows 20–36; activating all six lands on 36).
+// §5 Phase D: backfill personas exist to seat into PUBLIC leagues shortly
+// before their draft opens so a half-full stranger league still drafts — NOT
+// to inflate the house leagues (population stays 30; all six active = 36,
+// the §3.1 ceiling). The trigger is automatic: a forming league inside
+// BACKFILL_LEAD_SEC of its draft_opens_at (or past it and stuck) with empty
+// seats activates dormant personas, one per seat. The spec's "T-24h" assumed
+// the 48h join window; with our 24h window that literal reading would let
+// house agents take seats at formation, ahead of strangers — a short lead
+// keeps humans first (deviation logged in DRIFT). BACKFILL=1 still forces
+// activation manually.
 const BACKFILL = process.env.BACKFILL === '1';
+const BACKFILL_LEAD_SEC = Number(process.env.BACKFILL_LEAD_SEC ?? '7200');
+
+/** Seats to fill right now: forming leagues near/past draft time, not full. */
+async function backfillSeatsNeeded() {
+  if (BACKFILL) return Infinity;
+  const { status, body } = await api('/leagues');
+  if (status !== 200) return 0;
+  const size = body.league_size ?? 10;
+  const now = Date.now();
+  return (body.leagues ?? [])
+    .filter(
+      (l) =>
+        l.status === 'forming' &&
+        l.teams < size &&
+        l.draft_opens_at &&
+        Date.parse(l.draft_opens_at) - now <= BACKFILL_LEAD_SEC * 1000,
+    )
+    .reduce((sum, l) => sum + (size - l.teams), 0);
+}
 
 // Reasoning models bill their thinking against max_tokens and return EMPTY
 // content when they hit the ceiling mid-thought (gpt-5-mini spent 256 of 300
@@ -67,8 +92,7 @@ const BANTER_TEMPLATE = loadPrompt('persona-banter.md');
 function loadPersonas() {
   return readdirSync(PERSONA_DIR)
     .filter((f) => f.endsWith('.json'))
-    .map((f) => JSON.parse(readFileSync(join(PERSONA_DIR, f), 'utf8')))
-    .filter((p) => BACKFILL || !p.backfill);
+    .map((f) => JSON.parse(readFileSync(join(PERSONA_DIR, f), 'utf8')));
 }
 
 function loadState() {
@@ -766,8 +790,18 @@ async function pass() {
   const personas = loadPersonas();
   const state = loadState();
   const statuses = [];
+  // Phase D backfill: dormant bf-* personas wake only while under-filled
+  // leagues are near their draft time; one persona per empty seat. An
+  // activated persona (has a team) plays out its season like any other.
+  let seats = null; // resolved lazily — most passes have no dormant personas to place
   for (const persona of personas) {
     try {
+      if (persona.backfill && !state.personas[persona.name]?.team_id) {
+        seats ??= await backfillSeatsNeeded();
+        if (seats <= 0) continue; // stay dormant: not even registered yet
+        seats--;
+        log(persona.name, `backfill activation — ${seats} seat(s) remain after me`);
+      }
       const me = await ensureJoined(state, persona, await ensureRegistered(state, persona));
       // Advice first: the public response must precede any lineup action (§3.5).
       await actOwner(persona, me, state).catch((e) =>

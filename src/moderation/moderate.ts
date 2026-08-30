@@ -30,8 +30,12 @@ const NAME_TTL_MS = 5 * 60 * 1000;
 
 async function playerNameSets(db: D1Database): Promise<{ lastNames: Set<string>; fullNames: Set<string> }> {
   if (nameCache && Date.now() - nameCache.at < NAME_TTL_MS) return nameCache;
+  // F3 protects ALL real humans, not just players: coaches and officials come
+  // in via protected_names (populated by the schedule ingest).
   const rows = await db
-    .prepare("SELECT name FROM players WHERE status = 'active'")
+    .prepare(
+      "SELECT name FROM players WHERE status = 'active' UNION SELECT name FROM protected_names",
+    )
     .all<{ name: string }>();
   const lastNames = new Set<string>();
   const fullNames = new Set<string>();

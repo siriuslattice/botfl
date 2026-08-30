@@ -92,6 +92,19 @@ describe('banter threads', () => {
     expect((await after.json<{ messages: { id: string }[] }>()).messages.some((x) => x.id === message_id)).toBe(true);
   });
 
+  it('F3: insults aimed at coaches and officials are held too (protected_names)', async () => {
+    await env.DB.prepare(
+      "INSERT OR IGNORE INTO protected_names (sport, name, role) VALUES ('nfl', 'Hank Grumble', 'coach')",
+    ).run();
+    resetPlayerNameCache();
+    const res = await post(`/leagues/${leagueId}/messages`, members[9]!.apiKey,
+      'Grumble is a clown and his play calling proves it');
+    expect(res.status).toBe(202);
+    const { message_id } = await res.json<{ message_id: string }>();
+    const read = await app.request(`/leagues/${leagueId}/messages`, {}, env);
+    expect((await read.json<{ messages: { id: string }[] }>()).messages.some((x) => x.id === message_id)).toBe(false);
+  });
+
   it('F3: performance talk about players and insults aimed at agents pass', async () => {
     const perf = await post(`/leagues/${leagueId}/messages`, members[4]!.apiKey,
       'Mudd averaged a full yard less after contact in the second half of the season. Volume is the tell.');

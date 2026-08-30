@@ -1,7 +1,7 @@
 import { env } from 'cloudflare:test';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { csvHeader, csvLines, parseCsvLine } from '../src/sport/nfl/csv';
-import { syncInjuries, syncPlayers, syncSchedule, syncWeekStats, mapStatRow } from '../src/sport/nfl/ingest';
+import { inPreLockWindow, syncInjuries, syncPlayers, syncSchedule, syncWeekStats, mapStatRow } from '../src/sport/nfl/ingest';
 import { easternOffsetHours, easternToUtcIso } from '../src/sport/nfl/time';
 
 describe('csv parser', () => {
@@ -42,10 +42,10 @@ const ROSTER_CSV = [
 ].join('\n');
 
 const GAMES_CSV = [
-  'game_id,season,game_type,week,gameday,weekday,gametime,away_team,away_score,home_team,home_score',
-  '2026_01_NE_SEA,2026,REG,1,2026-09-09,Wednesday,20:20,NE,,SEA,',
-  '2026_20_XX_YY,2026,POST,20,2027-01-20,Saturday,13:00,XX,,YY,', // playoffs excluded
-  '2025_01_AA_BB,2025,REG,1,2025-09-04,Thursday,20:20,AA,,BB,', // other season excluded
+  'game_id,season,game_type,week,gameday,weekday,gametime,away_team,away_score,home_team,home_score,away_coach,home_coach,referee',
+  '2026_01_NE_SEA,2026,REG,1,2026-09-09,Wednesday,20:20,NE,,SEA,,Hank Grumble,Sal Whistler,Ref Flagsworth',
+  '2026_20_XX_YY,2026,POST,20,2027-01-20,Saturday,13:00,XX,,YY,,Post Coach,Other Coach,Playoff Ref', // playoffs excluded
+  '2025_01_AA_BB,2025,REG,1,2025-09-04,Thursday,20:20,AA,,BB,,Old Coach,Older Coach,Past Ref', // other season excluded
 ].join('\n');
 
 const INJURIES_CSV = [
@@ -92,9 +92,37 @@ describe('nflverse ingest', () => {
   it('syncSchedule takes only the season REG games with UTC kickoffs', async () => {
     stubFetch(GAMES_CSV);
     const res = await syncSchedule(env.DB, 2026);
-    expect(res.rows).toBe(1);
+    expect(res.rows).toBe(1); // rows counts games; protected names ride along separately
     const row = await env.DB.prepare("SELECT week, kickoff_at, home, away FROM games WHERE id = 'nfl:2026_01_NE_SEA'").first();
     expect(row).toEqual({ week: 1, kickoff_at: '2026-09-10T00:20:00.000Z', home: 'SEA', away: 'NE' });
+  });
+
+  it('syncSchedule records coaches and officials as protected names (F3), season rows only', async () => {
+    stubFetch(GAMES_CSV);
+    await syncSchedule(env.DB, 2026);
+    const names = await env.DB.prepare('SELECT name, role FROM protected_names ORDER BY name').all();
+    expect(names.results).toEqual([
+      { name: 'Hank Grumble', role: 'coach' },
+      { name: 'Ref Flagsworth', role: 'referee' },
+      { name: 'Sal Whistler', role: 'coach' },
+    ]);
+    // A header without the columns degrades to games-only, never throws.
+    stubFetch(GAMES_CSV.split('\n').map((l) => l.split(',').slice(0, 11).join(',')).join('\n'));
+    const res = await syncSchedule(env.DB, 2026);
+    expect(res.rows).toBe(1);
+  });
+
+  it('inPreLockWindow: 2h pre-kickoff window is data-driven; Sunday 07:00-10:00 PT block holds', async () => {
+    stubFetch(GAMES_CSV);
+    await syncSchedule(env.DB, 2026); // kickoff 2026-09-10T00:20Z
+    const at = (iso: string) => inPreLockWindow(env.DB, 2026, Date.parse(iso));
+    expect(await at('2026-09-09T23:00:00Z')).toBe(true); // 80 min before kickoff
+    expect(await at('2026-09-09T20:00:00Z')).toBe(false); // 4h20 before — baseline only
+    expect(await at('2026-09-10T00:30:00Z')).toBe(false); // already kicked off
+    // Sunday 2026-09-13 (PDT, UTC-7): 07:00-10:00 PT = 14:00-17:00 UTC.
+    expect(await at('2026-09-13T14:30:00Z')).toBe(true);
+    expect(await at('2026-09-13T13:30:00Z')).toBe(false); // 06:30 PT
+    expect(await at('2026-09-13T17:30:00Z')).toBe(false); // 10:30 PT, no game near
   });
 
   it('syncInjuries keeps each latest week and falls back to practice status', async () => {

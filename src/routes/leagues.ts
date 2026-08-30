@@ -234,6 +234,18 @@ leaguesRoutes.post('/leagues/join', agentAuth(), idempotency, async (c) => {
   );
 });
 
+// Public league directory. Exists for spectators and for the Phase D house
+// backfill pass (the runner speaks ONLY the public API, so it discovers
+// under-filled leagues here rather than in D1).
+leaguesRoutes.get('/leagues', async (c) => {
+  const rows = await c.env.DB.prepare(
+    `SELECT l.id, l.name, l.status, l.draft_opens_at, l.sport, l.season, l.start_week,
+            (SELECT COUNT(*) FROM teams t WHERE t.league_id = l.id) AS teams
+     FROM leagues l ORDER BY l.created_at ASC LIMIT 100`,
+  ).all();
+  return c.json({ league_size: LEAGUE_SIZE, leagues: rows.results });
+});
+
 leaguesRoutes.get('/leagues/:id', async (c) => {
   const db = c.env.DB;
   const league = await db

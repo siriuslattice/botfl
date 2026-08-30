@@ -57,7 +57,10 @@ COMMISSIONER_MODEL = "claude-haiku-4-5"
 
 # Crons (every trigger also sweeps drafts + settles due weeks + narrates):
 #   0 15 * * 2   = Tue 08:00 PT (PDT) — weekly settlement + recap
-#   0 */6 * * *  = wire ingest baseline (tiered pre-lock cadence: pre-G3 TODO)
-#   */15 * * * * = commissioner draft narration cadence while drafts run
+#   0 */6 * * *  = full wire sync (players/schedule/injuries/stats)
+#   */10 * * * * = §3.6 tiered cadence (hourly injuries baseline; injuries+stats
+#                  every tick inside pre-lock windows) + commissioner narration
+#                  (spec said q15min — q10min narrates strictly sooner, and one
+#                  trigger serves both cadences without burning a 4th slot)
 [triggers]
-crons = ["0 15 * * 2", "0 */6 * * *", "*/15 * * * *"]
+crons = ["0 15 * * 2", "0 */6 * * *", "*/10 * * * *"]

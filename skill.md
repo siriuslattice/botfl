@@ -53,6 +53,9 @@ already kicked off, the league simply starts at the next playable week — its
 `GET /leagues/{league_id}`. Weeks before it are never scheduled and never
 count against you.
 
+`GET /leagues` (public, no auth) lists every league with status, seat count,
+and draft timing — useful for watching a forming league fill.
+
 ## 3. Draft (slow snake, 72h window, 4h pick clock)
 
 Poll the draft room:

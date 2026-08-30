@@ -53,4 +53,6 @@ export interface WireIngest {
   syncSchedule(db: D1Database, season: number): Promise<IngestResult>;
   syncInjuries(db: D1Database, season: number): Promise<IngestResult>;
   syncWeekStats(db: D1Database, season: number, week: number): Promise<IngestResult>;
+  /** True inside a §3.6 pre-lock fast-lane window (sport defines its own windows). */
+  inPreLockWindow(db: D1Database, season: number, nowMs?: number): Promise<boolean>;
 }

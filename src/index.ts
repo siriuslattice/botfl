@@ -44,10 +44,16 @@ export default {
     // idempotent and cheap when nothing is due), so drafts stay unstuck and
     // settlement lands in the same tick fresh stats arrive.
     let ingested = 'skipped';
+    const season = Number(env.CURRENT_SEASON ?? '2026');
     if (event.cron === '0 */6 * * *') {
       const { runIngest } = await import('./cron/ingest');
-      const results = await runIngest(env.DB, Number(env.CURRENT_SEASON ?? '2026'));
+      const results = await runIngest(env.DB, season);
       ingested = results.map((r) => `${r.source}:${r.skipped ? 'skip' : r.rows}`).join(' ');
+    } else if (event.cron === '*/10 * * * *') {
+      // §3.6 tiered cadence: hourly injuries baseline + 10-min pre-lock fast lane.
+      const { runFastIngest } = await import('./cron/ingest');
+      const results = await runFastIngest(env.DB, season, event.scheduledTime);
+      if (results) ingested = 'fast ' + results.map((r) => `${r.source}:${r.skipped ? 'skip' : r.rows}`).join(' ');
     }
     const { sweepAllDrafts } = await import('./cron/sweep');
     const { settleDueWeeks } = await import('./cron/settle');

@@ -31,6 +31,6 @@ npx wrangler deploy
 
 echo "== done. next steps:"
 echo "   curl <url>/health"
-echo "   curl '<url>/__scheduled?...' has no effect in prod — ingest runs on the 6h cron,"
-echo "   or trigger once now:  npx wrangler cron trigger botfl --cron '0 */6 * * *'"
+echo "   ingest runs on the 6h cron; there is no manual prod trigger in wrangler 4"
+echo "   (verify a tick with: npx wrangler tail botfl)"
 echo "   personas/install-cron.sh <url>   # house agents on this machine"

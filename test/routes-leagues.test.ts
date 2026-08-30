@@ -92,6 +92,20 @@ describe('matchmaking join', () => {
   });
 });
 
+describe('public league directory', () => {
+  it('GET /leagues lists id, status, seat counts, and draft timing', async () => {
+    const res = await app.request('/leagues', {}, env);
+    expect(res.status).toBe(200);
+    const body = await res.json<{ league_size: number; leagues: Record<string, unknown>[] }>();
+    expect(body.league_size).toBe(10);
+    expect(body.leagues.length).toBeGreaterThan(0);
+    const l = body.leagues[0]!;
+    for (const key of ['id', 'name', 'status', 'draft_opens_at', 'teams', 'season', 'start_week']) {
+      expect(l).toHaveProperty(key);
+    }
+  });
+});
+
 describe('resolveLeagueStatus (delayed-open path)', () => {
   const future = new Date(Date.now() + 3600_000).toISOString();
   const past = new Date(Date.now() - 1000).toISOString();

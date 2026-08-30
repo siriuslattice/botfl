@@ -8,7 +8,7 @@
 
 import type { IngestResult, StatLine, WireIngest } from '../adapter';
 import { csvHeader, csvLines, parseCsvLine } from './csv';
-import { easternToUtcIso } from './time';
+import { easternOffsetHours, easternToUtcIso } from './time';
 import { NFL_POSITIONS } from './index';
 
 const BASE = 'https://github.com/nflverse';
@@ -95,14 +95,25 @@ export async function syncSchedule(db: D1Database, season: number): Promise<Inge
   const cTime = t.col('gametime');
   const cAway = t.col('away_team');
   const cHome = t.col('home_team');
+  // Optional: their absence upstream must not take down schedule ingest.
+  const cAwayCoach = t.colOpt('away_coach');
+  const cHomeCoach = t.colOpt('home_coach');
+  const cReferee = t.colOpt('referee');
 
   const stmts: D1PreparedStatement[] = [];
+  // Coaches and officials are real humans the F3 heuristic must know about;
+  // this CSV is where their names already live (SPEC §1 F3).
+  const protectedNames = new Map<string, string>();
   const prefix = `${season}_`;
   for (let i = 1; i < lines.length; i++) {
     const line = lines[i]!;
     if (!line.startsWith(prefix)) continue; // cheap prefilter: game_id begins with season
     const row = parseCsvLine(line);
     if (Number(row[cSeason]) !== season || row[cType] !== 'REG') continue;
+    for (const [col, role] of [[cAwayCoach, 'coach'], [cHomeCoach, 'coach'], [cReferee, 'referee']] as const) {
+      const name = (row[col] ?? '').trim();
+      if (name.length >= 4) protectedNames.set(`${name}|${role}`, name);
+    }
     const gameday = row[cDay] ?? '';
     const gametime = row[cTime] ?? '';
     if (!gameday || !gametime) continue; // untimed games can't drive locks; picked up when set
@@ -124,8 +135,45 @@ export async function syncSchedule(db: D1Database, season: number): Promise<Inge
         ),
     );
   }
+  const gameRows = stmts.length;
+  for (const [key, name] of protectedNames) {
+    const role = key.slice(key.indexOf('|') + 1);
+    stmts.push(
+      db
+        .prepare("INSERT OR IGNORE INTO protected_names (sport, name, role) VALUES ('nfl', ?, ?)")
+        .bind(name, role),
+    );
+  }
   await batchAll(db, stmts);
-  return { source: 'schedule', rows: stmts.length };
+  return { source: 'schedule', rows: gameRows };
+}
+
+/**
+ * Pre-lock ingest window (SPEC §3.6): fast-lane cadence applies inside the
+ * Sunday-morning inactives block (07:00–10:00 PT) and within 2h before ANY
+ * kickoff — the latter is data-driven off the games table, so Thu/Fri/Sat/Mon
+ * windows come free and nothing needs a day-of-week list.
+ */
+export async function inPreLockWindow(db: D1Database, season: number, nowMs = Date.now()): Promise<boolean> {
+  // PT shares the US DST rule with ET at PT = ET − 3h. Converge on the local
+  // components with one fixed-point pass so DST-transition mornings resolve
+  // against Pacific local time, not UTC.
+  const off0 =
+    easternOffsetHours(
+      new Date(nowMs).getUTCFullYear(), new Date(nowMs).getUTCMonth(),
+      new Date(nowMs).getUTCDate(), new Date(nowMs).getUTCHours(),
+    ) - 3;
+  const guess = new Date(nowMs + off0 * 3600_000);
+  const off =
+    easternOffsetHours(guess.getUTCFullYear(), guess.getUTCMonth(), guess.getUTCDate(), guess.getUTCHours()) - 3;
+  const pt = new Date(nowMs + off * 3600_000);
+  if (pt.getUTCDay() === 0 && pt.getUTCHours() >= 7 && pt.getUTCHours() < 10) return true;
+
+  const soon = await db
+    .prepare("SELECT 1 AS x FROM games WHERE sport = 'nfl' AND season = ? AND kickoff_at > ? AND kickoff_at <= ? LIMIT 1")
+    .bind(season, new Date(nowMs).toISOString(), new Date(nowMs + 2 * 3600_000).toISOString())
+    .first();
+  return soon !== null;
 }
 
 export async function syncInjuries(db: D1Database, season: number): Promise<IngestResult> {
@@ -239,4 +287,5 @@ export const nflIngest: WireIngest = {
   syncSchedule,
   syncInjuries,
   syncWeekStats,
+  inPreLockWindow,
 };
