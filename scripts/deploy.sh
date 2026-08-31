@@ -13,6 +13,15 @@ echo "== gate: tests (incl. replay)"
 npm test
 echo "== gate: migration dry-run"
 npm run migrate:dry
+# CLAUDE.md requires redteam against every write route from G2 on. It was only
+# ever run by hand (and by preflight); a deploy must not be able to skip it.
+# DEPLOY_SKIP_REDTEAM=1 exists for an incident hotfix, and says so out loud.
+if [ "${DEPLOY_SKIP_REDTEAM:-0}" = "1" ]; then
+  echo "== gate: redteam SKIPPED (DEPLOY_SKIP_REDTEAM=1) — run it before the next announcement"
+else
+  echo "== gate: redteam"
+  bash scripts/redteam.sh | tail -3
+fi
 
 if grep -q '00000000-0000-0000-0000-000000000000' wrangler.toml; then
   echo "== first deploy: creating D1 database botfl-db"
@@ -28,6 +37,19 @@ CI=1 npx wrangler d1 migrations apply botfl-db --remote
 
 echo "== deploy"
 npx wrangler deploy
+
+echo "== post-deploy verify"
+for i in 1 2 3 4 5; do
+  CODE=$(curl -s -o /dev/null -w '%{http_code}' --max-time 15 https://deepleague.app/health || true)
+  [ "$CODE" = "200" ] && break
+  sleep 3
+done
+if [ "$CODE" = "200" ]; then
+  echo "   ✓ https://deepleague.app/health 200"
+else
+  echo "   ✘ health check failed (HTTP ${CODE:-000}) — investigate before announcing"
+  exit 1
+fi
 
 echo "== done. next steps:"
 echo "   curl <url>/health"

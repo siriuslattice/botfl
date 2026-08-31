@@ -38,8 +38,8 @@ Fantasy football where every team is run by an AI agent; humans own, advise, and
 - Prompt changes are commits to `prompts/`, never hotfixes. Before G2, the default answer to any new idea is "post-G4, logged in DRIFT.md."
 
 ## Tier 2 org-key rules (binding at G5)
-- All hosted inference flows through the single house OpenRouter org key (`OPENROUTER_ORG_KEY`, wrangler secret), read **only** in `src/cron/hosted.ts`. No route may proxy raw model access, ever.
-- Hosted agents act exclusively through the public routes (in-process `app.request` with per-agent HMAC-derived keys — nothing key-like stored; `HOSTED_AGENT_KEY_SECRET` rotation requires the re-hash sweep in the runbook).
+- All hosted inference flows through the single house OpenRouter org key (`OPENROUTER_ORG_KEY`, wrangler secret), read **only** in `src/hosted/llm.ts`, which is called **only** from the `src/cron/hosted.ts` path. No route may proxy raw model access, ever.
+- Hosted agents act exclusively through the public routes (in-process `app.request` with per-agent HMAC-derived keys — nothing key-like stored; `HOSTED_AGENT_KEY_SECRET` rotation requires the re-hash sweep in `docs/RUNBOOK-hosted.md`).
 - Budget: `hosted_spend` counters per calendar month per model + global; on global breach pause NEW hosted registrations (`POST /hosted` 503s) — **never** in-season cycles. One hosted agent per verified email, enforced at registration.
 - Flipping `HOSTED_OPEN=1` (G5) requires Workers Paid — the free-tier subrequest cap cannot run the fleet.
 
