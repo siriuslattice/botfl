@@ -7,16 +7,25 @@ export interface MenuModel {
   key: string;
   id: string; // OpenRouter model id — also the agent's public `model`
   label: string;
+  /** Conservative per-call price (µ$, ~2k in + 1.2k out) charged when the
+   *  provider response omits usage.cost — the budget must never see $0. */
+  fallbackMicroUsd: number;
 }
 
 export const MODEL_MENU: readonly MenuModel[] = [
-  { key: 'hermes', id: 'nousresearch/hermes-4-70b', label: 'Hermes 4 70B — open weights, opinionated' },
-  { key: 'flash', id: 'google/gemini-2.5-flash-lite', label: 'Gemini Flash Lite — fast and chipper' },
-  { key: 'haiku', id: 'anthropic/claude-haiku-4.5', label: 'Claude Haiku 4.5 — concise with a bite' },
+  { key: 'hermes', id: 'nousresearch/hermes-4-70b', label: 'Hermes 4 70B — open weights, opinionated', fallbackMicroUsd: 1_000 },
+  { key: 'flash', id: 'google/gemini-2.5-flash-lite', label: 'Gemini Flash Lite — fast and chipper', fallbackMicroUsd: 1_000 },
+  { key: 'haiku', id: 'anthropic/claude-haiku-4.5', label: 'Claude Haiku 4.5 — concise with a bite', fallbackMicroUsd: 10_000 },
 ] as const;
 
 export function menuModel(key: unknown): MenuModel | null {
   return MODEL_MENU.find((m) => m.key === key) ?? null;
+}
+
+/** Fallback price for an OpenRouter model id; unknown ids charge the menu max. */
+export function fallbackCostMicroUsd(modelId: string): number {
+  const hit = MODEL_MENU.find((m) => m.id === modelId);
+  return hit?.fallbackMicroUsd ?? Math.max(...MODEL_MENU.map((m) => m.fallbackMicroUsd));
 }
 
 /** Persona template shape mirrors personas/*.json (the runner's contract). */

@@ -16,7 +16,7 @@ import letterPromptFile from '../../prompts/persona-letter.md';
 import { deriveHostedKey } from '../hosted/keys';
 import { cleanText, forPrompt, hostedLlmJson } from '../hosted/llm';
 import type { PersonaTemplate } from '../hosted/menu';
-import type { AppEnv } from '../routes/util';
+import { allowRate, type AppEnv } from '../routes/util';
 
 const TICK_DEADLINE_MS = 240_000;
 const LLM_NOTE_CAP = 240;
@@ -207,34 +207,57 @@ async function cycle(db: D1Database, env: Env, api: Api, agent: HostedAgent): Pr
         await api(`/teams/${teamId}/lineup`, { method: 'PUT', body: JSON.stringify({ week, slots }) });
       }
     }
+  }
 
-    // Monday letter: once per settled week (unclipped by ask-cap: 429 retries next tick).
+  {
+    // Monday letter: once per settled week. Dedupe runs BEFORE the LLM call —
+    // the old flow regenerated (and billed) the letter every 10-min tick for
+    // as long as that week stayed newest, because only the POST was
+    // idempotent. The marker is an events row (league_id NULL keeps it off
+    // public feeds; append-only, survives restarts and the 48h replay-cache
+    // sweep). A non-2xx leaves no marker; retries are rate-bound to ≤4/day
+    // per team-week so a stuck ask-cap can't burn inference either.
+    // NOT nested under "has an open matchup": the final week of a season
+    // settles with nothing left open, and that week deserves its letter too.
     const settled = ((matchups.body.matchups as { week: number; settled_at: string | null; home_team_id: string; away_team_id: string; home_score: number; away_score: number }[]) ?? [])
       .filter((m) => m.settled_at && (m.home_team_id === teamId || m.away_team_id === teamId))
       .sort((a, b) => b.week - a.week);
     if (settled.length > 0) {
       const last = settled[0]!;
-      const home = last.home_team_id === teamId;
-      const my = home ? last.home_score : last.away_score;
-      const theirs = home ? last.away_score : last.home_score;
-      const teamRead = await api(`/teams/${teamId}`);
-      const eventLines = ((teamRead.body.recent_events as { line: string }[]) ?? []).map((e) => e.line).slice(0, 6);
-      const result = `${my > theirs ? 'won' : my < theirs ? 'lost' : 'tied'} ${my.toFixed(2)}–${theirs.toFixed(2)}`;
-      const prompt = promptBody(letterPromptFile)
-        .replaceAll('{{PERSONA_JSON}}', JSON.stringify(persona, null, 1))
-        .replaceAll('{{WEEK}}', String(last.week))
-        .replaceAll('{{RESULT}}', forPrompt(result, 200))
-        .replaceAll('{{EVENTS}}', eventLines.map((l) => forPrompt(l, 200)).join('\n'));
-      const out = await hostedLlmJson(db, env, agent.model, prompt);
-      const memory = eventLines[eventLines.length - 1] ?? 'the draft';
-      const letter =
-        cleanText(out?.letter, 400) ??
-        `Week ${last.week}: we ${result}. I keep the receipts — remember “${String(memory).slice(0, 120)}”? Building on it. The lineup stays mine.`;
-      await api(`/teams/${teamId}/ask`, {
-        method: 'POST',
-        headers: { 'idempotency-key': `hosted-${teamId}-letter-w${last.week}` },
-        body: JSON.stringify({ body: letter }),
-      });
+      const marker = JSON.stringify({ team_id: teamId, week: last.week });
+      const sent = await db
+        .prepare("SELECT 1 AS x FROM events WHERE type = 'hosted_letter' AND payload_json = ? LIMIT 1")
+        .bind(marker)
+        .first();
+      if (!sent && (await allowRate(db, 'hosted-letter-try', `${teamId}-w${last.week}`, 21_600, 1))) {
+        const home = last.home_team_id === teamId;
+        const my = home ? last.home_score : last.away_score;
+        const theirs = home ? last.away_score : last.home_score;
+        const teamRead = await api(`/teams/${teamId}`);
+        const eventLines = ((teamRead.body.recent_events as { line: string }[]) ?? []).map((e) => e.line).slice(0, 6);
+        const result = `${my > theirs ? 'won' : my < theirs ? 'lost' : 'tied'} ${my.toFixed(2)}–${theirs.toFixed(2)}`;
+        const prompt = promptBody(letterPromptFile)
+          .replaceAll('{{PERSONA_JSON}}', JSON.stringify(persona, null, 1))
+          .replaceAll('{{WEEK}}', String(last.week))
+          .replaceAll('{{RESULT}}', forPrompt(result, 200))
+          .replaceAll('{{EVENTS}}', eventLines.map((l) => forPrompt(l, 200)).join('\n'));
+        const out = await hostedLlmJson(db, env, agent.model, prompt);
+        const memory = eventLines[eventLines.length - 1] ?? 'the draft';
+        const letter =
+          cleanText(out?.letter, 400) ??
+          `Week ${last.week}: we ${result}. I keep the receipts — remember “${String(memory).slice(0, 120)}”? Building on it. The lineup stays mine.`;
+        const posted = await api(`/teams/${teamId}/ask`, {
+          method: 'POST',
+          headers: { 'idempotency-key': `hosted-${teamId}-letter-w${last.week}` },
+          body: JSON.stringify({ body: letter }),
+        });
+        if (posted.status >= 200 && posted.status < 300) {
+          await db
+            .prepare('INSERT INTO events (league_id, type, payload_json, created_at) VALUES (NULL, ?, ?, ?)')
+            .bind('hosted_letter', marker, new Date().toISOString())
+            .run();
+        }
+      }
     }
   }
   return 'active';

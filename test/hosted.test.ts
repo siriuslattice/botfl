@@ -130,3 +130,134 @@ describe('persona leaderboard axis (§3.10)', () => {
     expect(html).toContain('analyst');
   });
 });
+
+describe('hosted letter economics (pre-G5 fix)', () => {
+  const ctx = { waitUntil() {}, passThroughOnException() {} } as unknown as ExecutionContext;
+  let teamId = '';
+  let openrouterCalls = 0;
+
+  function stubOpenRouter(payload: Record<string, unknown>) {
+    openrouterCalls = 0;
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: RequestInfo | URL) => {
+        if (String(input).includes('openrouter.ai')) {
+          openrouterCalls++;
+          return new Response(JSON.stringify(payload), { status: 200 });
+        }
+        throw new Error(`unexpected fetch ${String(input)}`);
+      }),
+    );
+  }
+
+  beforeAll(async () => {
+    henv.OPENROUTER_ORG_KEY = 'test-org-key';
+    // Give the hosted agent a settled matchup: activate its league, seat a
+    // second team, and hand-write week 1 (settled, a win) + week 2 (open).
+    const hosted = (await env.DB.prepare("SELECT id FROM agents WHERE tier = 'hosted' LIMIT 1")
+      .first<{ id: string }>())!;
+    const team = (await env.DB.prepare('SELECT id, league_id FROM teams WHERE agent_id = ?')
+      .bind(hosted.id)
+      .first<{ id: string; league_id: string }>())!;
+    teamId = team.id;
+    const rival = await registerAgent('Letter Rival');
+    await env.DB.prepare('INSERT INTO teams (id, league_id, agent_id, slot) VALUES (?, ?, ?, 2)')
+      .bind('letter-rival-team', team.league_id, rival.agentId)
+      .run();
+    await env.DB.prepare("UPDATE leagues SET status = 'active' WHERE id = ?").bind(team.league_id).run();
+    await env.DB.batch([
+      env.DB.prepare(
+        `INSERT INTO matchups (id, league_id, week, home_team_id, away_team_id, home_score, away_score, settled_at)
+         VALUES ('letter-m1', ?, 1, ?, 'letter-rival-team', 88.2, 61.0, ?)`,
+      ).bind(team.league_id, teamId, new Date().toISOString()),
+      env.DB.prepare(
+        `INSERT INTO matchups (id, league_id, week, home_team_id, away_team_id)
+         VALUES ('letter-m2', ?, 2, ?, 'letter-rival-team')`,
+      ).bind(team.league_id, teamId),
+    ]);
+  });
+
+  it('generates the Monday letter ONCE — the dedupe runs before the LLM call', async () => {
+    stubOpenRouter({
+      choices: [{ message: { content: '{"letter":"The scoreboard agrees with me, as scheduled."}' } }],
+      usage: { cost: 0.0001 },
+    });
+    expect(await runHostedTick(env.DB, env, app, ctx)).toBe(1);
+    expect(openrouterCalls).toBe(1); // exactly one letter generation
+    const markers = await env.DB.prepare("SELECT COUNT(*) AS n FROM events WHERE type = 'hosted_letter'")
+      .first<{ n: number }>();
+    expect(markers!.n).toBe(1);
+    const letters = await env.DB.prepare(
+      "SELECT COUNT(*) AS n FROM messages WHERE channel_type = 'advice' AND channel_id = ? AND agent_id IS NOT NULL",
+    )
+      .bind(teamId)
+      .first<{ n: number }>();
+    expect(letters!.n).toBe(1);
+
+    // The regression: before the fix this second tick burned another LLM call.
+    expect(await runHostedTick(env.DB, env, app, ctx)).toBe(1);
+    expect(openrouterCalls).toBe(1); // no second generation, no second post
+    expect(
+      (await env.DB.prepare("SELECT COUNT(*) AS n FROM events WHERE type = 'hosted_letter'").first<{ n: number }>())!.n,
+    ).toBe(1);
+  });
+
+  it('a failed post leaves no marker, and retries are rate-bound', async () => {
+    stubOpenRouter({
+      choices: [{ message: { content: '{"letter":"Attempt two."}' } }],
+      usage: { cost: 0.0001 },
+    });
+    // A NEW settled week (so nothing replays from week 1), with the team's
+    // daily ask cap jammed so the letter POST comes back 429.
+    await env.DB.prepare("UPDATE matchups SET home_score = 70.5, away_score = 91.25, settled_at = ? WHERE id = 'letter-m2'")
+      .bind(new Date().toISOString())
+      .run();
+    const window = Math.floor(Date.now() / 1000 / 86_400) * 86_400;
+    await env.DB.prepare(
+      "INSERT OR REPLACE INTO rate_counters (scope, bucket, window_start, count) VALUES ('ask', ?, ?, 99)",
+    )
+      .bind(teamId, window)
+      .run();
+
+    await runHostedTick(env.DB, env, app, ctx);
+    expect(openrouterCalls).toBe(1); // week 2 letter generated once…
+    const marked = await env.DB.prepare(
+      "SELECT COUNT(*) AS n FROM events WHERE type = 'hosted_letter' AND payload_json LIKE '%\"week\":2%'",
+    ).first<{ n: number }>();
+    expect(marked!.n).toBe(0); // …but the 429'd post left no marker
+
+    // Immediate retry is bounded by the 6h try-budget: no fresh LLM burn.
+    await runHostedTick(env.DB, env, app, ctx);
+    expect(openrouterCalls).toBe(1);
+  });
+});
+
+describe('hosted cost accounting', () => {
+  it('missing usage.cost bills the fallback price and leaves a breadcrumb; reported cost wins otherwise', async () => {
+    henv.OPENROUTER_ORG_KEY = 'test-org-key';
+    const { hostedLlmJson } = await import('../src/hosted/llm');
+    const spend = async () =>
+      (await env.DB.prepare("SELECT COALESCE(spent_microusd, 0) AS s FROM hosted_spend WHERE model = '*'")
+        .first<{ s: number }>())?.s ?? 0;
+
+    const before = await spend();
+    vi.stubGlobal('fetch', vi.fn(async () =>
+      new Response(JSON.stringify({ choices: [{ message: { content: '{"ok":1}' } }] }), { status: 200 }),
+    ));
+    await hostedLlmJson(env.DB, env, 'google/gemini-2.5-flash-lite', 'p');
+    await hostedLlmJson(env.DB, env, 'google/gemini-2.5-flash-lite', 'p');
+    expect(await spend()).toBe(before + 2_000); // 2 × 1000µ$ fallback — never ~$0
+    const warns = await env.DB.prepare("SELECT COUNT(*) AS n FROM events WHERE type = 'hosted_cost_fallback'")
+      .first<{ n: number }>();
+    expect(warns!.n).toBe(1); // once per day per model, not per call
+
+    vi.stubGlobal('fetch', vi.fn(async () =>
+      new Response(
+        JSON.stringify({ choices: [{ message: { content: '{"ok":1}' } }], usage: { cost: 0.0005 } }),
+        { status: 200 },
+      ),
+    ));
+    await hostedLlmJson(env.DB, env, 'google/gemini-2.5-flash-lite', 'p');
+    expect(await spend()).toBe(before + 2_500); // reported 500µ$ takes precedence
+  });
+});
