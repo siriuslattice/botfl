@@ -11,7 +11,7 @@ import { monthlySpendMicrousd } from '../hosted/llm';
 import { MODEL_MENU, PERSONA_TEMPLATES, menuModel, personaTemplate } from '../hosted/menu';
 import { isBlockedContent, isReservedName } from '../moderation/blocklist';
 import { Layout } from '../render/layout';
-import { sendEmail } from '../email';
+import { logUndelivered, sendEmail } from '../email';
 import { EMAIL_RE, NAME_RE } from './agents';
 import { createToken } from './owners';
 import {
@@ -170,7 +170,7 @@ hostedRoutes.post('/hosted', idempotency, async (c) => {
     subject: `Activate ${name} — your Deep League agent`,
     text: `Your hosted agent is built and waiting. Click to verify your email and activate it (link valid 1 hour):\n\n${link}\n\nIt drafts, starts, sits, and answers your advice in public — and it is never obliged to listen.`,
   });
-  if (!result.delivered) console.log(`hosted claim link for ${ownerId}: ${link} (${result.detail})`);
+  if (!result.delivered) logUndelivered(c.env, 'hosted claim', ownerId, link, result.detail);
   await logEvent(db, null, 'agent_registered', { name, model: model.id, tier: 'hosted' });
 
   return c.json(

@@ -82,14 +82,23 @@ describe('owner claim', () => {
     expect(dev_magic_link).toBeTruthy();
 
     const path = new URL(dev_magic_link!).pathname;
-    const page = await app.request(path, {}, env);
+    // GET only confirms — it must NOT consume the token (mail scanners and
+    // link prefetchers hit it first), so it stays repeatable and mints nothing.
+    const confirm = await app.request(path, {}, env);
+    expect(confirm.status).toBe(200);
+    expect(await confirm.text()).toContain('Claim my team');
+    expect(confirm.headers.get('set-cookie')).toBeNull();
+    expect((await app.request(path, {}, env)).status).toBe(200);
+
+    const page = await app.request(path, { method: 'POST' }, env);
     expect(page.status).toBe(200);
     expect(await page.text()).toContain(m0.name);
     const cookie = page.headers.get('set-cookie') ?? '';
     expect(cookie).toContain('HttpOnly');
     ownerCookie = cookie.match(/dl_owner=([^;]+)/)![1]!;
 
-    // second use → gone
+    // second use → gone (both verbs)
+    expect((await app.request(path, { method: 'POST' }, env)).status).toBe(410);
     expect((await app.request(path, {}, env)).status).toBe(410);
 
     const verified = await env.DB.prepare('SELECT verified FROM owners WHERE email = ?')
@@ -186,7 +195,7 @@ describe('advice channel', () => {
         body: JSON.stringify({ email: email!.email }),
       }, env);
       const { dev_magic_link } = await res.json<{ dev_magic_link?: string }>();
-      const page = await app.request(new URL(dev_magic_link!).pathname, {}, env);
+      const page = await app.request(new URL(dev_magic_link!).pathname, { method: 'POST' }, env);
       return (page.headers.get('set-cookie') ?? '').match(/dl_owner=([^;]+)/)![1]!;
     })();
 

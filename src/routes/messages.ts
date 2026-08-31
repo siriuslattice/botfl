@@ -15,6 +15,7 @@ import {
   newId,
   nowIso,
   readJsonObject,
+  sha256hex,
   type AppEnv,
 } from './util';
 
@@ -151,15 +152,48 @@ messagesRoutes.get('/matchups/:id/messages', async (c) => {
   return readMessages(c, channel);
 });
 
-// Report button (public, IP-limited). Five distinct reports auto-hold pending review.
+/**
+ * Report button (public, IP-limited). FIVE DISTINCT reporters auto-hold a
+ * message pending review — "distinct" is enforced per (IP, message) for a
+ * week, because a raw counter let a single IP spend 5 of its 20 daily reports
+ * to censor any message on the site (found in the 2026-08-30 review). A daily
+ * global cap bounds a coordinated ring: past it, reports still queue for
+ * /admin/reported, they just stop auto-hiding. Every auto-hold logs an event.
+ */
 messagesRoutes.post('/messages/:id/report', async (c) => {
-  const ipOk = await allowRate(c.env.DB, 'report:ip', clientIp(c), 86_400, 20);
+  const db = c.env.DB;
+  const messageId = c.req.param('id');
+  const ip = clientIp(c);
+  const ipOk = await allowRate(db, 'report:ip', ip, 86_400, 20);
   if (!ipOk) return jsonError(c, 429, 'RATE_LIMITED', 'report limit reached for today');
-  const row = await c.env.DB.prepare(
-    'UPDATE messages SET reports = reports + 1, held = CASE WHEN reports + 1 >= 5 THEN 1 ELSE held END WHERE id = ? AND hidden = 0 RETURNING reports, held',
-  )
-    .bind(c.req.param('id'))
+
+  const exists = await db
+    .prepare('SELECT reports, held FROM messages WHERE id = ? AND hidden = 0')
+    .bind(messageId)
+    .first<{ reports: number; held: number }>();
+  if (!exists) return jsonError(c, 404, 'MESSAGE_NOT_FOUND', 'no such message');
+
+  // One count per reporter per message per week; repeats answer identically
+  // (never leak whether this IP already reported it).
+  const firstFromThisIp = await allowRate(db, 'reportpair', await sha256hex(`${ip}|${messageId}`), 604_800, 1);
+  if (!firstFromThisIp) return c.json({ reported: true, auto_held: exists.held === 1 });
+
+  const row = await db
+    .prepare('UPDATE messages SET reports = reports + 1 WHERE id = ? AND hidden = 0 RETURNING reports, held')
+    .bind(messageId)
     .first<{ reports: number; held: number }>();
   if (!row) return jsonError(c, 404, 'MESSAGE_NOT_FOUND', 'no such message');
-  return c.json({ reported: true, auto_held: row.held === 1 && row.reports >= 5 });
+
+  let held = row.held === 1;
+  if (!held && row.reports >= 5 && (await allowRate(db, 'autohold', 'global', 86_400, 10))) {
+    const flip = await db
+      .prepare('UPDATE messages SET held = 1 WHERE id = ? AND held = 0 RETURNING id')
+      .bind(messageId)
+      .first<{ id: string }>();
+    if (flip) {
+      held = true;
+      await logEvent(db, null, 'message_held', { message_id: messageId, reports: row.reports });
+    }
+  }
+  return c.json({ reported: true, auto_held: held });
 });

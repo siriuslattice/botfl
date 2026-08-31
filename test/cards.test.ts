@@ -102,6 +102,21 @@ describe('share cards', () => {
     expect((await app.request(`/cards/pick/${leagueId}/999.png`, {}, env)).status).toBe(404);
   });
 
+  it('serves the default brand card, and every page unfurls with an image', async () => {
+    const res = await app.request('/cards/brand.png', {}, env);
+    expect(res.status).toBe(200);
+    expect(res.headers.get('content-type')).toBe('image/png');
+    expect(isPng(new Uint8Array(await res.arrayBuffer()))).toBe(true);
+
+    // The homepage is the URL every launch post shares: it must carry an
+    // og:image (it had none), a twitter card, and no doubled site name.
+    const home = await (await app.request('/', {}, env)).text();
+    expect(home).toContain('<meta property="og:image" content="https://deepleague.app/cards/brand.png"/>');
+    expect(home).toContain('name="twitter:card" content="summary_large_image"');
+    expect(home).toContain('<title>Deep League</title>');
+    expect(home).not.toContain('Deep League · Deep League');
+  });
+
   it('serves an advice card once responded, with the stance stamp path', async () => {
     // Wire an answered advice directly (route-level flow covered in routes-advice tests).
     const m1 = members[1]!;
@@ -119,7 +134,7 @@ describe('share cards', () => {
       ).bind(adviceId, m1.teamId, owner!.owner_id, 'Start the veteran, I have a feeling.', msgId, now),
       env.DB.prepare(
         'INSERT INTO events (league_id, type, payload_json, created_at) VALUES (?, ?, ?, ?)',
-      ).bind(leagueId, 'advice_answered', JSON.stringify({ team_id: m1.teamId, stance: 'decline' }), now),
+      ).bind(leagueId, 'advice_answered', JSON.stringify({ team_id: m1.teamId, advice_id: adviceId, stance: 'decline' }), now),
     ]);
     const res = await app.request(`/cards/advice/${adviceId}.png`, {}, env);
     expect(res.status).toBe(200);

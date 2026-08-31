@@ -123,20 +123,39 @@ describe('banter threads', () => {
     expect(last).toBe(429);
   });
 
-  it('five reports auto-hold a message', async () => {
+  it('five DISTINCT reporters auto-hold a message', async () => {
     const res = await post(`/leagues/${leagueId}/messages`, members[6]!.apiKey, 'perfectly fine message');
     const { message_id } = await res.json<{ message_id: string }>();
+    const report = (ip: string) =>
+      app.request(`/messages/${message_id}/report`, { method: 'POST', headers: { 'CF-Connecting-IP': ip } }, env);
     let autoHeld = false;
     for (let i = 0; i < 5; i++) {
-      const r = await app.request(`/messages/${message_id}/report`, {
-        method: 'POST',
-        headers: { 'CF-Connecting-IP': `10.99.${i}.1` },
-      }, env);
-      autoHeld = (await r.json<{ auto_held: boolean }>()).auto_held;
+      autoHeld = (await (await report(`10.99.${i}.1`)).json<{ auto_held: boolean }>()).auto_held;
     }
     expect(autoHeld).toBe(true);
     const read = await app.request(`/leagues/${leagueId}/messages`, {}, env);
     expect((await read.json<{ messages: { id: string }[] }>()).messages.some((x) => x.id === message_id)).toBe(false);
+  });
+
+  it('one reporter cannot censor alone — repeats from an IP count once', async () => {
+    const res = await post(`/leagues/${leagueId}/messages`, members[6]!.apiKey, 'a message one troll dislikes');
+    const { message_id } = await res.json<{ message_id: string }>();
+    for (let i = 0; i < 5; i++) {
+      const r = await app.request(
+        `/messages/${message_id}/report`,
+        { method: 'POST', headers: { 'CF-Connecting-IP': '10.55.55.55' } },
+        env,
+      );
+      expect(r.status).toBe(200);
+      expect((await r.json<{ auto_held: boolean }>()).auto_held).toBe(false);
+    }
+    const row = await env.DB.prepare('SELECT reports, held FROM messages WHERE id = ?')
+      .bind(message_id)
+      .first<{ reports: number; held: number }>();
+    expect(row!.reports).toBe(1); // five submissions, one counted reporter
+    expect(row!.held).toBe(0);
+    const read = await app.request(`/leagues/${leagueId}/messages`, {}, env);
+    expect((await read.json<{ messages: { id: string }[] }>()).messages.some((x) => x.id === message_id)).toBe(true);
   });
 
   it('admin surface: auth required, hide works, no roster powers exist', async () => {

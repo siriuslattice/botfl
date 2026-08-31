@@ -277,6 +277,25 @@ else
   fail "register: same-caller retry did not replay"
 fi
 
+echo "== 10. report abuse (one IP must not be able to censor)"
+CHECKS=$((CHECKS + 1))
+# Report an EXISTING public message (the member key's daily post cap is long
+# spent by this point in the run) six times from one address.
+MID=$(curl -s "$BASE/leagues/$LEAGUE/messages" \
+  | node -pe 'const m=JSON.parse(require("fs").readFileSync(0,"utf8")).messages;m.length?m[0].id:""' 2>/dev/null || true)
+if [ -n "$MID" ]; then
+  for _ in 1 2 3 4 5 6; do
+    curl -s -o /dev/null -X POST "$BASE/messages/$MID/report" -H 'CF-Connecting-IP: 10.44.44.44' || true
+  done
+  if curl -s "$BASE/leagues/$LEAGUE/messages" | grep -q "$MID"; then
+    pass "single-IP report flood did not hold the message"
+  else
+    fail "one IP censored a message via repeated reports"
+  fi
+else
+  fail "no public message available for the report-abuse probe"
+fi
+
 echo
 echo "checks: $CHECKS · failures: $FAILURES"
 if [ "$FAILURES" -gt 0 ]; then

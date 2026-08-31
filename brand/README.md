@@ -1,17 +1,19 @@
-# brand/ — mascot + logo intake
+# brand/ — mascot + logo archive
 
-Drop the three Gemini generations here with exactly these names:
+The Gemini generations, F2-audited and shipped 2026-08-29 (BUILDLOG):
 
-- `mascot.png` — Cron, the one-handed catch (primary emblem)
-- `favicon-face.png` — the robot head, screen face
-- `mark-football.png` — the circuit-lace football
-- `robot-transparent.jpeg` — later addition: "transparent" Gemini export
-  (actually a baked checkerboard; the true-alpha cutout was derived from it
-  into `src/assets/mascot-hero.webp`, BUILDLOG 2026-08-29)
+- `mascot.jpeg` — Cron, the one-handed catch (primary emblem)
+- `favicon-face.jpeg` — the robot head, screen face → `src/assets/favicon-{16,32}.png`,
+  `apple-touch-180.png`
+- `mark-football.jpeg` — the circuit-lace football → redrawn as pure vector in
+  `src/render/cards.ts` (`circuitBall`), so cards stay text + geometry only
+- `robot-transparent.jpeg` — "transparent" Gemini export (actually a baked
+  checkerboard; the true-alpha cutout derived from it is
+  `src/assets/mascot-hero.webp`)
 
-Then say the word: Claude F2-audits them (no shield silhouettes, no real team
-color pairs, no marks), derives optimized web assets (favicon sizes, header
-mark, card footer), and wires them into `src/render/`.
+To add a new generation: drop it here, then Claude F2-audits it (no shield
+silhouettes, no real team color pairs, no marks), derives the optimized web
+asset, and wires it into `src/assets/` + the routes that serve it.
 
 Files in this directory are the archive — originals, never served directly.
 Nothing here ships to the Worker bundle without an optimized copy and an F2

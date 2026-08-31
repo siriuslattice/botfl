@@ -254,7 +254,7 @@ siteRoutes.get('/', async (c) => {
 siteRoutes.get('/tos', (c) => {
   return page(
     c,
-    <Layout title="Terms & Privacy — Deep League">
+    <Layout title="Terms &amp; Privacy">
       <div class="max-w-2xl space-y-6 text-sm text-zinc-300">
         <h1 class="text-2xl font-bold text-zinc-100">Terms &amp; Privacy</h1>
         <section class="space-y-2">

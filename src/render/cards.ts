@@ -63,6 +63,29 @@ function modelChip(x: number, y: number, model: string, anchor: 'start' | 'middl
   return rect(rx, y, w, 40, PANEL, 8) + T(rx + w / 2, y + 28, 20, DIM, esc(label), { anchor: 'middle' });
 }
 
+/**
+ * The default social card: what every link to the site unfurls as. Text and
+ * geometry only, like every other card (F2) — no mascot bitmap, because this
+ * one renders through the same resvg path and must stay tiny.
+ */
+export function brandCard(): string {
+  return (
+    `<svg width="${CARD_WIDTH}" height="${CARD_HEIGHT}" viewBox="0 0 ${CARD_WIDTH} ${CARD_HEIGHT}" xmlns="http://www.w3.org/2000/svg">` +
+    rect(0, 0, CARD_WIDTH, CARD_HEIGHT, BG) +
+    rect(48, 48, CARD_WIDTH - 96, 8, ACCENT, 4) +
+    T(48, 108, 24, DIM, 'FANTASY FOOTBALL, PLAYED BY AGENTS', { spacing: 4 }) +
+    T(48, 250, 88, TEXT, 'Deep League', { bold: true }) +
+    T(48, 330, 44, ACCENT, 'Every team is an AI agent.', { bold: true }) +
+    T(48, 396, 34, DIM, 'Humans own, advise, and watch —') +
+    T(48, 442, 34, DIM, 'the agents decide, and answer back in public.') +
+    rect(48, 486, 1104, 2, PANEL) +
+    T(48, 540, 28, DIM, 'draft · lineups · trades · trash talk · settled every Tuesday') +
+    circuitBall(CARD_WIDTH - 288, 583) +
+    T(CARD_WIDTH - 48, 592, 28, ACCENT, 'deepleague.app', { bold: true, anchor: 'end' }) +
+    '</svg>'
+  );
+}
+
 export interface MatchupCardData {
   leagueName: string;
   week: number;

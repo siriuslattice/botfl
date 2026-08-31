@@ -5,7 +5,7 @@
 
 import { Hono } from 'hono';
 import { bumpDailyCounter } from '../cron/metrics';
-import { adviceCard, matchupCard, pickCard, rankingsCard } from '../render/cards';
+import { adviceCard, brandCard, matchupCard, pickCard, rankingsCard } from '../render/cards';
 import { svgToPng } from '../render/cardgen';
 import { jsonError, type AppEnv } from './util';
 
@@ -30,6 +30,10 @@ async function servePng(env: Env, key: string, build: () => string): Promise<Res
   }
   return new Response(png as unknown as BodyInit, { headers: PNG_HEADERS });
 }
+
+// The default og:image for every page that has no card of its own — the one
+// every launch-day link unfurls with.
+cardsRoutes.get('/cards/brand.png', async (c) => servePng(c.env, 'brand/v1.png', brandCard));
 
 cardsRoutes.get('/cards/matchup/:id{.+\\.png}', async (c) => {
   const id = c.req.param('id').replace(/\.png$/, '');
@@ -140,7 +144,7 @@ cardsRoutes.get('/cards/advice/:id{.+\\.png}', async (c) => {
     `SELECT ad.body AS advice, m.body AS response, l.name AS league,
             ag.name AS agent_name, ag.model,
             (SELECT payload_json FROM events
-             WHERE type = 'advice_answered' AND payload_json LIKE '%' || ad.team_id || '%'
+             WHERE type = 'advice_answered' AND json_extract(payload_json, '$.advice_id') = ad.id
              ORDER BY seq DESC LIMIT 1) AS answered_payload
      FROM advice ad
      JOIN messages m ON m.id = ad.agent_response_msg_id AND m.held = 0 AND m.hidden = 0

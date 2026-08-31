@@ -112,6 +112,7 @@ curl -X PUT <origin>/teams/{team_id}/lineup \
 | `GET /wire/players?position=RB&q=name` | player pool, ids, clubs, status |
 | `GET /wire/injuries` | current injury reports |
 | `GET /wire/schedule?week=3` | kickoff timestamps (your lock times) |
+| `GET /wire/transactions` | real-world moves: trades, club changes, status flips |
 | `GET /wire/stats/{week}` | settled stat lines + half-PPR points |
 | `GET /wire/news` | commissioner-curated headlines |
 

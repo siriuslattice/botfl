@@ -2,8 +2,13 @@ name = "botfl"
 main = "src/index.ts"
 compatibility_date = "2026-08-01"
 
-# Public home (zone lives in this Cloudflare account). workers.dev stays
-# enabled as a fallback origin until the G3 launch audit.
+# Public home (zone lives in this Cloudflare account). The workers.dev and
+# preview origins are OFF (G3 launch audit): every IP-keyed limit trusts
+# cf-connecting-ip, which is only trustworthy behind the proxied custom domain
+# — an open *.workers.dev origin would let a client spoof the header and walk
+# past the registration cap.
+workers_dev = false
+preview_urls = false
 routes = [
   { pattern = "deepleague.app", custom_domain = true },
   { pattern = "www.deepleague.app", custom_domain = true },

@@ -3,7 +3,7 @@
 // must respond publicly before its next lineup action, and is never bound.
 
 import { Hono, type Context } from 'hono';
-import { sendEmail } from '../email';
+import { logUndelivered, sendEmail } from '../email';
 import { moderateMessage } from '../moderation/moderate';
 import { Layout } from '../render/layout';
 import {
@@ -90,14 +90,58 @@ ownersRoutes.post('/claim', async (c) => {
     subject: 'Claim your Deep League team',
     text: `Your agent is waiting. Claim your team (link valid 1 hour):\n\n${link}\n\nYou advise; it decides. Welcome to the season.`,
   });
-  if (!result.delivered) console.log(`claim link for ${owner.id}: ${link} (${result.detail})`);
+  if (!result.delivered) logUndelivered(c.env, 'claim', owner.id, link, result.detail);
   if (c.env.DEV_EXPOSE_LINKS === '1') {
     return c.json({ ...generic, dev_magic_link: link });
   }
   return c.json(generic);
 });
 
+const expiredClaimPage = () =>
+  `<!doctype html>${(
+    <Layout title="Claim link expired">
+      <h1 class="text-xl font-bold">That claim link is gone.</h1>
+      <p class="mt-2 text-zinc-400">Links live one hour and work once. Request a fresh one from your team page.</p>
+    </Layout>
+  )}`;
+
+/**
+ * The claim link is a GET people click from an email — so it must not CONSUME
+ * anything: mail scanners and link-prefetchers (SafeLinks, AV, chat unfurlers)
+ * fetch it first and would burn the one-time token before the human arrives
+ * (found in the 2026-08-30 review). GET only confirms; the POST below claims.
+ */
 ownersRoutes.get('/claim/:token', async (c) => {
+  const token = c.req.param('token');
+  const row = await c.env.DB
+    .prepare(
+      "SELECT owner_id FROM owner_tokens WHERE token_hash = ? AND purpose = 'claim' AND used_at IS NULL AND expires_at > ?",
+    )
+    .bind(await sha256hex(token), nowIso())
+    .first<{ owner_id: string }>();
+  if (!row) return c.html(expiredClaimPage(), 410);
+  return c.html(
+    `<!doctype html>${(
+      <Layout title="Claim your team">
+        <h1 class="text-2xl font-bold">Claim your team</h1>
+        <p class="mt-3 text-zinc-400 max-w-xl">
+          You’ll be able to leave advice — up to 3 notes a day. Your agent must answer in public
+          before its next lineup move, and it is never obliged to listen. That’s the fun part.
+        </p>
+        <form method="post" action={`/claim/${encodeURIComponent(token)}`} class="mt-6">
+          <button
+            type="submit"
+            class="rounded bg-emerald-500 px-4 py-2 font-medium text-zinc-950 hover:bg-emerald-400"
+          >
+            Claim my team
+          </button>
+        </form>
+      </Layout>
+    )}`,
+  );
+});
+
+ownersRoutes.post('/claim/:token', async (c) => {
   const db = c.env.DB;
   const hash = await sha256hex(c.req.param('token'));
   const row = await db
@@ -106,21 +150,14 @@ ownersRoutes.get('/claim/:token', async (c) => {
     )
     .bind(hash, nowIso())
     .first<{ token_hash: string; owner_id: string }>();
-  if (!row) {
-    return c.html(
-      `<!doctype html>${(
-        <Layout title="Claim link expired">
-          <h1 class="text-xl font-bold">That claim link is gone.</h1>
-          <p class="mt-2 text-zinc-400">Links live one hour and work once. Request a fresh one from your team page.</p>
-        </Layout>
-      )}`,
-      410,
-    );
-  }
-  await db.batch([
-    db.prepare('UPDATE owner_tokens SET used_at = ? WHERE token_hash = ?').bind(nowIso(), row.token_hash),
-    db.prepare('UPDATE owners SET verified = 1 WHERE id = ?').bind(row.owner_id),
-  ]);
+  if (!row) return c.html(expiredClaimPage(), 410);
+  // Consume under a guard: two concurrent clicks must not both mint a session.
+  const consumed = await db
+    .prepare("UPDATE owner_tokens SET used_at = ? WHERE token_hash = ? AND used_at IS NULL")
+    .bind(nowIso(), row.token_hash)
+    .run();
+  if (consumed.meta.changes !== 1) return c.html(expiredClaimPage(), 410);
+  await db.prepare('UPDATE owners SET verified = 1 WHERE id = ?').bind(row.owner_id).run();
   const session = await createToken(db, row.owner_id, 'session', SESSION_TTL_MS);
 
   const teams = await db
@@ -286,8 +323,11 @@ ownersRoutes.post('/advice/:id/respond', agentAuth(), idempotency, async (c) => 
       .bind(msgId, advice.team_id, agent.id, verdict.message.body, verdict.message.held ? 1 : 0, nowIso()),
     db.prepare('UPDATE advice SET agent_response_msg_id = ? WHERE id = ?').bind(msgId, advice.id),
   ]);
+  // advice_id is what the share card keys its stance off — without it the card
+  // could only guess by team (newest answer wins, wrong on the second advice).
   await logEvent(db, advice.league_id, 'advice_answered', {
     team_id: advice.team_id,
+    advice_id: advice.id,
     ...(stance ? { stance } : {}),
   });
   return c.json({ advice_id: advice.id, response_msg_id: msgId, stance, held: verdict.message.held }, 201);

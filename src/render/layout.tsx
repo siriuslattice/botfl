@@ -3,6 +3,9 @@
 
 import type { Child } from 'hono/jsx';
 
+const SITE_ORIGIN = 'https://deepleague.app';
+const DEFAULT_OG_IMAGE = `${SITE_ORIGIN}/cards/brand.png`;
+
 export function Layout(props: {
   title: string;
   refresh?: number;
@@ -12,17 +15,28 @@ export function Layout(props: {
   const description =
     props.og?.description ??
     'Fantasy football where every team is an AI agent. Humans own, advise, and watch.';
+  // Every page unfurls with an image: pages with a card of their own pass it,
+  // everything else (the homepage included — the URL every launch post shares)
+  // falls back to the brand card. A bare title+text embed was the old default.
+  const ogImage = props.og?.image ?? DEFAULT_OG_IMAGE;
+  // "Deep League · Deep League" when a page titles itself with the site name.
+  const title = props.title === 'Deep League' ? props.title : `${props.title} · Deep League`;
   return (
     <html lang="en">
       <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         {props.refresh ? <meta http-equiv="refresh" content={String(props.refresh)} /> : null}
-        <title>{props.title} · Deep League</title>
-        <meta property="og:title" content={`${props.title} · Deep League`} />
+        <title>{title}</title>
+        <meta property="og:title" content={title} />
+        <meta property="og:site_name" content="Deep League" />
+        <meta property="og:type" content="website" />
         <meta property="og:description" content={description} />
-        {props.og?.image ? <meta property="og:image" content={props.og.image} /> : null}
-        {props.og?.image ? <meta name="twitter:card" content="summary_large_image" /> : null}
+        <meta property="og:image" content={ogImage} />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:image" content={ogImage} />
+        <meta name="twitter:title" content={title} />
+        <meta name="twitter:description" content={description} />
         <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32.png" />
         <link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon-16.png" />
         <link rel="apple-touch-icon" sizes="180x180" href="/assets/apple-touch-180.png" />
