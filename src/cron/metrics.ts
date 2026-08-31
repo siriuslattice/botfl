@@ -49,6 +49,14 @@ export async function computeDayMetrics(db: D1Database, day: string): Promise<Da
   const metrics: Record<string, number> = {
     registrations_byo: await one(
       "SELECT COUNT(*) n FROM agents WHERE tier = 'byo' AND badge != 'commissioner' AND created_at BETWEEN ? AND ?", from, to),
+    // K1 counts EXTERNALLY-owned agents only — house personas register through
+    // the same public route, so without the is_house split the kill-criteria
+    // evaluation would count our own fleet as traction.
+    registrations_external: await one(
+      `SELECT COUNT(*) n FROM agents WHERE is_house = 0 AND badge != 'commissioner'
+       AND created_at BETWEEN ? AND ?`, from, to),
+    external_agents_total: await one(
+      "SELECT COUNT(*) n FROM agents WHERE is_house = 0 AND badge != 'commissioner'"),
     registrations_hosted: await one(
       "SELECT COUNT(*) n FROM agents WHERE tier = 'hosted' AND created_at BETWEEN ? AND ?", from, to),
     agents_active: await one(
@@ -70,7 +78,51 @@ export async function computeDayMetrics(db: D1Database, day: string): Promise<Da
     cards_generated: await counterFor(db, 'metric:cards_generated', day),
     cards_fetched: await counterFor(db, 'metric:cards_fetched', day),
   };
+  // K2 (≥50% of external agents submit a Week-3 lineup) is a RATE over a
+  // league-week, not a daily count — daily event tallies can't answer it after
+  // the fact. Snapshot it each day against every active league's current
+  // unsettled week; the Oct 6 read is then a lookup, not an archaeology dig.
+  const k2 = await externalLineupRate(db);
+  metrics.external_with_lineup = k2.withLineup;
+  metrics.external_in_active_leagues = k2.eligible;
+  metrics.external_lineup_rate = k2.rate;
   return { day, metrics };
+}
+
+/**
+ * Share of externally-owned agents in active leagues that have a lineup for
+ * their league's current (earliest unsettled) week. Kill criterion K2.
+ */
+export async function externalLineupRate(
+  db: D1Database,
+): Promise<{ eligible: number; withLineup: number; rate: number }> {
+  const row = await db
+    .prepare(
+      `WITH current_week AS (
+         SELECT league_id, MIN(week) AS week FROM matchups WHERE settled_at IS NULL GROUP BY league_id
+       ),
+       eligible AS (
+         SELECT t.id AS team_id, cw.week
+         FROM teams t
+         JOIN leagues l ON l.id = t.league_id AND l.status = 'active'
+         JOIN agents a ON a.id = t.agent_id AND a.is_house = 0 AND a.badge != 'commissioner'
+         JOIN current_week cw ON cw.league_id = t.league_id
+       )
+       SELECT COUNT(*) AS eligible,
+              SUM(CASE WHEN EXISTS (
+                SELECT 1 FROM lineups ln
+                WHERE ln.team_id = e.team_id AND ln.week = e.week AND ln.player_id IS NOT NULL
+              ) THEN 1 ELSE 0 END) AS with_lineup
+       FROM eligible e`,
+    )
+    .first<{ eligible: number; with_lineup: number | null }>();
+  const eligible = row?.eligible ?? 0;
+  const withLineup = row?.with_lineup ?? 0;
+  return {
+    eligible,
+    withLineup,
+    rate: eligible === 0 ? 0 : Math.round((withLineup / eligible) * 1000) / 1000,
+  };
 }
 
 /**

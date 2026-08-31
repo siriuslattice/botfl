@@ -7,7 +7,7 @@
 import { getWireIngest } from '../sport';
 import type { IngestResult } from '../sport/adapter';
 
-export async function runIngest(db: D1Database, season: number): Promise<IngestResult[]> {
+export async function runIngest(db: D1Database, season: number, env?: Env): Promise<IngestResult[]> {
   const ingest = getWireIngest('nfl');
   const results: IngestResult[] = [];
   results.push(await ingest.syncPlayers(db, season));
@@ -21,6 +21,7 @@ export async function runIngest(db: D1Database, season: number): Promise<IngestR
   }
 
   await sweepReplayCache(db);
+  if (env) await checkRunnerHeartbeat(db, env);
 
   await db
     .prepare('INSERT INTO events (league_id, type, payload_json, created_at) VALUES (NULL, ?, ?, ?)')
@@ -142,4 +143,53 @@ async function raiseWireAlarms(db: D1Database, season: number, results: IngestRe
       .bind('wire_alarm', JSON.stringify({ season, ...alarm }), new Date(now).toISOString())
       .run();
   }
+}
+
+/**
+ * House-runner watchdog. The house fleet lives on one machine outside
+ * Cloudflare; if it dies, the site decays QUIETLY — forming leagues never
+ * fill, house lineups stop, banter goes stale, advice goes unanswered — and
+ * nothing on the site says so. Ownership of that signal belongs here, in the
+ * one process that always runs. Alarms at most once a day, and emails the
+ * operator when OPERATOR_EMAIL is set.
+ */
+export async function checkRunnerHeartbeat(db: D1Database, env: Env, quietHours = 6): Promise<boolean> {
+  const now = Date.now();
+  const active = await db
+    .prepare("SELECT 1 AS x FROM leagues WHERE status IN ('drafting', 'active') LIMIT 1")
+    .first();
+  if (!active) return false;
+  const last = await db
+    .prepare(
+      `SELECT MAX(e.created_at) AS at FROM events e
+       WHERE e.type IN ('lineup_submitted', 'banter', 'draft_pick', 'fa_move', 'advice_answered')`,
+    )
+    .first<{ at: string | null }>();
+  const lastMs = last?.at ? Date.parse(last.at) : 0;
+  if (lastMs > now - quietHours * 3600_000) return false;
+
+  const recent = await db
+    .prepare("SELECT 1 AS x FROM events WHERE type = 'runner_stale' AND created_at > ? LIMIT 1")
+    .bind(new Date(now - 24 * 3600_000).toISOString())
+    .first();
+  if (recent) return false;
+
+  const hours = lastMs === 0 ? 'ever' : `${Math.floor((now - lastMs) / 3600_000)}h`;
+  console.error(`RUNNER ALARM: no agent activity in ${hours} while leagues are live`);
+  await db
+    .prepare('INSERT INTO events (league_id, type, payload_json, created_at) VALUES (NULL, ?, ?, ?)')
+    .bind('runner_stale', JSON.stringify({ last_activity: last?.at ?? null }), new Date(now).toISOString())
+    .run();
+  if (env.OPERATOR_EMAIL) {
+    const { sendEmail } = await import('../email');
+    await sendEmail(env, {
+      to: env.OPERATOR_EMAIL,
+      subject: 'Deep League: house agents have gone quiet',
+      text:
+        `No agent activity in ${hours} while leagues are live.\n\n` +
+        'Check the house runner on its machine: crontab -l | grep deep-league, ' +
+        'then tail ~/.local/state/deep-league/runner.log.',
+    });
+  }
+  return true;
 }

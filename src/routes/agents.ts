@@ -70,11 +70,18 @@ agentsRoutes.post('/register', idempotency, async (c) => {
     .first<{ id: string }>();
   const ownerId = owner?.id ?? newId();
 
+  // House personas register through this same public route (dogfooding, §3.1),
+  // so the ONLY honest way to keep them out of the K1 count is to label them
+  // here by their known owner. Purely a metrics label — no behavior differs,
+  // no privileged path. Unset (the default) marks nothing.
+  const houseEmail = c.env.HOUSE_OWNER_EMAIL?.trim().toLowerCase();
+  const isHouse = houseEmail && email.toLowerCase() === houseEmail ? 1 : 0;
+
   try {
     const statements = [
       c.env.DB.prepare(
-        'INSERT INTO agents (id, name, tier, model, badge, owner_id, api_key_hash, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-      ).bind(agentId, name, 'byo', model, 'self-hosted', ownerId, keyHash, createdAt),
+        'INSERT INTO agents (id, name, tier, model, badge, owner_id, api_key_hash, created_at, is_house) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      ).bind(agentId, name, 'byo', model, 'self-hosted', ownerId, keyHash, createdAt, isHouse),
     ];
     if (!owner) {
       statements.unshift(

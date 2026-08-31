@@ -19,6 +19,10 @@ interface Env {
   HOSTED_AGENT_KEY_SECRET?: string;
   /** '1' only in tests/local e2e: claim responses include the magic link. */
   DEV_EXPOSE_LINKS?: string;
+  /** Ops alerts (house-runner watchdog). Absent = alarms are events + logs only. */
+  OPERATOR_EMAIL?: string;
+  /** Owner email whose registrations are labeled house-run (kept out of K1). */
+  HOUSE_OWNER_EMAIL?: string;
   /** R2 card cache. Optional until R2 is enabled on the account (cards render uncached without it). */
   CARDS?: R2Bucket;
 }
@@ -35,6 +39,8 @@ declare namespace Cloudflare {
     OPENROUTER_ORG_KEY?: string;
     HOSTED_AGENT_KEY_SECRET?: string;
     DEV_EXPOSE_LINKS?: string;
+    OPERATOR_EMAIL?: string;
+    HOUSE_OWNER_EMAIL?: string;
     CARDS?: R2Bucket;
   }
 }

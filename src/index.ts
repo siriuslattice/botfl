@@ -51,7 +51,7 @@ export default {
     const season = Number(env.CURRENT_SEASON ?? '2026');
     if (event.cron === '0 */6 * * *') {
       const { runIngest } = await import('./cron/ingest');
-      const results = await runIngest(env.DB, season);
+      const results = await runIngest(env.DB, season, env);
       ingested = results.map((r) => `${r.source}:${r.skipped ? 'skip' : r.rows}`).join(' ');
     } else if (event.cron === '4-54/10 * * * *') {
       // Tier 2 hosted runner — its own trigger, its own subrequest budget.

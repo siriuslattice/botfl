@@ -43,6 +43,22 @@ const [t] = d1(`SELECT
   (SELECT COALESCE((SELECT count FROM rate_counters WHERE scope='metric:cards_generated' AND bucket='day' AND window_start=${dayWindow}),0)) cards_generated`);
 console.log('querying hosted spend…');
 const spend = d1('SELECT month, model, calls, spent_microusd FROM hosted_spend ORDER BY month DESC, model ASC LIMIT 40');
+console.log('querying kill criteria…');
+// K1/K2 (SPEC §2, evaluated Oct 6). Mirrors externalLineupRate in
+// src/cron/metrics.ts — keep the two in sync when either changes.
+const [k] = d1(`SELECT
+  (SELECT COUNT(*) FROM agents WHERE is_house = 0 AND badge != 'commissioner') external_agents,
+  (SELECT COUNT(*) FROM agents WHERE is_house = 1) house_agents,
+  (SELECT COUNT(*) FROM teams t JOIN leagues l ON l.id = t.league_id AND l.status = 'active'
+     JOIN agents a ON a.id = t.agent_id AND a.is_house = 0 AND a.badge != 'commissioner') external_seated,
+  (SELECT COUNT(*) FROM teams t
+     JOIN leagues l ON l.id = t.league_id AND l.status = 'active'
+     JOIN agents a ON a.id = t.agent_id AND a.is_house = 0 AND a.badge != 'commissioner'
+     WHERE EXISTS (SELECT 1 FROM lineups ln WHERE ln.team_id = t.id AND ln.player_id IS NOT NULL
+                   AND ln.week = (SELECT MIN(week) FROM matchups m WHERE m.league_id = t.league_id AND m.settled_at IS NULL))
+  ) external_with_lineup`);
+const k1 = k.external_agents ?? 0;
+const k2Rate = (k.external_seated ?? 0) === 0 ? 0 : (k.external_with_lineup ?? 0) / k.external_seated;
 
 const days = new Map();
 for (const r of dayRows) {
@@ -63,6 +79,12 @@ const html = `<!doctype html><html lang="en"><head><meta charset="utf-8"/>
 <body class="bg-zinc-950 text-zinc-100 min-h-screen"><main class="max-w-5xl mx-auto px-4 py-8">
 <div class="flex items-baseline justify-between mb-6"><h1 class="text-2xl font-bold">Deep League ops</h1>
 <span class="text-xs text-zinc-500">local snapshot · ${esc(new Date().toISOString().slice(0, 16))}Z · built by scripts/dashboard.mjs</span></div>
+<h2 class="text-sm uppercase tracking-widest text-zinc-500 mb-3">kill criteria · evaluated Tue Oct 6</h2>
+<div class="grid grid-cols-2 md:grid-cols-3 gap-3 mb-8">
+${tile('K1 external agents', `${k1} / 100`, k1 >= 100 ? '✓ passing' : `${100 - k1} to go · ${k.house_agents ?? 0} house (excluded)`)}
+${tile('K2 lineup rate', `${Math.round(k2Rate * 100)}% / 50%`, `${k.external_with_lineup ?? 0} of ${k.external_seated ?? 0} seated externals, current week`)}
+${tile('K3 organic reach', 'manual', 'one post/screenshot >25k views')}
+</div>
 <h2 class="text-sm uppercase tracking-widest text-zinc-500 mb-3">today so far (UTC)</h2>
 <div class="grid grid-cols-2 md:grid-cols-3 gap-3 mb-8">
 ${tile('registrations today', (t.registrations_byo ?? 0) + (t.registrations_hosted ?? 0), `${t.registrations_hosted ?? 0} hosted`)}
