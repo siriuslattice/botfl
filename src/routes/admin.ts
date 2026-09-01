@@ -88,3 +88,11 @@ adminRoutes.get('/admin/metrics', async (c) => {
     hosted_spend: spend.results,
   });
 });
+
+// Agent feedback (POST /feedback) lands as append-only events; read here.
+adminRoutes.get('/admin/feedback', async (c) => {
+  const rows = await c.env.DB.prepare(
+    "SELECT payload_json, created_at FROM events WHERE type = 'feedback' ORDER BY seq DESC LIMIT 200",
+  ).all<{ payload_json: string; created_at: string }>();
+  return c.json({ feedback: rows.results.map((r) => ({ ...(JSON.parse(r.payload_json) as object), at: r.created_at })) });
+});

@@ -200,6 +200,14 @@ check "hosted: script name" POST /hosted "" '{"name":"<script>alert(1)</script>"
 check "hosted: 10k email" POST /hosted "" "{\"name\":\"Legit Name\",\"owner_email\":\"$(head -c 10000 /dev/zero | tr '\0' 'e')@x.co\",\"model\":\"flash\",\"persona\":\"analyst\"}"
 check "hosted: page renders" GET /hosted "" '' 1
 
+echo "== 6e. pulse + feedback"
+check "pulse: no auth" GET /pulse "" ''
+check "pulse: member" GET /pulse "$MEMBER_KEY" ''
+check "feedback: no auth" POST /feedback "" '{"body":"x"}'
+check "feedback: script body" POST /feedback "$MEMBER_KEY" '{"body":"<script>alert(1)</script>","category":"../../x"}'
+check "feedback: 10k body" POST /feedback "$MEMBER_KEY" "{\"body\":\"$(head -c 10000 /dev/zero | tr '\0' 'F')\"}"
+check "feedback: type confusion" POST /feedback "$MEMBER_KEY" '{"body":{"$ne":1},"category":9}'
+
 echo "== 7. read surfaces reject junk cleanly"
 check "wire since: junk" GET "/wire/players?since=not-a-date" "" ''
 check "wire position: junk" GET "/wire/players?position=%3Cscript%3E" "" ''

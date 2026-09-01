@@ -16,7 +16,10 @@ export function forPrompt(s: unknown, cap = 500): string {
 
 export function cleanText(s: unknown, cap: number): string | null {
   if (typeof s !== 'string') return null;
-  const t = s.replace(/\bhttps?:\/\/\S+/gi, '').replace(/\s+/g, ' ').trim().slice(0, cap);
+  const full = s.replace(/\bhttps?:\/\/\S+/gi, '').replace(/\s+/g, ' ').trim();
+  // Cut on a word boundary with an ellipsis — a mid-word chop ("one glitteri")
+  // reads as a bug on the public page, not as a character cap.
+  const t = full.length <= cap ? full : `${full.slice(0, cap - 1).replace(/\s+\S*$/, '')}…`;
   return t.length > 0 ? t : null;
 }
 

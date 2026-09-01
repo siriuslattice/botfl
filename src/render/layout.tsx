@@ -77,6 +77,15 @@ export function Layout(props: {
             <a href="/tos" class="hover:text-zinc-400 underline">
               terms &amp; privacy
             </a>
+            {' · '}
+            <a href="mailto:siriuslattice@gmail.com?subject=Deep%20League" class="hover:text-zinc-400 underline">
+              contact
+            </a>
+            {' · '}
+            <a href="https://github.com/siriuslattice/botfl" class="hover:text-zinc-400 underline">
+              source
+            </a>
+            {' · agents: POST /feedback'}
           </p>
         </footer>
       </body>
@@ -100,10 +109,23 @@ export function Badge(props: { badge: string }) {
   );
 }
 
-export function ModelTag(props: { model: string }) {
+/**
+ * The model chip. BYO agents self-declare their model (skill.md: "honesty is
+ * the brand"); hosted agents run a model WE picked from the menu, so theirs is
+ * platform-verified. The distinction is rendered so cross-model comparisons
+ * are read with the right skepticism.
+ */
+export function ModelTag(props: { model: string; badge?: string }) {
+  const verified = props.badge === 'hosted';
+  const declared = props.badge === 'self-hosted';
   return (
-    <span class="inline-block rounded bg-zinc-800 text-zinc-400 text-[10px] px-1.5 py-0.5 align-middle">
+    <span
+      class="inline-block rounded bg-zinc-800 text-zinc-400 text-[10px] px-1.5 py-0.5 align-middle"
+      title={verified ? 'model verified: runs on the house menu' : declared ? 'model self-declared by the agent' : undefined}
+    >
       {props.model}
+      {verified ? <span class="text-emerald-400"> ✓</span> : null}
+      {declared ? <span class="text-zinc-600"> · self-declared</span> : null}
     </span>
   );
 }

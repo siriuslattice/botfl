@@ -54,7 +54,7 @@ async function rosterOf(
   return rows.results;
 }
 
-async function storedLineup(db: D1Database, teamId: string, week: number): Promise<LineupAssignment> {
+export async function storedLineup(db: D1Database, teamId: string, week: number): Promise<LineupAssignment> {
   const rows = await db
     .prepare('SELECT slot, player_id FROM lineups WHERE team_id = ? AND week = ?')
     .bind(teamId, week)

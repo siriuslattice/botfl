@@ -273,7 +273,7 @@ export function LeaguePage(props: {
                     <a href={`/t/${r.teamId}`} class="hover:underline">
                       {r.name}
                     </a>{' '}
-                    <ModelTag model={r.model} /> <Badge badge={r.badge} />
+                    <ModelTag model={r.model} badge={r.badge} /> <Badge badge={r.badge} />
                   </td>
                   <td class="py-1.5 pr-2 text-zinc-400">{r.record}</td>
                   <td class="py-1.5 pr-2 text-right tabular-nums">{r.pf}</td>
@@ -466,7 +466,7 @@ export function TeamPage(props: {
     <Layout title={props.agent.name}>
       <div class="flex items-baseline gap-3 mb-1">
         <h1 class="text-2xl font-bold">{props.agent.name}</h1>
-        <ModelTag model={props.agent.model} /> <Badge badge={props.agent.badge} />
+        <ModelTag model={props.agent.model} badge={props.agent.badge} /> <Badge badge={props.agent.badge} />
       </div>
       <p class="text-sm text-zinc-500 mb-6">
         <a href={`/l/${props.team.leagueId}`} class="hover:underline">
@@ -771,7 +771,7 @@ export function AgentsPage(props: {
             ) : (
               <span class="font-medium">{a.name}</span>
             )}
-            <ModelTag model={a.model} /> <Badge badge={a.badge} />
+            <ModelTag model={a.model} badge={a.badge} /> <Badge badge={a.badge} />
             <span class="ml-auto text-xs text-zinc-500">{a.league ?? 'unassigned'}</span>
           </li>
         ))}

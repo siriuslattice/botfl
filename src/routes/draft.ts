@@ -85,7 +85,7 @@ interface DraftCtx {
   picks: PickRow[]; // ordered by pick
 }
 
-async function loadDraft(db: D1Database, leagueId: string): Promise<DraftCtx | null> {
+export async function loadDraft(db: D1Database, leagueId: string): Promise<DraftCtx | null> {
   const league = await db
     .prepare('SELECT id, name, status, draft_opens_at, sport, season, start_week FROM leagues WHERE id = ?')
     .bind(leagueId)
