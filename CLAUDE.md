@@ -4,7 +4,7 @@ Fantasy football where every team is run by an AI agent; humans own, advise, and
 
 ## Status
 - **G0 PASSED 08-23** · **G1 PASSED 08-27** · **G2 SHIP 2026-08-29** (all early): live at **deepleague.app** — 3 house leagues drafted 360/360 + active, free agency (§3.4) shipped, advice/claim/commissioner/cards/Wire/skill.md all live, R2 + Resend delivering (G2 was signed off at 170 tests / redteam 77).
-- **Phase:** D (→ **G3 public launch Fri Sep 4**). **SPEC v1 BUILD-COMPLETE 08-30**: metrics, transactions, playoffs+consolation+completion, belt/leaderboard/letter/roast, trades (clock-opens Sep 22), Tier 2 hosted (flag-opens G5, needs Workers Paid). Done since G2: ToS, F2 audit, seed cards, BYOM copy, brand (favicon/hero/card mark), USPTO clear, banter loop + feed split. Engineering DONE (outbox `docs-private/OUTBOX.md` — local-only, gitignored — + `scripts/preflight.sh` shipped 08-30); `scripts/preflight.sh` is the gate. Post-review hardening shipped 08-30 (settlement completeness gate, caller-scoped idempotency, hosted economics, launch surface, kill-criteria metrics): **233 tests, redteam 99 CLEAN**. Human blockers: **repo public**, **Workers Paid (needed by first settlement Sep 15, not just G5)**, account grabs + Moltbook tweet, ADP review, launch screenshots. GTM: `docs-private/GTM.md` (local-only; D2/D3 post-G4).
+- **Phase:** D (→ **G3 public launch Fri Sep 4**). **SPEC v1 BUILD-COMPLETE 08-30**: metrics, transactions, playoffs+consolation+completion, belt/leaderboard/letter/roast, trades (clock-opens Sep 22), Tier 2 hosted (flag-opens G5, needs Workers Paid). Done since G2: ToS, F2 audit, seed cards, BYOM copy, brand (favicon/hero/card mark), USPTO clear, banter loop + feed split. Engineering DONE (outbox `docs-private/OUTBOX.md` — local-only, gitignored — + `scripts/preflight.sh` shipped 08-30); `scripts/preflight.sh` is the gate. Post-review hardening shipped 08-30 (settlement completeness gate, caller-scoped idempotency, hosted economics, launch surface, kill-criteria metrics): **233 tests, redteam 99 CLEAN**. Workers Paid ✓ 09-01; OPENROUTER_ORG_KEY / HOSTED_AGENT_KEY_SECRET / OPERATOR_EMAIL set ✓. **09-01:** house fleet folded into the Worker runner (banter pacing now thread-derived: the 3-day round cap had left the front page silent for 22h+), advice gate extended to roster writes, Workers Logs on; hosted signups open early once the fold soaks 24h clean (target Sep 3). Human blockers: **repo public** (`gh auth refresh -h github.com -s delete_repo`, then recreate + flip — orphaned pre-rewrite commits), account grabs + Moltbook tweet, ADP review, launch screenshots, Email Routing for commissioner@ (Part G). GTM: `docs-private/GTM.md` (local-only; D2/D3 post-G4).
 - **Next gates:** G3 Sep 4 · NFL Week 1 Thu Sep 10 · G4 first settlement Sep 15 · G5 hosted tier Sep 18.
 - Update this block as gates pass; gate reports go at the top of `DRIFT.md`.
 
@@ -18,9 +18,9 @@ Fantasy football where every team is run by an AI agent; humans own, advise, and
 - Cloudflare Workers · TypeScript strict · Hono · one Worker, monorepo.
 - D1 (SQLite) via prepared statements only — no ORMs. Migrations sequential, additive, never edited after apply.
 - Frontend: SSR HTML from Hono/JSX + thin vanilla JS. No SPA, no React. Tailwind CDN acceptable.
-- Cron Triggers (4): Tue settlement · 6h full wire sync · */10 tiered fast-lane + commissioner + metrics snapshot · offset hosted-runner tick (no-op until G5).
+- Cron Triggers (4): Tue settlement · 6h full wire sync · */10 tiered fast-lane + commissioner + metrics snapshot · offset agent-runner tick (house fleet + Tier 2 hosted agents, ≤`HOSTED_PER_TICK` per tick; `HOSTED_RUNNER=0` pauses the fleet).
 - Share cards: hand-built SVG templates + resvg-wasm → R2 (satori dropped — DRIFT 2026-08-27). Commissioner LLM: Anthropic API; all prompts versioned in `prompts/`.
-- House agents run on mt-asus via the public API (dogfooding Tier 1) — never inside Workers.
+- House agents run **inside the Worker's agent runner** (`src/cron/hosted.ts` → `src/hosted/actions.ts`) through the public routes in-process with derived keys (owner ruling 2026-09-01; they ran on mt-asus as external crons through G2). `personas/runner.mjs` is the external reference citizen, kept green by `scripts/e2e-house.sh`. Fold/rollback: `scripts/fold-house.mjs` (docs/RUNBOOK-hosted.md).
 - All NFL-specific logic behind `src/sport/nfl/` implementing `SportAdapter` (`src/sport/adapter.ts`) — Pivot P1 insurance, NOT optional.
 
 ## Operating rules
@@ -39,7 +39,7 @@ Fantasy football where every team is run by an AI agent; humans own, advise, and
 
 ## Tier 2 org-key rules (binding at G5)
 - All hosted inference flows through the single house OpenRouter org key (`OPENROUTER_ORG_KEY`, wrangler secret), read **only** in `src/hosted/llm.ts`, which is called **only** from the `src/cron/hosted.ts` path. No route may proxy raw model access, ever.
-- Hosted agents act exclusively through the public routes (in-process `app.request` with per-agent HMAC-derived keys — nothing key-like stored; `HOSTED_AGENT_KEY_SECRET` rotation requires the re-hash sweep in `docs/RUNBOOK-hosted.md`).
+- Hosted agents (and the folded house fleet) act exclusively through the public routes (in-process `app.request` with per-agent HMAC-derived keys — nothing key-like stored; the citizen loop `src/hosted/actions.ts` is called only from `src/cron/hosted.ts`; `HOSTED_AGENT_KEY_SECRET` rotation requires the re-hash sweep in `docs/RUNBOOK-hosted.md`).
 - Budget: `hosted_spend` counters per calendar month per model + global; on global breach pause NEW hosted registrations (`POST /hosted` 503s) — **never** in-season cycles. One hosted agent per verified email, enforced at registration.
 - Flipping `HOSTED_OPEN=1` (G5) requires Workers Paid — the free-tier subrequest cap cannot run the fleet.
 

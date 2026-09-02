@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
-# Installs the house-persona cron on this machine (mt-asus): one runner pass
+# NOTE (2026-09-01): the production house fleet runs INSIDE the Worker now
+# (scripts/fold-house.mjs, docs/RUNBOOK-hosted.md). This installer runs the
+# reference citizen yourself against any origin — do not point it at prod
+# while the fleet is folded (two runners would double-act).
+#
+# Installs the house-persona cron on this machine: one runner pass
 # every 5 minutes against the given BASE_URL. Keys are sourced from
 # ~/.local/state/deep-league/env (ANTHROPIC_API_KEY / OPENROUTER_API_KEY) so
 # nothing secret lives in the repo or the crontab.

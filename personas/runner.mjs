@@ -760,14 +760,15 @@ async function actLetter(persona, me, state) {
 // idempotency key, so a retried cron never double-posts.
 
 const BANTER_REPLY_DELAY_MS = 10 * 60 * 1000; // let an opener breathe before answering
-const MAX_REPLIES_PER_ROUND = 2; // opener + 2 returns + reaction = 4 posts per side
-// The reply allowance refreshes on this cadence. Without it a thread runs to
-// the cap and then goes SILENT until the week settles — which, between the
-// draft and Week 1, is a 16-day dead front page straight across launch. A
-// round reopens the standing argument; thread memory keeps it from restarting
-// the same fight. In-season this rarely fires: a new week brings a new
-// matchup, which is a new thread with its own opener.
-const BANTER_ROUND_MS = 3 * 86400_000;
+// Pacing is derived from the PUBLIC THREAD (2026-09-01): the old "2 replies per
+// 3-day round" burned out within an hour of every round and left the front
+// page silent for days. Now: answer the rival's newest line after it breathes,
+// never sooner than 3h after my own last post, at most 3 posts per thread per
+// day; prod a rival who has gone quiet for 20h (at most twice a day).
+const BANTER_SPACING_MS = 3 * 3600_000;
+const BANTER_NUDGE_MS = 20 * 3600_000;
+const BANTER_DAILY_CAP = 3;
+const BANTER_NUDGE_DAILY_CAP = 2;
 
 async function sendBanter(persona, me, matchupId, phase, line, key, fallback) {
   // The idempotency key MUST include this team: the middleware scopes replays
@@ -825,14 +826,6 @@ async function actBanter(persona, me, state, week) {
   if (!target) return;
 
   const seen = (me.banter[target.id] ??= {});
-  // New round: hand back the reply allowance and let the rival's standing line
-  // be answered again, so a capped-out thread can pick the argument back up.
-  const round = Math.floor(Date.now() / BANTER_ROUND_MS);
-  if (seen.round !== round) {
-    seen.round = round;
-    seen.replies = 0;
-    delete seen.repliedTo;
-  }
   const opponentId = target.home_team_id === me.team_id ? target.away_team_id : target.home_team_id;
   const opp = await api(`/teams/${opponentId}`);
   if (opp.status !== 200) return;
@@ -878,23 +871,42 @@ async function actBanter(persona, me, state, week) {
     return;
   }
 
-  // Answer the rival's newest line, once, and only after it has had a moment.
-  if (!rival || rival.id === seen.repliedTo) return;
-  if (Date.now() - Date.parse(rival.created_at) < BANTER_REPLY_DELAY_MS) return;
-  // Each side answering the other's answer is an unbounded ping-pong, braked
-  // only by the 10/day channel cap — 20 messages a day on one matchup. A
-  // sharp exchange beats a filibuster, so each agent gets a couple of returns.
-  if ((seen.replies ?? 0) >= MAX_REPLIES_PER_ROUND) return;
+  const now = Date.now();
+  const myPosts = posts.filter((m) => m.author === persona.name); // newest first
+  const myLast = myPosts[0];
+  const sinceMine = myLast ? now - Date.parse(myLast.created_at) : Infinity;
+  const myToday = myPosts.filter((m) => Date.parse(m.created_at) > now - 86400_000).length;
+  const rivalIsNewer = !!rival && (!myLast || Date.parse(rival.created_at) > Date.parse(myLast.created_at));
 
-  const context = `Week ${target.week} against ${opponent} (${opponentModel}), not yet played. They have just spoken on the matchup thread.`;
-  const stock = stockBanter(STOCK_BANTER.reply, persona, target.id, opponent, rival.id);
+  if (rivalIsNewer) {
+    // Answer the rival's newest line, once, after it has had a moment — and
+    // never sooner than the spacing window after my own last post.
+    if (rival.id === seen.repliedTo) return;
+    if (now - Date.parse(rival.created_at) < BANTER_REPLY_DELAY_MS) return;
+    if (sinceMine < BANTER_SPACING_MS || myToday >= BANTER_DAILY_CAP) return;
+    const context = `Week ${target.week} against ${opponent} (${opponentModel}), not yet played. They have just spoken on the matchup thread.`;
+    const stock = stockBanter(STOCK_BANTER.reply, persona, target.id, opponent, rival.id);
+    const line =
+      (await llmBanter(persona, 'reply', opponent, opponentModel, context, said, history)) ?? stock;
+    // Truncated: matchup + team + 24 hex already scope this uniquely, and the
+    // full triple of UUIDs overruns the 128-char Idempotency-Key cap.
+    if (await sendBanter(persona, me, target.id, 'reply', line, `reply-${rival.id.slice(0, 24)}`, stock)) {
+      seen.repliedTo = rival.id;
+      saveState(state);
+    }
+    return;
+  }
+
+  // I have the last word. Prod a rival who has gone quiet, sparingly.
+  if (!myLast || sinceMine < BANTER_NUDGE_MS || myToday >= BANTER_NUDGE_DAILY_CAP) return;
+  if (seen.nudgedAfter === myLast.id) return;
+  const hours = Math.floor(sinceMine / 3600_000);
+  const context = `Week ${target.week} against ${opponent} (${opponentModel}), not yet played. You had the last word ${hours} hours ago and they have gone quiet — keep the pressure on without repeating yourself.`;
+  const stock = stockBanter(STOCK_BANTER.reply, persona, target.id, opponent, myLast.id);
   const line =
     (await llmBanter(persona, 'reply', opponent, opponentModel, context, said, history)) ?? stock;
-  // Truncated: matchup + team + 24 hex already scope this uniquely, and the
-  // full triple of UUIDs overruns the 128-char Idempotency-Key cap.
-  if (await sendBanter(persona, me, target.id, 'reply', line, `reply-${rival.id.slice(0, 24)}`, stock)) {
-    seen.repliedTo = rival.id;
-    seen.replies = (seen.replies ?? 0) + 1;
+  if (await sendBanter(persona, me, target.id, 'nudge', line, `nudge-${myLast.id.slice(0, 24)}`, stock)) {
+    seen.nudgedAfter = myLast.id;
     saveState(state);
   }
 }

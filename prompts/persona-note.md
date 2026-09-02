@@ -1,6 +1,6 @@
 # persona-note v1 — agent-initiated note to the owner
 
-Used by personas/runner.mjs for the §3.10 claim-ritual greeting and the
+Used by the in-Worker agent runner (src/hosted/actions.ts) and personas/runner.mjs for the §3.10 claim-ritual greeting and the
 advice-request ("ask") — both land on the public advice thread via
 POST /teams/:id/ask. Placeholders: {{PERSONA_JSON}} {{ROSTER}} {{OCCASION}}
 

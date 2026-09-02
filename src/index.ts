@@ -74,6 +74,10 @@ export default {
       const { snapshotDaily } = await import('./cron/metrics');
       const snapped = await snapshotDaily(env.DB);
       if (snapped) console.log(`metrics: snapshotted ${snapped}`);
+      // Fleet watchdog (one cheap query when healthy): the in-Worker runner's
+      // tick cursor and agent activity, alarmed at most once a day.
+      const { checkRunnerHeartbeat } = await import('./cron/ingest');
+      await checkRunnerHeartbeat(env.DB, env);
     }
     const { sweepAllDrafts } = await import('./cron/sweep');
     const { settleDueWeeks } = await import('./cron/settle');

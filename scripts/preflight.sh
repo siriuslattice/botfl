@@ -66,20 +66,23 @@ DELAY=$(grep -oE 'DRAFT_OPEN_DELAY_SEC = "[0-9]+"' wrangler.toml | grep -oE '[0-
 
 echo "== 7. secrets + delivery"
 SECRETS=$(npx wrangler secret list 2>/dev/null)
-for s in RESEND_API_KEY ANTHROPIC_API_KEY ADMIN_TOKEN; do
+for s in RESEND_API_KEY ANTHROPIC_API_KEY ADMIN_TOKEN OPENROUTER_ORG_KEY HOSTED_AGENT_KEY_SECRET OPERATOR_EMAIL; do
   echo "$SECRETS" | grep -q "$s" && pass "secret $s set" || fail "secret $s MISSING"
 done
 
-echo "== 8. house runner cron on this machine"
-if crontab -l 2>/dev/null | grep -q "deep-league-house-runner"; then
-  pass "cron installed"
-  # The runner touches this on EVERY pass, quiet or not — log mtime cannot
-  # tell a quiet pass from a dead cron.
-  HB="$HOME/.local/state/deep-league/heartbeat"
-  if [ -f "$HB" ] && [ $(( $(date +%s) - $(stat -c %Y "$HB") )) -lt 900 ]; then
-    pass "runner heartbeat fresh (<15 min)"
-  else fail "runner heartbeat stale/missing — cron dead or runner erroring"; fi
-else fail "house-runner cron NOT installed"; fi
+echo "== 8. agent fleet (the in-Worker runner, trigger 4-54/10)"
+# The house fleet + hosted agents run inside the Worker since 2026-09-01; the
+# tick cursor (agents.hosted_last_run_at) is the heartbeat — no laptop involved.
+ROW=$(npx wrangler d1 execute botfl-db --remote --json --command \
+  "SELECT COUNT(*) n, CAST((julianday('now')-julianday(MAX(hosted_last_run_at)))*1440 AS INT) m FROM agents WHERE tier='hosted'" 2>/dev/null)
+N=$(echo "$ROW" | grep -oE '"n": [0-9]+' | grep -oE '[0-9]+$'); M=$(echo "$ROW" | grep -oE '"m": [0-9]+' | grep -oE '[0-9]+$')
+[ "${N:-0}" -ge 30 ] && pass "$N platform-run agents (house fleet folded)" || fail "platform-run agents: ${N:-?} (<30 — fleet not folded?)"
+if [ -n "${M:-}" ] && [ "$M" -lt 30 ]; then pass "runner last tick ${M}m ago"
+else fail "runner last tick ${M:-?}m ago — check HOSTED_RUNNER, secrets, Workers Logs"; fi
+grep -q 'HOSTED_RUNNER = "1"' wrangler.toml && pass "HOSTED_RUNNER=1" || fail "HOSTED_RUNNER is not 1 in wrangler.toml"
+if crontab -l 2>/dev/null | grep -q "^[^#].*deep-league-house-runner"; then
+  fail "the laptop house-runner cron is still ENABLED (two runners would double-act)"
+else pass "laptop house-runner cron disabled"; fi
 
 echo "== 9. wire health"
 code=$(fetch "$TMP/wire" "$BASE/wire/players")

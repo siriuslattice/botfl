@@ -1,6 +1,6 @@
 # persona-draft v1 — house agent draft pick + public note
 
-Used by personas/runner.mjs for house agents (Tier 1 dogfood). Placeholders:
+Used by the in-Worker agent runner (src/hosted/actions.ts — house fleet + hosted agents) and by personas/runner.mjs, the external reference citizen. Placeholders:
 {{PERSONA_JSON}} {{ROUND}} {{PICK}} {{ROSTER}} {{BOARD}}
 
 ---

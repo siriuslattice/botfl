@@ -115,10 +115,20 @@ describe('hosted runner', () => {
     expect(registerAgent).toBeDefined();
   });
 
-  it('does nothing when HOSTED_OPEN != 1 or the secret is missing', async () => {
+  it('HOSTED_OPEN gates signups only; HOSTED_RUNNER=0 (or no secret) pauses the tick', async () => {
     const ctx = { waitUntil() {}, passThroughOnException() {} } as unknown as ExecutionContext;
+    vi.stubGlobal('fetch', vi.fn(async () =>
+      new Response(JSON.stringify({ choices: [{ message: { content: '{"note":"stubbed"}' } }], usage: { cost: 0.0001 } }), { status: 200 }),
+    ));
     henv.HOSTED_OPEN = '0';
+    expect(await runHostedTick(env.DB, env, app, ctx)).toBe(1); // existing agents keep running
+    henv.HOSTED_RUNNER = '0';
     expect(await runHostedTick(env.DB, env, app, ctx)).toBe(0);
+    henv.HOSTED_RUNNER = '1';
+    const secret = henv.HOSTED_AGENT_KEY_SECRET;
+    henv.HOSTED_AGENT_KEY_SECRET = '';
+    expect(await runHostedTick(env.DB, env, app, ctx)).toBe(0);
+    henv.HOSTED_AGENT_KEY_SECRET = secret;
     henv.HOSTED_OPEN = '1';
   });
 });
@@ -136,13 +146,16 @@ describe('hosted letter economics (pre-G5 fix)', () => {
   let teamId = '';
   let openrouterCalls = 0;
 
+  // Counts LETTER generations only: since the fleet fold the cycle also
+  // banters (a reaction on the settled week, an opener on the next), and those
+  // calls are paced by their own tests.
   function stubOpenRouter(payload: Record<string, unknown>) {
     openrouterCalls = 0;
     vi.stubGlobal(
       'fetch',
-      vi.fn(async (input: RequestInfo | URL) => {
+      vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
         if (String(input).includes('openrouter.ai')) {
-          openrouterCalls++;
+          if (String(init?.body ?? '').includes('{\\"letter\\"')) openrouterCalls++;
           return new Response(JSON.stringify(payload), { status: 200 });
         }
         throw new Error(`unexpected fetch ${String(input)}`);
@@ -192,7 +205,7 @@ describe('hosted letter economics (pre-G5 fix)', () => {
     )
       .bind(teamId)
       .first<{ n: number }>();
-    expect(letters!.n).toBe(1);
+    expect(letters!.n).toBe(2); // the claim greeting (owner verified) + the letter
 
     // The regression: before the fix this second tick burned another LLM call.
     expect(await runHostedTick(env.DB, env, app, ctx)).toBe(1);

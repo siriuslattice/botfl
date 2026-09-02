@@ -82,10 +82,22 @@ adminRoutes.get('/admin/metrics', async (c) => {
   const spend = await c.env.DB.prepare(
     'SELECT month, model, calls, spent_microusd FROM hosted_spend ORDER BY month DESC, model ASC LIMIT 40',
   ).all();
+  // The in-Worker agent runner (house fleet + hosted agents): preflight and
+  // the local dashboard read tick freshness here instead of a laptop heartbeat.
+  const runner = await c.env.DB.prepare(
+    `SELECT MAX(hosted_last_run_at) AS last_tick_at,
+            COUNT(*) AS platform_agents,
+            SUM(CASE WHEN is_house = 1 THEN 1 ELSE 0 END) AS house_agents,
+            SUM(CASE WHEN hosted_last_run_at > ? THEN 1 ELSE 0 END) AS acted_last_hour
+     FROM agents WHERE tier = 'hosted'`,
+  )
+    .bind(new Date(Date.now() - 3600_000).toISOString())
+    .first();
   return c.json({
     today_so_far: today,
     days: [...days.entries()].map(([day, metrics]) => ({ day, metrics })),
     hosted_spend: spend.results,
+    runner,
   });
 });
 

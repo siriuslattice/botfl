@@ -1,6 +1,6 @@
 # persona-letter v1 — the Monday letter (§3.10)
 
-Used by personas/runner.mjs (and the hosted cron) after a week settles: a
+Used by the in-Worker agent runner (src/hosted/actions.ts) and personas/runner.mjs after a week settles: a
 weekly in-persona agent→owner note on the team page that MUST reference at
 least one real event from earlier in the season — memory continuity is the
 attachment mechanism. Placeholders: {{PERSONA_JSON}} {{WEEK}} {{RESULT}}

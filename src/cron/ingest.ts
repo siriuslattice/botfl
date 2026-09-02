@@ -21,7 +21,6 @@ export async function runIngest(db: D1Database, season: number, env?: Env): Prom
   }
 
   await sweepReplayCache(db);
-  if (env) await checkRunnerHeartbeat(db, env);
 
   await db
     .prepare('INSERT INTO events (league_id, type, payload_json, created_at) VALUES (NULL, ?, ?, ?)')
@@ -146,27 +145,37 @@ async function raiseWireAlarms(db: D1Database, season: number, results: IngestRe
 }
 
 /**
- * House-runner watchdog. The house fleet lives on one machine outside
- * Cloudflare; if it dies, the site decays QUIETLY — forming leagues never
- * fill, house lineups stop, banter goes stale, advice goes unanswered — and
- * nothing on the site says so. Ownership of that signal belongs here, in the
- * one process that always runs. Alarms at most once a day, and emails the
- * operator when OPERATOR_EMAIL is set.
+ * Fleet watchdog. The house fleet and hosted agents run inside this Worker on
+ * the `4-54/10` trigger; if that path stops (a bad deploy, a missing secret,
+ * HOSTED_RUNNER=0 left behind) the site decays QUIETLY — lineups stop, banter
+ * goes stale, advice goes unanswered — and nothing on the site says so. Two
+ * signals: the tick cursor (max hosted_last_run_at) older than `staleMinutes`,
+ * or no agent activity events for `quietHours` while leagues are live (a tick
+ * that runs but fails every cycle). Alarms at most once a day; emails the
+ * operator when OPERATOR_EMAIL is set. Rides the 10-min fast lane.
  */
-export async function checkRunnerHeartbeat(db: D1Database, env: Env, quietHours = 6): Promise<boolean> {
+export async function checkRunnerHeartbeat(db: D1Database, env: Env, quietHours = 6, staleMinutes = 60): Promise<boolean> {
   const now = Date.now();
+  const fleet = await db
+    .prepare("SELECT COUNT(*) AS n, MAX(hosted_last_run_at) AS at FROM agents WHERE tier = 'hosted'")
+    .first<{ n: number; at: string | null }>();
+  const tickMs = fleet?.at ? Date.parse(fleet.at) : 0;
+  const tickStale = (fleet?.n ?? 0) > 0 && tickMs < now - staleMinutes * 60_000;
+
   const active = await db
     .prepare("SELECT 1 AS x FROM leagues WHERE status IN ('drafting', 'active') LIMIT 1")
     .first();
-  if (!active) return false;
-  const last = await db
-    .prepare(
-      `SELECT MAX(e.created_at) AS at FROM events e
-       WHERE e.type IN ('lineup_submitted', 'banter', 'draft_pick', 'fa_move', 'advice_answered')`,
-    )
-    .first<{ at: string | null }>();
+  const last = active
+    ? await db
+        .prepare(
+          `SELECT MAX(e.created_at) AS at FROM events e
+           WHERE e.type IN ('lineup_submitted', 'banter', 'draft_pick', 'fa_move', 'advice_answered')`,
+        )
+        .first<{ at: string | null }>()
+    : null;
   const lastMs = last?.at ? Date.parse(last.at) : 0;
-  if (lastMs > now - quietHours * 3600_000) return false;
+  const activityStale = !!active && lastMs < now - quietHours * 3600_000;
+  if (!tickStale && !activityStale) return false;
 
   const recent = await db
     .prepare("SELECT 1 AS x FROM events WHERE type = 'runner_stale' AND created_at > ? LIMIT 1")
@@ -174,21 +183,25 @@ export async function checkRunnerHeartbeat(db: D1Database, env: Env, quietHours 
     .first();
   if (recent) return false;
 
-  const hours = lastMs === 0 ? 'ever' : `${Math.floor((now - lastMs) / 3600_000)}h`;
-  console.error(`RUNNER ALARM: no agent activity in ${hours} while leagues are live`);
+  const ago = (ms: number) => (ms === 0 ? 'ever' : `${Math.floor((now - ms) / 60_000)}m`);
+  const detail = tickStale
+    ? `the in-Worker agent runner has not ticked in ${ago(tickMs)} (trigger 4-54/10 * * * *)`
+    : `no agent activity in ${ago(lastMs)} while leagues are live (ticks run, cycles fail?)`;
+  console.error(`RUNNER ALARM: ${detail}`);
   await db
     .prepare('INSERT INTO events (league_id, type, payload_json, created_at) VALUES (NULL, ?, ?, ?)')
-    .bind('runner_stale', JSON.stringify({ last_activity: last?.at ?? null }), new Date(now).toISOString())
+    .bind('runner_stale', JSON.stringify({ last_tick: fleet?.at ?? null, last_activity: last?.at ?? null, detail }), new Date(now).toISOString())
     .run();
   if (env.OPERATOR_EMAIL) {
     const { sendEmail } = await import('../email');
     await sendEmail(env, {
       to: env.OPERATOR_EMAIL,
-      subject: 'Deep League: house agents have gone quiet',
+      subject: 'Deep League: the agent fleet has gone quiet',
       text:
-        `No agent activity in ${hours} while leagues are live.\n\n` +
-        'Check the house runner on its machine: crontab -l | grep deep-league, ' +
-        'then tail ~/.local/state/deep-league/runner.log.',
+        `${detail}.\n\n` +
+        'Check Workers Logs for the botfl Worker (observability is on), confirm HOSTED_RUNNER is not "0" ' +
+        'and HOSTED_AGENT_KEY_SECRET / OPENROUTER_ORG_KEY are set (npx wrangler secret list), then watch ' +
+        'the next tick with `npx wrangler tail`. Runbook: docs/RUNBOOK-hosted.md.',
     });
   }
   return true;

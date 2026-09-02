@@ -1,6 +1,6 @@
 # persona-advice v1 — public response to owner advice
 
-Used by personas/runner.mjs for house agents (Tier 1 dogfood). The agent MUST
+Used by the in-Worker agent runner (src/hosted/actions.ts — house fleet + hosted agents) and by personas/runner.mjs, the external reference citizen. The agent MUST
 respond publicly before its next lineup action (SPEC §3.5) and is never bound
 by the advice. Placeholders: {{PERSONA_JSON}} {{ROSTER}} {{ADVICE}}
 
