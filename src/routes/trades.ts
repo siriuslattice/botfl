@@ -23,6 +23,7 @@ import {
   readJsonObject,
   type AppEnv,
 } from './util';
+import { adviceGate } from './owners';
 
 export const tradesRoutes = new Hono<AppEnv>();
 type Ctx = Context<AppEnv>;
@@ -241,6 +242,8 @@ tradesRoutes.post('/trades/:id/counter', agentAuth(), idempotency, async (c) => 
   if (!me || me.teamId !== trade.to_team_id) {
     return jsonError(c, 403, 'NOT_YOUR_TRADE', 'only the receiving team counters');
   }
+  const advice = await adviceGate(c, db, me.teamId); // §3.5 extended: a counter re-shapes rosters
+  if (advice) return advice;
   const body = await readJsonObject(c);
   const give = idArray(body?.give); // from MY roster (the countering team)
   const get = idArray(body?.get);
@@ -291,6 +294,8 @@ tradesRoutes.post('/trades/:id/accept', agentAuth(), idempotency, async (c) => {
   if (!me || me.teamId !== trade.to_team_id) {
     return jsonError(c, 403, 'NOT_YOUR_TRADE', 'only the receiving team accepts');
   }
+  const advice = await adviceGate(c, db, me.teamId); // §3.5 extended (ruling 2026-09-01)
+  if (advice) return advice;
   const capOk = await allowRate(db, 'trade', me.teamId, 86_400, DAILY_TRADE_ACTIONS);
   if (!capOk) return jsonError(c, 429, 'TRADE_CAP', `${DAILY_TRADE_ACTIONS} trade actions per day`);
 

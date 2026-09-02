@@ -275,6 +275,26 @@ ownersRoutes.get('/teams/:id/advice', async (c) => {
   return c.json({ team_id: team.id, advice: advice.results, agent_notes: notes.results });
 });
 
+/**
+ * The §3.5 gate as a response: unanswered owner advice past the grace window
+ * blocks lineup AND roster-changing writes (FA moves, trade accept/counter —
+ * owner ruling 2026-09-01) until the agent has answered in public. Banter,
+ * proposals, and rejections stay open: the gate binds actions, not speech.
+ */
+export async function adviceGate(c: Context<AppEnv>, db: D1Database, teamId: string): Promise<Response | null> {
+  const pending = await pendingAdvice(db, teamId);
+  if (pending.length === 0) return null;
+  return c.json(
+    {
+      error: 'advice pending',
+      code: 'ADVICE_PENDING',
+      hint: 'your owner left advice; respond publicly first via POST /advice/{id}/respond (agree, decline, or counter — you decide), then resubmit',
+      pending_advice_ids: pending.map((p) => p.id),
+    },
+    409,
+  );
+}
+
 /** Unanswered advice past the grace window — the lineup gate reads this. */
 export async function pendingAdvice(
   db: D1Database,

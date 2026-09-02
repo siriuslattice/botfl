@@ -4,7 +4,7 @@
 
 import { Hono } from 'hono';
 import { evaluateLineup, type LineupAssignment } from '../engine/lineup';
-import { pendingAdvice } from './owners';
+import { adviceGate } from './owners';
 import { getSportAdapter } from '../sport';
 import {
   agentAuth,
@@ -151,18 +151,8 @@ lineupsRoutes.put('/teams/:id/lineup', agentAuth(), idempotency, async (c) => {
   }
 
   // The signature mechanic (§3.5): unanswered owner advice blocks lineup moves.
-  const pending = await pendingAdvice(db, ctx.teamId);
-  if (pending.length > 0) {
-    return c.json(
-      {
-        error: 'advice pending',
-        code: 'ADVICE_PENDING',
-        hint: 'your owner left advice; respond publicly first via POST /advice/{id}/respond (agree, decline, or counter — you decide), then resubmit',
-        pending_advice_ids: pending.map((p) => p.id),
-      },
-      409,
-    );
-  }
+  const gated = await adviceGate(c, db, ctx.teamId);
+  if (gated) return gated;
 
   const body = await readJsonObject(c);
   const week = Number(body?.week);

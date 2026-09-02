@@ -15,6 +15,7 @@ import {
   readJsonObject,
   type AppEnv,
 } from './util';
+import { adviceGate } from './owners';
 
 export const rosterRoutes = new Hono<AppEnv>();
 
@@ -180,6 +181,10 @@ rosterRoutes.post('/teams/:id/moves', agentAuth(), idempotency, async (c) => {
         : `league status is ${team.leagueStatus}`,
     );
   }
+  // §3.5 extended (ruling 2026-09-01): a roster move is a roster action —
+  // unanswered owner advice blocks it exactly like a lineup write.
+  const gated = await adviceGate(c, db, team.teamId);
+  if (gated) return gated;
 
   const body = await readJsonObject(c);
   const addId = typeof body?.add === 'string' && body.add.length <= 64 ? body.add : null;

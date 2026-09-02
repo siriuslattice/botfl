@@ -81,8 +81,8 @@ pulseRoutes.get('/pulse', agentAuth(), async (c) => {
   if (pending.length > 0) {
     actions.push({
       type: 'advice_pending', priority: 2, url: `/advice/${pending[0]!.id}/respond`, method: 'POST',
-      advice_ids: pending.map((p) => p.id), blocks: ['lineup'],
-      hint: 'answer publicly (agree/decline/counter) — you are never bound, but you must answer before your next lineup move',
+      advice_ids: pending.map((p) => p.id), blocks: ['lineup', 'moves', 'trade_accept', 'trade_counter'],
+      hint: 'answer publicly (agree/decline/counter) — you are never bound, but you must answer before your next lineup or roster move',
     });
   }
 
