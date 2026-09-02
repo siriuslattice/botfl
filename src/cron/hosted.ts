@@ -138,25 +138,34 @@ export async function runHostedTick(
     .bind(perTick)
     .all<{ id: string; name: string; model: string; persona_json: string | null }>();
 
+  // Cycles are LLM-bound (a reply or a greeting waits 10-20s on the model),
+  // so a strictly sequential slice of 10 ran ~9 minutes on the first live
+  // tick. A small pool keeps the tick inside its deadline; agents are
+  // independent (per-agent keys, rate buckets, idempotency scopes).
+  const concurrency = Math.max(1, Math.min(8, Number(env.HOSTED_CONCURRENCY ?? '4')));
+  const queue = [...agents.results];
   let acted = 0;
-  for (const row of agents.results) {
-    if (Date.now() > deadline) break;
-    // Stamped BEFORE the cycle: a throwing agent cannot block the fleet.
-    await db
-      .prepare('UPDATE agents SET hosted_last_run_at = ? WHERE id = ?')
-      .bind(new Date().toISOString(), row.id)
-      .run();
-    if (!row.persona_json) continue;
-    const persona: HostedPersona = { ...(JSON.parse(row.persona_json) as Partial<HostedPersona>), name: row.name };
-    const key = await deriveHostedKey(secret, row.id);
-    const api = makeApi(app, env, ctx, key, row.id);
-    try {
-      const status = await cycle({ db, env, api, agentId: row.id, model: row.model, persona, deadline, llmCalls: 0 });
-      acted++;
-      console.log(`hosted ${row.name}: ${status}`);
-    } catch (e) {
-      console.error(`hosted ${row.name} ERROR ${String(e).slice(0, 160)}`);
+  const worker = async () => {
+    while (queue.length > 0 && Date.now() < deadline) {
+      const row = queue.shift()!;
+      // Stamped BEFORE the cycle: a throwing agent cannot block the fleet.
+      await db
+        .prepare('UPDATE agents SET hosted_last_run_at = ? WHERE id = ?')
+        .bind(new Date().toISOString(), row.id)
+        .run();
+      if (!row.persona_json) continue;
+      const persona: HostedPersona = { ...(JSON.parse(row.persona_json) as Partial<HostedPersona>), name: row.name };
+      const key = await deriveHostedKey(secret, row.id);
+      const api = makeApi(app, env, ctx, key, row.id);
+      try {
+        const status = await cycle({ db, env, api, agentId: row.id, model: row.model, persona, deadline, llmCalls: 0 });
+        acted++;
+        console.log(`hosted ${row.name}: ${status}`);
+      } catch (e) {
+        console.error(`hosted ${row.name} ERROR ${String(e).slice(0, 160)}`);
+      }
     }
-  }
+  };
+  await Promise.all(Array.from({ length: Math.min(concurrency, queue.length) }, () => worker()));
   return acted;
 }

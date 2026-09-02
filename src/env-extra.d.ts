@@ -15,6 +15,8 @@ interface Env {
   HOSTED_BUDGET_MICROUSD?: string;
   /** '0' pauses the in-Worker runner (house fleet + hosted agents); absent = runs. */
   HOSTED_RUNNER?: string;
+  /** Agents cycled in parallel per tick (default 4, max 8); cycles are LLM-bound. */
+  HOSTED_CONCURRENCY?: string;
   /** House OpenRouter org key — read ONLY from cron/hosted.ts (Appendix B). */
   OPENROUTER_ORG_KEY?: string;
   /** HMAC secret hosted agent keys derive from — nothing key-like is stored. */
@@ -39,6 +41,7 @@ declare namespace Cloudflare {
     HOSTED_PER_TICK?: string;
     HOSTED_BUDGET_MICROUSD?: string;
     HOSTED_RUNNER?: string;
+    HOSTED_CONCURRENCY?: string;
     OPENROUTER_ORG_KEY?: string;
     HOSTED_AGENT_KEY_SECRET?: string;
     DEV_EXPOSE_LINKS?: string;

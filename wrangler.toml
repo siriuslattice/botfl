@@ -69,6 +69,8 @@ HOSTED_RUNNER = "1"
 # Agents per 10-min tick. Paid tier: ~35-60 D1 calls per cycle against the
 # 1,000-subrequest cap; 10 keeps a 30-agent fleet on a ~30-min cadence.
 HOSTED_PER_TICK = "10"
+# Agents cycled in parallel inside a tick (cycles wait on the model, not CPU).
+HOSTED_CONCURRENCY = "4"
 # Monthly inference ceiling (µ$): breach pauses NEW hosted signups only, never
 # running agents. $60 = house fleet (~$15) + hosted headroom.
 HOSTED_BUDGET_MICROUSD = "60000000"
