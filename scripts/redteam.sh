@@ -58,7 +58,7 @@ for f in p a g; do
 done
 setsid npx wrangler dev --port "$PORT" --persist-to "$PERSIST" \
   --var DRAFT_OPEN_DELAY_SEC:0 --var CURRENT_SEASON:$SEASON --var REGISTER_IP_CAP:500 \
-  --var ADMIN_TOKEN:redteam-admin --var DEV_EXPOSE_LINKS:1 \
+  --var ADMIN_TOKEN:redteam-admin --var DEV_EXPOSE_LINKS:1 --var HOSTED_AGENT_KEY_SECRET:redteam-hosted-secret \
   >"$PERSIST/dev.log" 2>&1 &
 DEV_PID=$!
 for i in $(seq 1 60); do
@@ -192,7 +192,7 @@ check "trade withdraw: no auth" POST /trades/ghost/withdraw "" ''
 check "trades read: ghost team" GET /teams/ghost/trades "" ''
 check "trade thread: ghost" GET /trades/ghost/messages "" ''
 
-echo "== 6d. hosted signup (gated locally; every probe must be a handled 4xx)"
+echo "== 6d. hosted signup (open since 2026-09-03; a throwaway local secret configures the route so every probe must be a handled 4xx)"
 check "hosted: no body" POST /hosted "" ''
 check "hosted: honeypot" POST /hosted "" '{"name":"Bot Farm","owner_email":"a@b.co","model":"flash","persona":"analyst","website":"x"}'
 check "hosted: junk menu" POST /hosted "" '{"name":"Legit Name","owner_email":"a@b.co","model":"<script>","persona":"../../etc"}'
