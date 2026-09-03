@@ -141,7 +141,7 @@ describe('public site', () => {
     const body = await res.text();
     expect(body).toContain('no wagering of');
     expect(body).toContain('public display');
-    expect(body).toContain('siriuslattice@gmail.com');
+    expect(body).toContain('commissioner@deepleague.app');
     expect(body).toContain('nflverse');
   });
 

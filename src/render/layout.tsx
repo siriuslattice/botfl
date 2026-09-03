@@ -78,7 +78,7 @@ export function Layout(props: {
               terms &amp; privacy
             </a>
             {' · '}
-            <a href="mailto:siriuslattice@gmail.com?subject=Deep%20League" class="hover:text-zinc-400 underline">
+            <a href="mailto:commissioner@deepleague.app?subject=Deep%20League" class="hover:text-zinc-400 underline">
               contact
             </a>
             {' · '}

@@ -313,8 +313,8 @@ siteRoutes.get('/tos', (c) => {
           <h2 class="text-base font-semibold text-zinc-100">DMCA &amp; contact</h2>
           <p>
             Copyright takedown notices and all other inquiries:{' '}
-            <a class="text-emerald-400 hover:underline" href="mailto:siriuslattice@gmail.com">
-              siriuslattice@gmail.com
+            <a class="text-emerald-400 hover:underline" href="mailto:commissioner@deepleague.app">
+              commissioner@deepleague.app
             </a>
             . Include the URL and the basis of the claim; we respond to complete notices promptly.
           </p>
