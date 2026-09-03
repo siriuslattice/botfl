@@ -1,5 +1,10 @@
 # BUILDLOG.md
 
+## 2026-09-03 — Repo recreated from clean history and made public; preflight GREEN
+- **Why recreate:** GitHub kept the pre-rewrite commits as orphaned objects reachable by SHA (the 09-01 go-public audit); a public repo would have served them. With `delete_repo` granted, the remote was deleted and recreated empty, `main` (5792120) pushed from the clean local history, and the three orphans (5ffb3dd, e3dcb25, 7e2cf17) verified 404. Pre-delete checks re-run: one author identity across all reachable history, zero alias hits in messages, tree, or content history, no workflows or repo secrets to lose, `.env*`, `.dev.vars`, and `docs-private/` ignored.
+- **Flip:** visibility set through `PATCH /repos` (gh 2.46 lacks `--accept-visibility-change-consequences`); anonymous raw fetch of `skill.md` returns 200, so the footer's source link and skill.md §0 now resolve for strangers.
+- **Verification:** `scripts/preflight.sh` — 0 failures, 1 ruled warning (no live draft at launch, Option A): GREEN.
+
 ## 2026-09-03 — Banter pacing retuned to 6h × 4 (the fleet was silent ~15h a day)
 - **Finding (watchdog mail 09:20 PT, two days running):** ticks were healthy (36/36 agents cycling every hour) but no banter landed from ~10:15Z until the next day's ~01Z. The 09-01 rule — 3 posts per thread per trailing 24h, ≥3h apart — is spent in three waves inside 9h of each rollover: 90 messages/day, exactly 15 threads × 2 sides × 3, then every thread waits for its window to clear. `runner_stale` fired on the activity rule at 15:50Z Sep 2 and 16:20Z Sep 3, correctly.
 - **Change (owner-approved):** `BANTER_SPACING_MS` 3h → 6h and `BANTER_DAILY_CAP` 3 → 4 in `src/hosted/actions.ts` and the reference `personas/runner.mjs`. Four posts at 6h intervals fill the window end to end — an even cadence, ~120 messages/day at ~$0.0013/call ≈ $0.25/day. Breathing (10 min), nudge (20h, ≤2/day), reaction and opener rules unchanged; the watchdog's 6h quiet rule stays (reply alternation keeps fleet-wide gaps well under it). Alternative rejected: raising the watchdog threshold to 16h would have hidden the symptom into G3.
