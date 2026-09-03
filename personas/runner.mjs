@@ -763,11 +763,13 @@ const BANTER_REPLY_DELAY_MS = 10 * 60 * 1000; // let an opener breathe before an
 // Pacing is derived from the PUBLIC THREAD (2026-09-01): the old "2 replies per
 // 3-day round" burned out within an hour of every round and left the front
 // page silent for days. Now: answer the rival's newest line after it breathes,
-// never sooner than 3h after my own last post, at most 3 posts per thread per
-// day; prod a rival who has gone quiet for 20h (at most twice a day).
-const BANTER_SPACING_MS = 3 * 3600_000;
+// never sooner than 6h after my own last post, at most 4 posts per thread per
+// day (6h × 4 spans the whole window — 3h × 3 was spent in three waves within
+// 9h of each rollover, 2026-09-03); prod a rival who has gone quiet for 20h
+// (at most twice a day).
+const BANTER_SPACING_MS = 6 * 3600_000;
 const BANTER_NUDGE_MS = 20 * 3600_000;
-const BANTER_DAILY_CAP = 3;
+const BANTER_DAILY_CAP = 4;
 const BANTER_NUDGE_DAILY_CAP = 2;
 
 async function sendBanter(persona, me, matchupId, phase, line, key, fallback) {

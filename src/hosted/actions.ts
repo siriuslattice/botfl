@@ -90,9 +90,11 @@ export const BACKFILL_LEAD_SEC = 7200;
 // Banter pacing (replaces the runner's 2-per-3-day round, which burned out
 // within an hour of every round and left the front page dead for days).
 export const BANTER_REPLY_DELAY_MS = 10 * 60_000; // let a rival's line breathe
-export const BANTER_SPACING_MS = 3 * 3600_000; // between my own posts on a thread
+// 6h × 4 spans the whole trailing-24h window (2026-09-03): the earlier 3h × 3
+// was spent in three waves within 9h of each rollover, leaving ~15h of silence.
+export const BANTER_SPACING_MS = 6 * 3600_000; // between my own posts on a thread
 export const BANTER_NUDGE_MS = 20 * 3600_000; // silence before I prod a quiet rival
-export const BANTER_DAILY_CAP = 3; // my visible posts per thread per 24h (API cap is 10)
+export const BANTER_DAILY_CAP = 4; // my visible posts per thread per 24h (API cap is 10)
 export const BANTER_NUDGE_DAILY_CAP = 2;
 const BANTER_LINE_CAP = 280;
 
@@ -544,8 +546,8 @@ async function sendBanter(cx: Cycle, matchupId: string, key: string, line: strin
  * One post per cycle at most. Target: a settled matchup still owed a reaction
  * (reactions outrank the new week's opener), else this week's matchup.
  * Everything else is derived from the PUBLIC thread: opener if I have not
- * spoken; reply if the rival has the last word (≥10 min old, ≥3 h since my own
- * last post, <3 of mine in 24 h); nudge if I have the last word and the rival
+ * spoken; reply if the rival has the last word (≥10 min old, ≥6 h since my own
+ * last post, <4 of mine in 24 h); nudge if I have the last word and the rival
  * has been silent ≥20 h (<2 nudges in 24 h). Marker rows cover only what the
  * thread cannot show, and they are checked BEFORE any LLM call.
  */

@@ -139,7 +139,7 @@ describe('in-season cycle', () => {
     expect(llmCalls - before).toBeLessThanOrEqual(1); // at most the weekly ask
   });
 
-  it('answers a rival only after it breathes, spaced 3h apart, capped at 3 a day', async () => {
+  it('answers a rival only after it breathes, spaced 6h apart, capped at 4 a day', async () => {
     stubLlm();
     // Fresh rival line (0 min old): let it breathe.
     const fresh = await rivalSays(`${hostedName} drafted like the board was upside down.`, 0);
@@ -151,8 +151,12 @@ describe('in-season cycle', () => {
     await backdate(fresh, 15 * 60_000);
     await tick();
     expect((await myPosts()).length).toBe(1);
-    // Age my opener past the spacing window → reply lands.
+    // 4h old is still inside the 6h spacing window.
     await backdate((await myPosts())[0]!.id, 4 * HOUR);
+    await tick();
+    expect((await myPosts()).length).toBe(1);
+    // Age my opener past the spacing window → reply lands.
+    await backdate((await myPosts())[0]!.id, 7 * HOUR);
     before = llmCalls;
     await tick();
     expect((await myPosts()).length).toBe(2);
@@ -160,16 +164,20 @@ describe('in-season cycle', () => {
     // Rival silent → I stay quiet (no ping-pong with myself).
     await tick();
     expect((await myPosts()).length).toBe(2);
-    // Two more exchanges reach the daily cap of 3; the fourth is refused.
+    // Three more exchanges reach the daily cap of 4; the fifth is refused.
     await rivalSays('Spacing is a coward’s word, bot.');
-    await backdate((await myPosts())[0]!.id, 4 * HOUR);
+    await backdate((await myPosts())[0]!.id, 7 * HOUR);
     await tick();
     expect((await myPosts()).length).toBe(3);
     await rivalSays('Still here. Still ahead.');
-    await backdate((await myPosts())[0]!.id, 4 * HOUR);
+    await backdate((await myPosts())[0]!.id, 7 * HOUR);
+    await tick();
+    expect((await myPosts()).length).toBe(4);
+    await rivalSays('Four lines and nothing to show for them.');
+    await backdate((await myPosts())[0]!.id, 7 * HOUR);
     before = llmCalls;
     await tick();
-    expect((await myPosts()).length).toBe(3); // daily cap
+    expect((await myPosts()).length).toBe(4); // daily cap
     expect(llmCalls).toBe(before);
   });
 
@@ -188,14 +196,14 @@ describe('in-season cycle', () => {
     const before = llmCalls;
     await tick();
     expect(llmCalls).toBe(before + 1);
-    expect((await myPosts()).length).toBe(3); // nothing landed
+    expect((await myPosts()).length).toBe(4); // nothing landed
     const latched = await env.DB.prepare("SELECT COUNT(*) AS n FROM events WHERE type = 'hosted_banter' AND payload_json LIKE '%\"phase\":\"reply\"%'")
       .first<{ n: number }>();
     expect(latched!.n).toBeGreaterThanOrEqual(1);
     await env.DB.prepare("DELETE FROM rate_counters WHERE scope = 'msgcap' AND bucket = ?").bind(`${hostedId}:matchup:${matchupId}`).run();
     await tick();
     expect(llmCalls).toBe(before + 1); // latched: no second generation, no post
-    expect((await myPosts()).length).toBe(3);
+    expect((await myPosts()).length).toBe(4);
   });
 
   it('nudges a silent rival after 20h, then holds', async () => {
@@ -207,9 +215,9 @@ describe('in-season cycle', () => {
       .bind(new Date(Date.now() - 25 * HOUR).toISOString(), matchupId, hostedId)
       .run();
     await tick();
-    expect((await myPosts()).length).toBe(4); // the nudge
+    expect((await myPosts()).length).toBe(5); // the nudge
     await tick();
-    expect((await myPosts()).length).toBe(4); // my last word is fresh now: quiet
+    expect((await myPosts()).length).toBe(5); // my last word is fresh now: quiet
   });
 
   it('reacts exactly once when the week settles', async () => {
