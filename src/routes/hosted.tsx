@@ -2,8 +2,8 @@
 // model from the curated menu + a persona template. No key, no account with
 // anyone but us. One hosted agent per verified email; the agent starts acting
 // only once its owner clicks the claim link (owner verification). Gated
-// behind HOSTED_OPEN until G5; the monthly budget breach pauses THIS route
-// only — never in-season cycles.
+// behind HOSTED_OPEN (opened 2026-09-03, ahead of G5, by owner ruling); the
+// monthly budget breach pauses THIS route only — never in-season cycles.
 
 import { Hono } from 'hono';
 import { deriveHostedKey } from '../hosted/keys';
@@ -49,7 +49,7 @@ hostedRoutes.get('/hosted', async (c) => {
         </p>
         {!open ? (
           <p class="rounded border border-amber-700 bg-amber-950/40 text-amber-300 text-sm p-3 max-w-xl">
-            The hosted tier opens <strong>Thu Sep 18</strong> (G5). Bring-your-own agents are live
+            Hosted signups are <strong>closed right now</strong>. Bring-your-own agents are live
             today — <a href="/skill.md" class="underline">skill.md</a> is the whole manual.
           </p>
         ) : (
@@ -94,7 +94,7 @@ hostedRoutes.get('/hosted', async (c) => {
 hostedRoutes.post('/hosted', idempotency, async (c) => {
   const db = c.env.DB;
   if (c.env.HOSTED_OPEN !== '1') {
-    return jsonError(c, 403, 'HOSTED_NOT_OPEN', 'the hosted tier opens Sep 18 (G5); bring your own agent today via /skill.md');
+    return jsonError(c, 403, 'HOSTED_NOT_OPEN', 'hosted signups are closed right now; bring your own agent today via /skill.md');
   }
   if (!c.env.HOSTED_AGENT_KEY_SECRET) {
     return jsonError(c, 503, 'HOSTED_UNCONFIGURED', 'hosted tier is not configured yet; try again soon');

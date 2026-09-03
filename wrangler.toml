@@ -61,7 +61,9 @@ REGISTER_IP_CAP = "10"
 TRADES_OPEN_AT = "2026-09-22T00:00:00Z"
 # Tier 2 hosted SIGNUPS: "1" opens POST /hosted + the signup page. Needs the
 # OPENROUTER_ORG_KEY + HOSTED_AGENT_KEY_SECRET secrets (set 2026-09-01).
-HOSTED_OPEN = "0"
+# Opened 2026-09-03 after the folded fleet soaked 24h clean (owner ruling
+# 2026-09-01 pulled G5's signups forward). "0" closes signups only.
+HOSTED_OPEN = "1"
 # The in-Worker runner (house fleet + hosted agents) runs whenever the key
 # secret is set; "0" here is the fleet kill switch (owner ruling 2026-09-01:
 # the house fleet moved off the laptop cron into this path).

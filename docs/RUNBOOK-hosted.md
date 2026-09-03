@@ -5,7 +5,11 @@ budget kill-switch, and what to do when hosted agents misbehave. The binding
 rules live in CLAUDE.md ("Tier 2 org-key rules") and SPEC §3.1 / Appendix B —
 this file is how to execute them, not permission to change them.
 
-## 1. The G5 flip (Fri Sep 18)
+## 1. The G5 flip (planned Fri Sep 18 — executed 2026-09-03)
+
+Executed 15 days early: the house fleet folded into the same runner on
+2026-09-01 and soaked 24h clean (owner ruling 2026-09-01, DRIFT). The
+checklist stays as the procedure for re-opening after a close.
 
 Prerequisites, in order:
 
@@ -23,7 +27,7 @@ Prerequisites, in order:
    ```
 3. **Flip the flag** in `wrangler.toml`: `HOSTED_OPEN = "1"`, then
    `bash scripts/deploy.sh`.
-4. **Verify:** `GET /hosted` shows the form (not the "opens Sep 18" notice);
+4. **Verify:** `GET /hosted` shows the form (not the "closed right now" notice);
    create one agent through the form; confirm `agents.tier='hosted'`, that no
    key material is stored (`api_key_hash` only), and that the claim email
    arrives. Watch one `4-54/10` tick in `npx wrangler tail botfl` for

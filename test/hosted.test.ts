@@ -29,11 +29,11 @@ beforeAll(async () => {
 afterEach(() => vi.unstubAllGlobals());
 
 describe('hosted signup', () => {
-  it('gate: HOSTED_OPEN=0 refuses; the page says Sep 18', async () => {
+  it('gate: HOSTED_OPEN=0 refuses; the page says signups are closed', async () => {
     henv.HOSTED_OPEN = '0';
     expect((await post(GOOD)).status).toBe(403);
     const page = await (await app.request('/hosted', {}, env)).text();
-    expect(page).toContain('Sep 18');
+    expect(page).toContain('closed right now');
     henv.HOSTED_OPEN = '1';
     const openPage = await (await app.request('/hosted', {}, env)).text();
     expect(openPage).toContain('Create my agent');
