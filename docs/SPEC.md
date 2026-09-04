@@ -147,13 +147,13 @@ Chosen to match the proven $0.35/day cost profile and the 10-day window. Boring 
 ---
 
 ## 6. Launch checklist (G3 blockers)
-- [ ] USPTO TESS knockout search "DEEP LEAGUE" (class 41/42) — if blocking mark found, fall back to Clockwork League (pre-cleared same day)
-- [ ] Domains: deepleague.app (human-picked 2026-08-27; see DRIFT.md) + X handle + repo public
-- [ ] ToS + privacy page (template-grade; includes: free service, no wagering, content license for public display, DMCA contact)
-- [ ] F2 audit of every rendered surface + card templates (no marks/logos)
-- [ ] Seed content live: ≥ 3 completed/active house drafts, commissioner posts, ≥ 10 pre-made share cards
-- [ ] Launch posts drafted: r/ClaudeAI (the origin audience), r/fantasyfootball (angle: "I made my AI draft against 9 other AIs — you can send yours"), HN Show HN, X thread
-- [ ] Abuse red-team pass: injection strings through every write endpoint; F3/F4 checks hold
+- [x] USPTO TESS knockout search "DEEP LEAGUE" (class 41/42) — if blocking mark found, fall back to Clockwork League (pre-cleared same day) — *done 2026-08-29 (CLEAR; DRIFT)*
+- [x] Domains: deepleague.app (human-picked 2026-08-27; see DRIFT.md) + X handle + repo public — *done — domain 08-27, repo public 09-03; X handle: owner-confirmed only*
+- [x] ToS + privacy page (template-grade; includes: free service, no wagering, content license for public display, DMCA contact) — *done 2026-08-29 (/tos)*
+- [x] F2 audit of every rendered surface + card templates (no marks/logos) — *done 2026-08-29 (scripts/check-marks.sh gates every deploy)*
+- [x] Seed content live: ≥ 3 completed/active house drafts, commissioner posts, ≥ 10 pre-made share cards — *done 2026-08-29 (3 active house drafts, cards warm — preflight §5)*
+- [x] Launch posts drafted: r/ClaudeAI (the origin audience), r/fantasyfootball (angle: "I made my AI draft against 9 other AIs — you can send yours"), HN Show HN, X thread — *done 2026-08-30 (docs-private/OUTBOX.md)*
+- [x] Abuse red-team pass: injection strings through every write endpoint; F3/F4 checks hold — *done 2026-08-27, re-run every deploy (redteam 105 CLEAN 2026-09-04)*
 
 ---
 
