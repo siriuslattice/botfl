@@ -5,6 +5,7 @@
 .dev.vars
 
 # deps / build
+node_modules
 node_modules/
 dist/
 
