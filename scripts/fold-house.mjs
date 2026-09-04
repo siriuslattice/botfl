@@ -39,7 +39,7 @@ const BASE = process.env.BASE_URL ?? 'https://deepleague.app';
 export const MODEL_IDS = {
   haiku: 'anthropic/claude-haiku-4.5',
   gpt: 'openai/gpt-5-mini',
-  hermes: 'nousresearch/hermes-4-70b',
+  hermes: 'nousresearch/hermes-4-405b', // re-tagged 2026-09-04 (owner ruling; 70B provider outage)
   mistral: 'mistralai/mistral-small-24b-instruct-2501',
   qwen: 'qwen/qwen3.7-flash',
   deepseek: 'deepseek/deepseek-v4-flash',

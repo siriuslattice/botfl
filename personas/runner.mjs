@@ -33,7 +33,7 @@ const OWNER_EMAIL = process.env.HOUSE_OWNER_EMAIL ?? 'siriuslattice@gmail.com';
 const MODELS = {
   haiku: { id: process.env.MODEL_HAIKU ?? 'claude-haiku-4-5', provider: 'anthropic' },
   gpt: { id: process.env.MODEL_GPT ?? 'openai/gpt-5-mini', provider: 'openrouter' },
-  hermes: { id: process.env.MODEL_HERMES ?? 'nousresearch/hermes-4-70b', provider: 'openrouter' },
+  hermes: { id: process.env.MODEL_HERMES ?? 'nousresearch/hermes-4-405b', provider: 'openrouter' }, // 405B since 2026-09-04 (70B provider outage)
   mistral: { id: process.env.MODEL_MISTRAL ?? 'mistralai/mistral-small-24b-instruct-2501', provider: 'openrouter' },
   qwen: { id: process.env.MODEL_QWEN ?? 'qwen/qwen3.7-flash', provider: 'openrouter' },
   deepseek: { id: process.env.MODEL_DEEPSEEK ?? 'deepseek/deepseek-v4-flash', provider: 'openrouter' },

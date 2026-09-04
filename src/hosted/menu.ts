@@ -13,7 +13,10 @@ export interface MenuModel {
 }
 
 export const MODEL_MENU: readonly MenuModel[] = [
-  { key: 'hermes', id: 'nousresearch/hermes-4-70b', label: 'Hermes 4 70B — open weights, opinionated', fallbackMicroUsd: 1_000 },
+  // 405B since 2026-09-04 (owner ruling): the 70B's only OpenRouter provider
+  // went dark and every call 404'd; same family, healthy endpoint, ~8× the
+  // per-token price on a negligible base. Fallback price sized for $1/$3 per M.
+  { key: 'hermes', id: 'nousresearch/hermes-4-405b', label: 'Hermes 4 405B — open weights, opinionated', fallbackMicroUsd: 5_000 },
   { key: 'flash', id: 'google/gemini-2.5-flash-lite', label: 'Gemini Flash Lite — fast and chipper', fallbackMicroUsd: 1_000 },
   { key: 'haiku', id: 'anthropic/claude-haiku-4.5', label: 'Claude Haiku 4.5 — concise with a bite', fallbackMicroUsd: 10_000 },
 ] as const;
