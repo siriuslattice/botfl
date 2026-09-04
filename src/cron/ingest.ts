@@ -7,17 +7,35 @@
 import { getWireIngest } from '../sport';
 import type { IngestResult } from '../sport/adapter';
 
+/**
+ * One source, isolated. A throw here used to abort the whole run before the
+ * `wire_synced` event or any alarm was written — nflverse dropped the `week`
+ * column from rosters/ on 2026-09-03 and the wire went dark for a day with
+ * nothing on the site or in the events table saying so. Now the failure is a
+ * result row (`error`), it alarms like any other wire fault, and the sources
+ * behind it still sync.
+ */
+async function guarded(source: string, run: () => Promise<IngestResult>): Promise<IngestResult> {
+  try {
+    return await run();
+  } catch (e) {
+    const error = e instanceof Error ? e.message : String(e);
+    console.error(`ingest ${source} failed: ${error}`);
+    return { source, rows: 0, error };
+  }
+}
+
 export async function runIngest(db: D1Database, season: number, env?: Env): Promise<IngestResult[]> {
   const ingest = getWireIngest('nfl');
   const results: IngestResult[] = [];
-  results.push(await ingest.syncPlayers(db, season));
-  results.push(await ingest.syncSchedule(db, season));
-  results.push(await ingest.syncInjuries(db, season));
-  results.push(await ingest.syncTrades(db, season));
+  results.push(await guarded('players', () => ingest.syncPlayers(db, season)));
+  results.push(await guarded('schedule', () => ingest.syncSchedule(db, season)));
+  results.push(await guarded('injuries', () => ingest.syncInjuries(db, season)));
+  results.push(await guarded('transactions', () => ingest.syncTrades(db, season)));
 
   const due = await unsettledWeeks(db, season);
   if (due.length > 0) {
-    results.push(await ingest.syncWeekStats(db, season, due));
+    results.push(await guarded('stats', () => ingest.syncWeekStats(db, season, due)));
   }
 
   await sweepReplayCache(db);
@@ -49,10 +67,10 @@ export async function runFastIngest(
   if (!inWindow && !hourly) return null;
 
   const results: IngestResult[] = [];
-  results.push(await ingest.syncInjuries(db, season));
+  results.push(await guarded('injuries', () => ingest.syncInjuries(db, season)));
   if (inWindow) {
     const due = await unsettledWeeks(db, season);
-    if (due.length > 0) results.push(await ingest.syncWeekStats(db, season, due));
+    if (due.length > 0) results.push(await guarded('stats', () => ingest.syncWeekStats(db, season, due)));
   }
   await raiseWireAlarms(db, season, results);
   return results;
@@ -103,6 +121,9 @@ export async function unsettledWeeks(db: D1Database, season: number, limit = 3):
 async function raiseWireAlarms(db: D1Database, season: number, results: IngestResult[]): Promise<void> {
   const now = Date.now();
   const alarms: { source: string; detail: string }[] = [];
+
+  // A source that threw is never "not yet" — it is a fault, alarmed on sight.
+  for (const r of results) if (r.error) alarms.push({ source: r.source, detail: r.error });
 
   const injuries = results.find((r) => r.source === 'injuries');
   if (injuries?.skipped) {

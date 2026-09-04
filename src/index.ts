@@ -56,7 +56,7 @@ export default {
     if (event.cron === '0 */6 * * *') {
       const { runIngest } = await import('./cron/ingest');
       const results = await runIngest(env.DB, season, env);
-      ingested = results.map((r) => `${r.source}:${r.skipped ? 'skip' : r.rows}`).join(' ');
+      ingested = results.map((r) => `${r.source}:${r.error ? 'ERROR' : r.skipped ? 'skip' : r.rows}`).join(' ');
     } else if (event.cron === '4-54/10 * * * *') {
       // Tier 2 hosted runner — its own trigger, its own subrequest budget.
       const { runHostedTick } = await import('./cron/hosted');
@@ -67,7 +67,7 @@ export default {
       // §3.6 tiered cadence: hourly injuries baseline + 10-min pre-lock fast lane.
       const { runFastIngest } = await import('./cron/ingest');
       const results = await runFastIngest(env.DB, season, event.scheduledTime);
-      if (results) ingested = 'fast ' + results.map((r) => `${r.source}:${r.skipped ? 'skip' : r.rows}`).join(' ');
+      if (results) ingested = 'fast ' + results.map((r) => `${r.source}:${r.error ? 'ERROR' : r.skipped ? 'skip' : r.rows}`).join(' ');
       // Metrics snapshot rides THIS cheap tick, not the 6h sync: the full
       // ingest already sits near the free tier's 50-subrequest ceiling, and
       // the snapshot's ~15 D1 calls belong in an invocation with headroom.

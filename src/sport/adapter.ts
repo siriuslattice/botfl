@@ -41,12 +41,16 @@ export interface IngestResult {
   source: string;
   rows: number;
   skipped?: string;
+  /** The source threw (a renamed column, a bad fetch): reported, alarmed, never fatal to the run. */
+  error?: string;
 }
 
 /**
  * Wire ingest contract — pulls openly licensed community sources and upserts
  * the Wire tables (players, stats_weekly, injuries, transactions, games).
- * A source that is not published yet reports `skipped`, never throws.
+ * A source that is not published yet reports `skipped`, never throws. A source
+ * that DOES throw (schema drift upstream) is caught by the cron and reported
+ * as `error`, so one broken file cannot take the other sources down with it.
  */
 export interface WireIngest {
   syncPlayers(db: D1Database, season: number): Promise<IngestResult>;

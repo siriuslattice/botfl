@@ -54,9 +54,14 @@ export async function syncPlayers(db: D1Database, season: number): Promise<Inges
   const cName = t.col('full_name');
   const cTeam = t.col('team');
   const cStatus = t.col('status');
-  const cWeek = t.col('week');
+  // `week` is OPTIONAL: nflverse's rosters/ release carried weekly snapshots
+  // until 2026-09-03, when it became a one-row-per-player season file and the
+  // snapshots moved to weekly_rosters/. Without the column every row is week 0
+  // and the first row per player wins (the season file has no duplicates).
+  // A hard `col('week')` here killed every 6h sync for a day, silently.
+  const cWeek = t.colOpt('week');
 
-  // Roster files accumulate weekly snapshots; keep the latest week per player.
+  // Weekly-snapshot files accumulate rows; keep the latest week per player.
   const latest = new Map<string, { name: string; position: string; team: string; status: string; week: number }>();
   for (let i = 1; i < lines.length; i++) {
     const row = parseCsvLine(lines[i]!);

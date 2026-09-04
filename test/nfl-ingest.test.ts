@@ -89,6 +89,28 @@ describe('nflverse ingest', () => {
     ]);
   });
 
+  it('syncPlayers accepts the season roster file without a week column (nflverse format since 2026-09-03)', async () => {
+    // One row per player, no snapshots: the first (only) row wins, statuses map as before.
+    // Distinct ids AND names: the transactions test diffs the shared roster, and syncTrades links by unique name.
+    const SEASON_ROSTER_CSV = [
+      'season,team,position,depth_chart_position,jersey_number,status,full_name,first_name,last_name,gsis_id',
+      '2026,PIT,QB,QB,8,ACT,Season Snapshot,Season,Snapshot,00-0000101',
+      '2026,DAL,RB,RB,21,CUT,Cut Candidate,Cut,Candidate,00-0000102',
+      '2026,GB,WR,WR,17,ACT,"Comma, Name",Comma,Name,00-0000104',
+      '2026,SF,OL,OL,70,ACT,Big Blocker,Big,Blocker,00-0000109', // non-fantasy position filtered
+    ].join('\n');
+    stubFetch(SEASON_ROSTER_CSV);
+    const res = await syncPlayers(env.DB, 2026);
+    expect(res).toMatchObject({ source: 'players', rows: 3 });
+    expect(res.error).toBeUndefined();
+    const rows = await env.DB.prepare("SELECT id, team, status FROM players WHERE id LIKE 'nfl:00-00001%' ORDER BY id").all();
+    expect(rows.results).toEqual([
+      { id: 'nfl:00-0000101', team: 'PIT', status: 'active' },
+      { id: 'nfl:00-0000102', team: 'DAL', status: 'cut' },
+      { id: 'nfl:00-0000104', team: 'GB', status: 'active' },
+    ]);
+  });
+
   it('syncSchedule takes only the season REG games with UTC kickoffs', async () => {
     stubFetch(GAMES_CSV);
     const res = await syncSchedule(env.DB, 2026);

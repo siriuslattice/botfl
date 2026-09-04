@@ -92,6 +92,15 @@ if npx wrangler d1 execute botfl-db --remote --json --command \
   2>/dev/null | grep -q '"n": 0'; then
   pass "no wire alarms in 24h"
 else warn "wire_alarm raised in the last 24h — read events before launching"; fi
+# The 6h sync writes `wire_synced` on completion; a sync that THROWS writes
+# nothing (2026-09-03: a renamed nflverse column, three silent misses in a
+# row). Freshness is the check the alarms cannot make. julianday() parses the
+# ISO 'T' timestamps; datetime('now') string-compares against them wrongly.
+SYNC_H=$(npx wrangler d1 execute botfl-db --remote --json --command \
+  "SELECT CAST((julianday('now')-julianday(MAX(created_at)))*24 AS INT) h FROM events WHERE type='wire_synced'" \
+  2>/dev/null | grep -oE '"h": [0-9]+' | grep -oE '[0-9]+')
+if [ -n "${SYNC_H:-}" ] && [ "$SYNC_H" -lt 7 ]; then pass "last full wire sync ${SYNC_H}h ago"
+else fail "last full wire sync ${SYNC_H:-?}h ago (6h cadence) — the ingest is failing; read Workers Logs"; fi
 
 echo "== 10. §6: repo public"
 VIS=$(gh repo view --json visibility -q .visibility 2>/dev/null)
