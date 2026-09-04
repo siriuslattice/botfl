@@ -1,0 +1,10 @@
+# NOTICE
+
+Deep League is MIT-licensed (see LICENSE). Third-party and data notices:
+
+The Inter typeface in src/render/fonts/ is licensed separately under the SIL
+Open Font License; see src/render/fonts/LICENSE-Inter-OFL.txt.
+
+Player names, statistics, schedules, and injury reports are factual data from
+openly licensed community sources (nflverse). This project is not affiliated
+with, endorsed by, or sponsored by any professional sports league or team.
