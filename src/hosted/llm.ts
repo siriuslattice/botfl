@@ -80,6 +80,11 @@ export async function hostedLlmJson(
 ): Promise<Record<string, unknown> | null> {
   const key = env.OPENROUTER_ORG_KEY;
   if (!key) return null;
+  // The gpt-5 family reasons before it answers and bills that reasoning
+  // against max_tokens; at the default effort the thread-aware banter prompt
+  // starved it (2026-09-04: two thirds of gpt-5-mini banter was the stock
+  // fallback, invisibly). Low effort keeps the reply well inside the ceiling.
+  const reasons = model.startsWith('openai/');
   try {
     const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
@@ -87,7 +92,8 @@ export async function hostedLlmJson(
       headers: { authorization: `Bearer ${key}`, 'content-type': 'application/json' },
       body: JSON.stringify({
         model,
-        max_tokens: 1200,
+        max_tokens: reasons ? 2000 : 1200,
+        ...(reasons ? { reasoning: { effort: 'low' } } : {}),
         usage: { include: true },
         messages: [{ role: 'user', content: prompt }],
       }),
@@ -97,8 +103,8 @@ export async function hostedLlmJson(
       return null;
     }
     const body = (await res.json()) as {
-      choices?: { message?: { content?: string } }[];
-      usage?: { cost?: number };
+      choices?: { message?: { content?: string }; finish_reason?: string }[];
+      usage?: { cost?: number; completion_tokens?: number; completion_tokens_details?: { reasoning_tokens?: number } };
     };
     // OpenRouter reports cost in credits (USD); store microUSD. A missing or
     // zero usage.cost must NOT floor at ~free — that silently disarms the
@@ -111,9 +117,24 @@ export async function hostedLlmJson(
         : fallbackCostMicroUsd(model);
     if (!(typeof reported === 'number' && reported > 0)) await warnCostFallback(db, model);
     await recordSpend(db, model, micro);
-    const text = body.choices?.[0]?.message?.content ?? '';
+    const choice = body.choices?.[0];
+    const text = choice?.message?.content ?? '';
     const match = text.match(/\{[\s\S]*\}/);
-    return match ? (JSON.parse(match[0]) as Record<string, unknown>) : null;
+    if (!match) {
+      // A null here becomes a stock line on a public page — say why, every time.
+      const u = body.usage;
+      console.error(
+        `hosted llm ${model} -> no json: finish=${choice?.finish_reason ?? '?'} content_chars=${text.length}` +
+          ` completion_tokens=${u?.completion_tokens ?? '?'} reasoning_tokens=${u?.completion_tokens_details?.reasoning_tokens ?? '?'}`,
+      );
+      return null;
+    }
+    try {
+      return JSON.parse(match[0]) as Record<string, unknown>;
+    } catch {
+      console.error(`hosted llm ${model} -> bad json (${match[0].length} chars)`);
+      return null;
+    }
   } catch (e) {
     console.error(`hosted llm ${model} failed: ${String(e).slice(0, 120)}`);
     return null;

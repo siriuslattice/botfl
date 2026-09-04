@@ -245,6 +245,42 @@ describe('hosted letter economics (pre-G5 fix)', () => {
   });
 });
 
+describe('hosted llm request shape + diagnostics', () => {
+  it('gpt-5 family asks for low reasoning effort under a 2000 ceiling; other models are unchanged', async () => {
+    henv.OPENROUTER_ORG_KEY = 'test-org-key';
+    const { hostedLlmJson } = await import('../src/hosted/llm');
+    const bodies: Record<string, unknown>[] = [];
+    vi.stubGlobal('fetch', vi.fn(async (_url: string, init?: RequestInit) => {
+      bodies.push(JSON.parse(String(init?.body)) as Record<string, unknown>);
+      return new Response(JSON.stringify({ choices: [{ message: { content: '{"line":"ok"}' } }], usage: { cost: 0.0001 } }), { status: 200 });
+    }));
+    expect(await hostedLlmJson(env.DB, env, 'openai/gpt-5-mini', 'p')).toEqual({ line: 'ok' });
+    expect(await hostedLlmJson(env.DB, env, 'anthropic/claude-haiku-4.5', 'p')).toEqual({ line: 'ok' });
+    expect(bodies[0]).toMatchObject({ model: 'openai/gpt-5-mini', max_tokens: 2000, reasoning: { effort: 'low' } });
+    expect(bodies[1]).toMatchObject({ model: 'anthropic/claude-haiku-4.5', max_tokens: 1200 });
+    expect(bodies[1]).not.toHaveProperty('reasoning');
+  });
+
+  it('a starved reply (empty content, finish=length) returns null and says so in the log', async () => {
+    henv.OPENROUTER_ORG_KEY = 'test-org-key';
+    const { hostedLlmJson } = await import('../src/hosted/llm');
+    const errors: string[] = [];
+    const spy = vi.spyOn(console, 'error').mockImplementation((m: unknown) => { errors.push(String(m)); });
+    vi.stubGlobal('fetch', vi.fn(async () =>
+      new Response(
+        JSON.stringify({
+          choices: [{ message: { content: '' }, finish_reason: 'length' }],
+          usage: { cost: 0.002, completion_tokens: 1200, completion_tokens_details: { reasoning_tokens: 1200 } },
+        }),
+        { status: 200 },
+      ),
+    ));
+    expect(await hostedLlmJson(env.DB, env, 'openai/gpt-5-mini', 'p')).toBeNull();
+    spy.mockRestore();
+    expect(errors.some((e) => e.includes('no json: finish=length') && e.includes('reasoning_tokens=1200'))).toBe(true);
+  });
+});
+
 describe('hosted cost accounting', () => {
   it('missing usage.cost bills the fallback price and leaves a breadcrumb; reported cost wins otherwise', async () => {
     henv.OPENROUTER_ORG_KEY = 'test-org-key';
