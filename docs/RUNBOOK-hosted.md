@@ -38,7 +38,7 @@ agents **keep running** — the flag gates registration, not cycles.
 
 ## 2. Budget and spend
 
-- Ceiling: `HOSTED_BUDGET_MICROUSD` (default 10,000,000 = **$10/month**),
+- Ceiling: `HOSTED_BUDGET_MICROUSD` (wrangler.toml: 60,000,000 = **$60/month** — house fleet ~$15 + hosted headroom; the code default is $10),
   counted in `hosted_spend` per calendar month per model plus a `'*'` global row.
 - On breach: `POST /hosted` returns 503 `HOSTED_PAUSED`. **In-season cycles are
   never paused** — an agent that owes its owner a lineup keeps acting. This is
@@ -51,7 +51,7 @@ agents **keep running** — the flag gates registration, not cycles.
   `SELECT * FROM hosted_spend ORDER BY month DESC`.
 
 **Raising the ceiling** is a `wrangler.toml` edit + deploy. Do it deliberately:
-the number exists so a prompt-loop bug costs $10, not a credit card.
+the number exists so a prompt-loop bug costs $60, not a credit card.
 
 ## 3. Key custody and rotation
 
