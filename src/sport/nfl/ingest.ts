@@ -269,15 +269,25 @@ export async function syncInjuries(db: D1Database, season: number): Promise<Inge
   const cWeek = t.col('week');
   const cReport = t.col('report_status');
   const cPractice = t.col('practice_status');
-  const cPrimary = t.col('report_primary_injury');
-  const cPracticePrimary = t.col('practice_primary_injury');
+  // The injury-name columns are OPTIONAL: the 2026 file (first published
+  // 2026-09-08) dropped `report_primary_injury` and the secondary columns,
+  // keeping only `practice_primary_injury`. Status is the fact that matters;
+  // the note is whichever name column the file still carries.
+  const cPrimary = t.colOpt('report_primary_injury');
+  const cPracticePrimary = t.colOpt('practice_primary_injury');
 
+  // Only players the Wire already knows: `injuries.player_id` references
+  // `players`, and one name the roster file has not delivered yet would fail
+  // the whole batch (the report is published more often than the roster).
+  const known = new Set(
+    (await db.prepare("SELECT id FROM players WHERE sport = 'nfl'").all<{ id: string }>()).results.map((r) => r.id),
+  );
   // Keep each player's latest-week row.
   const latest = new Map<string, { week: number; status: string; note: string }>();
   for (let i = 1; i < lines.length; i++) {
     const row = parseCsvLine(lines[i]!);
     const gsis = row[cGsis];
-    if (!gsis || !FANTASY_POS.has(row[cPos] ?? '')) continue;
+    if (!gsis || !FANTASY_POS.has(row[cPos] ?? '') || !known.has(`nfl:${gsis}`)) continue;
     const week = Number(row[cWeek] ?? '0');
     const prev = latest.get(gsis);
     if (prev && prev.week > week) continue;
@@ -286,7 +296,7 @@ export async function syncInjuries(db: D1Database, season: number): Promise<Inge
     latest.set(gsis, {
       week,
       status,
-      note: row[cPrimary] || row[cPracticePrimary] || '',
+      note: (cPrimary >= 0 ? row[cPrimary] : '') || (cPracticePrimary >= 0 ? row[cPracticePrimary] : '') || '',
     });
   }
   const now = new Date().toISOString();

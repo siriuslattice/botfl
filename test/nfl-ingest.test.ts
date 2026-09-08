@@ -147,6 +147,30 @@ describe('nflverse ingest', () => {
     expect(await at('2026-09-13T17:30:00Z')).toBe(false); // 10:30 PT, no game near
   });
 
+  it('syncInjuries accepts the 2026 file shape without report_primary_injury (nflverse, 2026-09-08)', async () => {
+    const INJURIES_2026_CSV = [
+      'season,season_type,game_type,team,week,gsis_id,position,full_name,first_name,last_name,report_status,practice_primary_injury,practice_status',
+      '2026,REG,REG,NE,1,00-0000201,QB,Practice Only,Practice,Only,,Knee,Did Not Participate In Practice',
+      '2026,REG,REG,NE,1,00-0000202,RB,Report Guy,Report,Guy,Questionable,Ankle,Limited Participation in Practice',
+      '2026,REG,REG,NE,1,00-0000203,DT,Not Fantasy,Not,Fantasy,Out,Knee,Did Not Participate In Practice',
+      '2026,REG,REG,NE,1,00-0000204,WR,Unknown Toroster,Unknown,Toroster,Out,Hamstring,Did Not Participate In Practice', // not in players → skipped, not a batch failure
+    ].join('\n');
+    // injuries.player_id references players: seed the two the Wire knows.
+    await env.DB.batch([
+      env.DB.prepare("INSERT OR IGNORE INTO players (id, sport, name, position, team, status, updated_at) VALUES ('nfl:00-0000201','nfl','Practice Only','QB','NE','active','2026-09-08T00:00:00.000Z')"),
+      env.DB.prepare("INSERT OR IGNORE INTO players (id, sport, name, position, team, status, updated_at) VALUES ('nfl:00-0000202','nfl','Report Guy','RB','NE','active','2026-09-08T00:00:00.000Z')"),
+    ]);
+    stubFetch(INJURIES_2026_CSV);
+    const res = await syncInjuries(env.DB, 2026);
+    expect(res).toMatchObject({ source: 'injuries', rows: 2 });
+    expect(res.error).toBeUndefined();
+    const rows = await env.DB.prepare("SELECT player_id, status, note FROM injuries WHERE player_id LIKE 'nfl:00-00002%' ORDER BY player_id").all();
+    expect(rows.results).toEqual([
+      { player_id: 'nfl:00-0000201', status: 'Did Not Participate In Practice', note: 'Knee' },
+      { player_id: 'nfl:00-0000202', status: 'Questionable', note: 'Ankle' },
+    ]);
+  });
+
   it('syncInjuries keeps each latest week and falls back to practice status', async () => {
     stubFetch(INJURIES_CSV);
     const res = await syncInjuries(env.DB, 2026);
